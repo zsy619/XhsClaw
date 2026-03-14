@@ -1,0 +1,21 @@
+server:
+  port: 8000
+  mode: debug
+
+database:
+  type: postgres
+  host: 127.0.0.1
+  port: 5432
+  user: postgres
+  password: 123456
+  dbname: xiaohongshu
+  sslmode: disable
+
+deepseek:
+  api_key: ""
+  model: deepseek-chat
+  base_url: https://api.deepseek.com
+
+jwt:
+  secret: xiaohongshu-secret-key
+  expire: 24
