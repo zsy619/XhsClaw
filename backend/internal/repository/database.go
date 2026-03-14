@@ -4,6 +4,7 @@ package repository
 import (
 	"encoding/json"
 	"log"
+	"time"
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/utils"
@@ -20,9 +21,19 @@ var DB *gorm.DB
 func InitDatabase(cfg *config.DatabaseConfig) error {
 	var err error
 	
+	// 根据运行模式配置日志级别
+	logLevel := logger.Info
+	if config.AppConfig.Server.Mode == "production" {
+		logLevel = logger.Error
+	}
+	
 	// 配置GORM日志
 	gormConfig := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logLevel),
+		// 启用准备语句缓存，提高性能
+		PrepareStmt: true,
+		// 禁用默认事务，提高性能（需要时手动开启）
+		SkipDefaultTransaction: true,
 	}
 
 	// 根据数据库类型选择驱动
@@ -38,6 +49,26 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 	if err != nil {
 		return err
 	}
+
+	// 获取底层数据库连接池
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+
+	// 配置连接池
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.ConnMaxIdleTime) * time.Second)
+
+	// 验证连接
+	if err := sqlDB.Ping(); err != nil {
+		return err
+	}
+
+	log.Printf("Database connection pool configured: MaxOpenConns=%d, MaxIdleConns=%d",
+		cfg.MaxOpenConns, cfg.MaxIdleConns)
 
 	// 先迁移角色和权限表
 	err = DB.AutoMigrate(

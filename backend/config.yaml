@@ -1,7 +1,12 @@
+# 服务器配置
 server:
   port: 8000
   mode: debug
+  read_timeout: 60
+  write_timeout: 60
+  idle_timeout: 120
 
+# 数据库配置
 database:
   type: postgres
   host: 127.0.0.1
@@ -10,12 +15,56 @@ database:
   password: 123456
   dbname: xiaohongshu
   sslmode: disable
+  max_open_conns: 100
+  max_idle_conns: 10
+  conn_max_lifetime: 3600
+  conn_max_idle_time: 600
 
+# DeepSeek API 配置
 deepseek:
   api_key: ""
   model: deepseek-chat
   base_url: https://api.deepseek.com
+  timeout: 120
+  max_retries: 3
 
+# JWT 配置
 jwt:
-  secret: xiaohongshu-secret-key
+  secret: xiaohongshu-secret-key-change-in-production
   expire: 24
+  refresh_expire: 7
+  issuer: xiaohongshu-backend
+  audience: xiaohongshu-frontend
+
+# 安全配置
+security:
+  cors:
+    allow_origins:
+      - http://localhost:5173
+      - http://localhost:8000
+    allow_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allow_headers:
+      - Origin
+      - Content-Type
+      - Authorization
+      - X-Requested-With
+    expose_headers:
+      - Content-Length
+      - Content-Type
+    allow_credentials: true
+    max_age: 86400
+  rate_limit:
+    enabled: true
+    rps: 100.0
+    burst: 200
+  request_security:
+    max_body_size: 10485760
+    enable_csrf: false
+    enable_xss: true
+    security_headers: true
+    content_security_policy: "default-src 'self'"

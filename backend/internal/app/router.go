@@ -94,9 +94,18 @@ func SetupRouter(h *server.Hertz) {
 	rendererHandler := handler.NewRendererHandler()
 	roleHandler := handler.NewRoleHandler()
 
+	// 健康检查 - 不需要认证
+	h.GET("/health", handler.HealthCheck)
+	h.GET("/ready", handler.ReadyCheck)
+	h.GET("/live", handler.LivenessCheck)
+	
 	// 公共路由
 	api := h.Group("/api")
 	{
+		// 健康检查（API路径）
+		api.GET("/health", handler.HealthCheck)
+		api.GET("/ready", handler.ReadyCheck)
+		api.GET("/live", handler.LivenessCheck)
 		// 用户认证 - /api/auth
 		auth := api.Group("/auth")
 		{

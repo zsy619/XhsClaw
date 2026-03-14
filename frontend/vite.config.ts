@@ -31,7 +31,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: Number(import.meta.env.VITE_DEV_SERVER_PORT) || 5173,
     open: false,
     proxy: {
       '/api': {
@@ -44,10 +44,12 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'static',
     sourcemap: false,
+    // Vite 8 中，我们可以使用默认的 rolldown 压缩器，它比 terser 更快
+    // 但如果需要更高级的压缩选项，可以继续使用 terser
     minify: 'terser',
     terserOptions: {
       compress: {
-        productionTypes: true,
+        // productionTypes 在 Vite 8 中可能已被移除，我们保留其他选项
         drop_console: true,
         drop_debugger: true,
       },

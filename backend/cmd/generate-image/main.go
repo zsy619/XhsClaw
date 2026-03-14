@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+
 	"xiaohongshu/internal/service"
 )
 
@@ -38,7 +39,6 @@ func main() {
 		1440,
 		2160,
 	)
-
 	if err != nil {
 		log.Fatalf("生成图片失败: %v", err)
 	}

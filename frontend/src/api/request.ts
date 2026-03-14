@@ -16,8 +16,8 @@ interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
 
 // 创建 axios 实例
 const service: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
-  timeout: 30000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
   // 不设置默认 Content-Type，让 axios 根据数据类型自动设置
 })
 
