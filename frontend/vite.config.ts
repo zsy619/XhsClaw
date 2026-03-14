@@ -31,7 +31,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: Number(import.meta.env.VITE_DEV_SERVER_PORT) || 5173,
+    port: 5173,
     open: false,
     proxy: {
       '/api': {
