@@ -173,3 +173,31 @@ func (h *PublishHandler) CancelPublish(c context.Context, ctx *app.RequestContex
 
 	response.Success(ctx, nil)
 }
+
+// RetryPublish 重试发布
+func (h *PublishHandler) RetryPublish(c context.Context, ctx *app.RequestContext) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Error(ctx, errno.Unauthorized)
+		return
+	}
+
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.ParamError(ctx, "无效的ID")
+		return
+	}
+
+	record, err := h.publishService.RetryPublish(userID, uint(id))
+	if err != nil {
+		if e, ok := err.(*errno.ErrNo); ok {
+			response.Error(ctx, e)
+		} else {
+			response.Error(ctx, errno.InternalError)
+		}
+		return
+	}
+
+	response.Success(ctx, record)
+}

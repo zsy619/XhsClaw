@@ -329,7 +329,8 @@
                   v-if="generatedImages.length > 0"
                   :src="generatedImages[currentImageIndex]"
                   :alt="`生成的图片 ${currentImageIndex + 1}`"
-                  class="max-h-64 max-w-full object-contain rounded-lg shadow-md"
+                  class="max-h-64 max-w-full object-contain rounded-lg shadow-md cursor-pointer hover:opacity-80 transition-opacity"
+                  @click="openImageViewer(currentImageIndex)"
                 />
                 <div v-else class="flex flex-col items-center text-gray-400">
                   <el-icon :size="40"><Picture /></el-icon>
@@ -398,84 +399,231 @@
     <el-dialog
       v-model="showImageRenderDialog"
       title="图片生成配置"
-      width="600px"
+      width="680px"
       :close-on-click-modal="false"
+      class="image-config-dialog"
     >
-      <div class="space-y-4">
+      <div class="image-config-content">
         <!-- 图片样式主题 -->
-        <el-form-item label="图片样式主题">
-          <el-select v-model="imageConfig.styleKey" class="w-full">
-            <el-option label="简约灰" value="default" />
-            <el-option label="小红书红" value="xiaohongshu" />
-            <el-option label="活泼几何" value="playful-geometric" />
-            <el-option label="新野兽派" value="neo-brutalism" />
-            <el-option label="植物系" value="botanical" />
-            <el-option label="专业商务" value="professional" />
-            <el-option label="复古风格" value="retro" />
-            <el-option label="终端风格" value="terminal" />
-            <el-option label="手绘风格" value="sketch" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 智能分页 -->
-        <el-form-item label="智能分页">
-          <el-switch v-model="imageConfig.enableSmartPagination" />
-          <span class="ml-2 text-sm text-gray-500">自动拆分长内容到多张卡片</span>
-        </el-form-item>
-
-        <!-- 卡片尺寸 -->
-        <el-divider content-position="left">卡片尺寸配置</el-divider>
-        
-        <el-form-item label="卡片宽度">
-          <el-input-number
-            v-model="imageConfig.cardWidth"
-            :min="720"
-            :max="1440"
-            :step="40"
-            class="w-full"
-          />
-          <span class="ml-2 text-xs text-gray-400">px</span>
-        </el-form-item>
-
-        <el-form-item label="卡片高度">
-          <el-input-number
-            v-model="imageConfig.cardHeight"
-            :min="960"
-            :max="1920"
-            :step="40"
-            class="w-full"
-          />
-          <span class="ml-2 text-xs text-gray-400">px</span>
-        </el-form-item>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-between">
-          <el-button @click="showImageRenderDialog = false">取消</el-button>
-          <div class="flex gap-2">
-            <el-button
-              v-if="imageRenderProgress > 0"
-              @click="cancelImageRender"
+        <div class="config-section">
+          <div class="section-header mb-4">
+            <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <el-icon class="text-primary-500"><Brush /></el-icon>
+              图片样式主题
+            </h3>
+            <p class="text-xs text-gray-500">选择适合您内容的视觉风格</p>
+          </div>
+          <div class="style-grid">
+            <div
+              v-for="style in styleOptions"
+              :key="style.value"
+              @click="imageConfig.styleKey = style.value"
+              :class="[
+                'style-option p-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                imageConfig.styleKey === style.value
+                  ? 'border-primary-500 bg-primary-50 shadow-sm'
+                  : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+              ]"
             >
-              取消生成
-            </el-button>
-            <el-button
-              type="primary"
-              :loading="renderingImages"
-              @click="handleRenderImages"
-            >
-              开始生成
-            </el-button>
+              <div class="flex items-center gap-3">
+                <div 
+                  class="style-preview w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                  :class="style.previewClass"
+                >
+                  {{ style.icon }}
+                </div>
+                <div class="flex-1">
+                  <div class="font-medium text-gray-800">{{ style.label }}</div>
+                  <div class="text-xs text-gray-500">{{ style.description }}</div>
+                </div>
+                <el-icon 
+                  v-if="imageConfig.styleKey === style.value"
+                  class="text-primary-500"
+                  :size="20"
+                >
+                  <CircleCheck />
+                </el-icon>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 进度条 -->
-        <el-progress
-          v-if="imageRenderProgress > 0"
-          :percentage="imageRenderProgress"
-          :stroke-width="8"
-          class="mt-4"
-        />
+        <!-- 分割线 -->
+        <div class="my-6 border-t border-gray-100"></div>
+
+        <!-- 智能分页 -->
+        <div class="config-section">
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <el-icon class="text-blue-500"><MagicStick /></el-icon>
+              </div>
+              <div>
+                <div class="font-medium text-gray-800">智能分页</div>
+                <div class="text-xs text-gray-500">自动拆分长内容到多张卡片</div>
+              </div>
+            </div>
+            <el-switch 
+              v-model="imageConfig.enableSmartPagination"
+              size="large"
+              active-color="#10b981"
+            />
+          </div>
+        </div>
+
+        <!-- 卡片尺寸配置 -->
+        <div class="config-section mt-6">
+          <div class="section-header mb-4">
+            <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <el-icon class="text-primary-500"><Edit /></el-icon>
+              卡片尺寸配置
+            </h3>
+            <p class="text-xs text-gray-500">设置生成图片的尺寸，支持常见比例</p>
+          </div>
+          
+          <!-- 预设尺寸 -->
+          <div class="mb-4">
+            <div class="text-xs font-medium text-gray-600 mb-2">快速选择</div>
+            <div class="flex flex-wrap gap-2">
+              <el-button
+                v-for="preset in sizePresets"
+                :key="preset.label"
+                size="small"
+                @click="imageConfig.cardWidth = preset.width; imageConfig.cardHeight = preset.height"
+                :type="imageConfig.cardWidth === preset.width && imageConfig.cardHeight === preset.height ? 'primary' : 'default'"
+                class="preset-btn"
+              >
+                {{ preset.label }}
+              </el-button>
+            </div>
+          </div>
+
+          <!-- 自定义尺寸 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 bg-gray-50 rounded-xl">
+              <label class="block text-sm font-medium text-gray-700 mb-2">卡片宽度</label>
+              <div class="flex items-center gap-2">
+                <el-button
+                  size="small"
+                  @click="imageConfig.cardWidth = Math.max(720, imageConfig.cardWidth - 40)"
+                  :disabled="imageConfig.cardWidth <= 720"
+                  class="flex-shrink-0"
+                >
+                  <el-icon><Minus /></el-icon>
+                </el-button>
+                <el-input-number
+                  v-model="imageConfig.cardWidth"
+                  :min="720"
+                  :max="1440"
+                  :step="40"
+                  size="large"
+                  class="flex-1"
+                  controls-position="right"
+                />
+                <el-button
+                  size="small"
+                  @click="imageConfig.cardWidth = Math.min(1440, imageConfig.cardWidth + 40)"
+                  :disabled="imageConfig.cardWidth >= 1440"
+                  class="flex-shrink-0"
+                >
+                  <el-icon><Plus /></el-icon>
+                </el-button>
+              </div>
+              <div class="text-xs text-gray-500 mt-1">范围: 720 - 1440 px</div>
+            </div>
+            
+            <div class="p-4 bg-gray-50 rounded-xl">
+              <label class="block text-sm font-medium text-gray-700 mb-2">卡片高度</label>
+              <div class="flex items-center gap-2">
+                <el-button
+                  size="small"
+                  @click="imageConfig.cardHeight = Math.max(960, imageConfig.cardHeight - 40)"
+                  :disabled="imageConfig.cardHeight <= 960"
+                  class="flex-shrink-0"
+                >
+                  <el-icon><Minus /></el-icon>
+                </el-button>
+                <el-input-number
+                  v-model="imageConfig.cardHeight"
+                  :min="960"
+                  :max="1920"
+                  :step="40"
+                  size="large"
+                  class="flex-1"
+                  controls-position="right"
+                />
+                <el-button
+                  size="small"
+                  @click="imageConfig.cardHeight = Math.min(1920, imageConfig.cardHeight + 40)"
+                  :disabled="imageConfig.cardHeight >= 1920"
+                  class="flex-shrink-0"
+                >
+                  <el-icon><Plus /></el-icon>
+                </el-button>
+              </div>
+              <div class="text-xs text-gray-500 mt-1">范围: 960 - 1920 px</div>
+            </div>
+          </div>
+          
+          <!-- 比例提示 -->
+          <div class="mt-3 p-3 bg-primary-50 rounded-lg">
+            <div class="text-xs text-primary-700 flex items-center gap-1">
+              <el-icon :size="14"><InfoFilled /></el-icon>
+              当前比例: {{ getAspectRatio() }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="image-config-footer">
+          <!-- 进度条 -->
+          <div v-if="imageRenderProgress > 0" class="progress-section mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700">正在生成...</span>
+              <span class="text-sm text-primary-600 font-semibold">{{ imageRenderProgress }}%</span>
+            </div>
+            <el-progress
+              :percentage="imageRenderProgress"
+              :stroke-width="10"
+              :show-text="false"
+              striped
+              striped-flow
+            />
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <el-button 
+              size="large"
+              @click="showImageRenderDialog = false"
+              class="cancel-btn px-8"
+            >
+              取消
+            </el-button>
+            <div class="flex items-center gap-3">
+              <el-button
+                v-if="imageRenderProgress > 0"
+                size="large"
+                type="danger"
+                @click="cancelImageRender"
+                class="px-6"
+              >
+                <el-icon class="mr-1"><Close /></el-icon>
+                取消生成
+              </el-button>
+              <el-button
+                type="primary"
+                size="large"
+                :loading="renderingImages"
+                @click="handleRenderImages"
+                class="generate-btn px-8 h-12 text-base font-medium"
+              >
+                <el-icon class="mr-2"><Picture /></el-icon>
+                {{ renderingImages ? '生成中...' : '开始生成' }}
+              </el-button>
+            </div>
+          </div>
+        </div>
       </template>
     </el-dialog>
 
@@ -510,6 +658,65 @@
         </el-timeline>
       </div>
     </el-dialog>
+
+    <!-- 图片查看器弹窗 -->
+    <div
+      v-if="showImageViewer"
+      class="image-viewer-mask"
+      @click.self="closeImageViewer"
+      @keydown="handleViewerKeydown"
+      tabindex="0"
+      ref="imageViewerMask"
+    >
+      <!-- 关闭按钮 -->
+      <div class="image-viewer-close" @click="closeImageViewer">
+        <el-icon :size="28"><Close /></el-icon>
+      </div>
+
+      <!-- 上一张按钮 -->
+      <div
+        class="image-viewer-nav image-viewer-nav-left"
+        :class="{ 'is-disabled': imageViewerIndex === 0 }"
+        @click="prevImage"
+      >
+        <el-icon :size="36"><ArrowLeft /></el-icon>
+      </div>
+
+      <!-- 图片容器 -->
+      <div class="image-viewer-content">
+        <img
+          :src="generatedImages[imageViewerIndex]"
+          :alt="`图片 ${imageViewerIndex + 1}`"
+          class="image-viewer-image"
+        />
+      </div>
+
+      <!-- 下一张按钮 -->
+      <div
+        class="image-viewer-nav image-viewer-nav-right"
+        :class="{ 'is-disabled': imageViewerIndex === generatedImages.length - 1 }"
+        @click="nextImage"
+      >
+        <el-icon :size="36"><ArrowRight /></el-icon>
+      </div>
+
+      <!-- 底部工具栏 -->
+      <div class="image-viewer-toolbar">
+        <div class="image-viewer-info">
+          <span class="image-viewer-count">{{ imageViewerIndex + 1 }} / {{ generatedImages.length }}</span>
+        </div>
+        <div class="image-viewer-actions">
+          <el-button
+            size="default"
+            class="toolbar-btn"
+            @click="handleDownloadImage(imageViewerIndex)"
+          >
+            <el-icon><Download /></el-icon>
+            下载
+          </el-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -526,7 +733,15 @@ import {
   Star,
   Picture,
   Timer,
-  RefreshLeft
+  RefreshLeft,
+  Brush,
+  CircleCheck,
+  Plus,
+  Minus,
+  InfoFilled,
+  Close,
+  ArrowLeft,
+  ArrowRight
 } from '@element-plus/icons-vue'
 import { http } from '@/api/request'
 import { renderMarkdown, getRenderedImage } from '@/api/xiaohongshuRenderer'
@@ -536,6 +751,7 @@ import XiaohongshuEditor from '@/components/editor/XiaohongshuEditor.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const formRef = ref<FormInstance>()
+const imageViewerMask = ref<HTMLElement | null>(null)
 
 // 状态变量
 const fullscreenLoading = ref(false)
@@ -548,6 +764,8 @@ const showHistoryDialog = ref(false)
 const generatedImages = ref<string[]>([])
 const currentImageIndex = ref(0)
 const imageRenderProgress = ref(0)
+const showImageViewer = ref(false)
+const imageViewerIndex = ref(0)
 
 // 标题相关
 const titleOptions = ref<string[]>([])
@@ -566,6 +784,91 @@ const examples = [
   '护肤品测评',
   '职场新人指南'
 ]
+
+// 样式主题选项
+const styleOptions = [
+  {
+    value: 'default',
+    label: '简约灰',
+    icon: '⚪',
+    description: '简洁大方的通用风格',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'xiaohongshu',
+    label: '小红书红',
+    icon: '🔴',
+    description: '小红书平台经典红色主题',
+    previewClass: 'bg-red-100'
+  },
+  {
+    value: 'playful-geometric',
+    label: '活泼几何',
+    icon: '🔷',
+    description: '充满活力的几何图形设计',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'neo-brutalism',
+    label: '新野兽派',
+    icon: '🟡',
+    description: '粗旷有力的现代美学',
+    previewClass: 'bg-yellow-100'
+  },
+  {
+    value: 'botanical',
+    label: '植物系',
+    icon: '🌿',
+    description: '清新自然的植物风格',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'professional',
+    label: '专业商务',
+    icon: '💼',
+    description: '稳重专业的商务风格',
+    previewClass: 'bg-slate-100'
+  },
+  {
+    value: 'retro',
+    label: '复古风格',
+    icon: '📺',
+    description: '怀旧复古的设计风格',
+    previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'terminal',
+    label: '终端风格',
+    icon: '💻',
+    description: '程序员专属终端风格',
+    previewClass: 'bg-emerald-100'
+  },
+  {
+    value: 'sketch',
+    label: '手绘风格',
+    icon: '✏️',
+    description: '温馨可爱的手绘风格',
+    previewClass: 'bg-pink-100'
+  }
+]
+
+// 尺寸预设
+const sizePresets = [
+  { label: '小红书 3:4', width: 1080, height: 1440 },
+  { label: '正方形 1:1', width: 1080, height: 1080 },
+  { label: '横屏 4:3', width: 1440, height: 1080 },
+  { label: '手机壁纸 9:16', width: 1080, height: 1920 }
+]
+
+// 计算宽高比
+const getAspectRatio = () => {
+  const ratio = imageConfig.cardWidth / imageConfig.cardHeight
+  if (Math.abs(ratio - 3/4) < 0.01) return '3:4 (小红书标准)'
+  if (Math.abs(ratio - 1) < 0.01) return '1:1 (正方形)'
+  if (Math.abs(ratio - 4/3) < 0.01) return '4:3 (横屏)'
+  if (Math.abs(ratio - 9/16) < 0.01) return '9:16 (手机壁纸)'
+  return `${ratio.toFixed(2)}:1`
+}
 
 // 表单数据
 const form = reactive({
@@ -872,6 +1175,48 @@ const handleDownloadAllImages = () => {
   })
 }
 
+// 打开图片查看器
+const openImageViewer = (index: number) => {
+  imageViewerIndex.value = index
+  showImageViewer.value = true
+  // 等待 DOM 更新后聚焦到遮罩层，以便键盘事件生效
+  setTimeout(() => {
+    if (imageViewerMask.value) {
+      imageViewerMask.value.focus()
+    }
+  }, 100)
+}
+
+// 关闭图片查看器
+const closeImageViewer = () => {
+  showImageViewer.value = false
+}
+
+// 查看上一张图片
+const prevImage = () => {
+  if (imageViewerIndex.value > 0) {
+    imageViewerIndex.value--
+  }
+}
+
+// 查看下一张图片
+const nextImage = () => {
+  if (imageViewerIndex.value < generatedImages.value.length - 1) {
+    imageViewerIndex.value++
+  }
+}
+
+// 键盘导航
+const handleViewerKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') {
+    closeImageViewer()
+  } else if (e.key === 'ArrowLeft') {
+    prevImage()
+  } else if (e.key === 'ArrowRight') {
+    nextImage()
+  }
+}
+
 // 添加到历史记录
 const addToHistory = (type: string, content: string, oldContent?: string) => {
   const historyItem = {
@@ -979,6 +1324,317 @@ const handleSave = async () => {
 .creation-center-container {
   .result-editor {
     min-height: 400px;
+  }
+}
+
+// 图片配置弹窗样式
+.image-config-dialog {
+  :deep(.el-dialog__header) {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  :deep(.el-dialog__title) {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 24px;
+  }
+
+  :deep(.el-dialog__footer) {
+    padding: 16px 24px 24px;
+    border-top: 1px solid #f3f4f6;
+  }
+}
+
+.image-config-content {
+  .config-section {
+    .section-header {
+      h3 {
+        margin: 0;
+      }
+
+      p {
+        margin: 4px 0 0;
+      }
+    }
+  }
+
+  .style-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+
+    .style-option {
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      .style-preview {
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .preset-btn {
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.image-config-footer {
+  .progress-section {
+    .el-progress {
+      :deep(.el-progress__text) {
+        font-weight: 600;
+      }
+    }
+  }
+
+  .cancel-btn {
+    border-color: #d1d5db;
+    color: #4b5563;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #9ca3af;
+      color: #374151;
+      background-color: #f9fafb;
+    }
+  }
+
+  .generate-btn {
+    background: linear-gradient(135deg, #ff2442 0%, #ff6b81 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(255, 36, 66, 0.3);
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(255, 36, 66, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &.is-loading {
+      opacity: 0.8;
+    }
+  }
+}
+
+// 响应式优化
+@media (max-width: 768px) {
+  .image-config-dialog {
+    :deep(.el-dialog) {
+      width: 95% !important;
+      margin: 5vh auto !important;
+    }
+  }
+
+  .image-config-content {
+    .style-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// 图片查看器样式
+.image-viewer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10000;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+  }
+}
+
+.image-viewer-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10000;
+
+  &:hover:not(.is-disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  &.is-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}
+
+.image-viewer-nav-left {
+  left: 20px;
+}
+
+.image-viewer-nav-right {
+  right: 20px;
+}
+
+.image-viewer-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.image-viewer-image {
+  max-width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.image-viewer-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 12px 24px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  z-index: 10000;
+}
+
+.image-viewer-info {
+  .image-viewer-count {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.image-viewer-actions {
+  .toolbar-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    border-radius: 20px;
+    padding: 8px 20px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+}
+
+// 图片查看器响应式
+@media (max-width: 768px) {
+  .image-viewer-nav {
+    width: 44px;
+    height: 44px;
+
+    .el-icon {
+      font-size: 28px !important;
+    }
+  }
+
+  .image-viewer-nav-left {
+    left: 10px;
+  }
+
+  .image-viewer-nav-right {
+    right: 10px;
+  }
+
+  .image-viewer-close {
+    width: 40px;
+    height: 40px;
+    top: 10px;
+    right: 10px;
+
+    .el-icon {
+      font-size: 22px !important;
+    }
+  }
+
+  .image-viewer-toolbar {
+    padding: 10px 16px;
+    gap: 16px;
+
+    .toolbar-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+    }
   }
 }
 </style>

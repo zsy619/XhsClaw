@@ -25,7 +25,7 @@ func (r *UserRepository) Create(user *model.User) error {
 // FindByID 根据ID查找用户
 func (r *UserRepository) FindByID(id uint) (*model.User, error) {
 	var user model.User
-	err := r.db.First(&user, id).Error
+	err := r.db.Preload("Role").First(&user, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (r *UserRepository) FindByID(id uint) (*model.User, error) {
 // FindByUsername 根据用户名查找用户
 func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 	var user model.User
-	err := r.db.Where("username = ?", username).First(&user).Error
+	err := r.db.Preload("Role").Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (r *UserRepository) FindByUsername(username string) (*model.User, error) {
 // FindByEmail 根据邮箱查找用户
 func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
 	var user model.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.Preload("Role").Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (r *UserRepository) List(offset, limit int) ([]model.User, int64, error) {
 	var total int64
 	
 	r.db.Model(&model.User{}).Count(&total)
-	err := r.db.Offset(offset).Limit(limit).Find(&users).Error
+	err := r.db.Preload("Role").Offset(offset).Limit(limit).Find(&users).Error
 	
 	return users, total, err
 }

@@ -33,6 +33,12 @@ func NewUserHandler() *UserHandler {
 
 // toAuthUserInfo 转换为认证用户信息格式
 func toAuthUserInfo(user *model.User) *model.AuthUserInfo {
+	// 确定角色代码
+	roleCode := "user"
+	if user.Role != nil {
+		roleCode = user.Role.Code
+	}
+	
 	return &model.AuthUserInfo{
 		ID:        user.ID,
 		Username:  user.Username,
@@ -41,7 +47,7 @@ func toAuthUserInfo(user *model.User) *model.AuthUserInfo {
 		Avatar:    user.Avatar,
 		IsActive:  user.Status == 1,
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		Role:      user.Role,
+		Role:      roleCode,
 	}
 }
 

@@ -15,8 +15,9 @@ type User struct {
 	Password  string         `json:"-" gorm:"size:255;not null"` // 不返回密码
 	Nickname  string         `json:"nickname" gorm:"size:50;not null"`
 	Avatar    string         `json:"avatar" gorm:"size:255"`
-	Role      string         `json:"role" gorm:"size:20;default:'user'"` // user, admin
-	Status    int            `json:"status" gorm:"default:1"`              // 1:正常, 0:禁用
+	RoleID    uint           `json:"role_id" gorm:"index;default:3"` // 关联角色ID
+	Role      *Role          `json:"role,omitempty" gorm:"foreignKey:RoleID"`
+	Status    int            `json:"status" gorm:"default:1"` // 1:正常, 0:禁用
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
@@ -76,4 +77,38 @@ type TokenBlacklist struct {
 // TableName 指定表名
 func (TokenBlacklist) TableName() string {
 	return "token_blacklists"
+}
+
+// Role 角色模型
+type Role struct {
+	ID          uint           `json:"id" gorm:"primaryKey"`
+	Name        string         `json:"name" gorm:"uniqueIndex;size:50;not null"`
+	Code        string         `json:"code" gorm:"uniqueIndex;size:50;not null"`
+	Description string         `json:"description" gorm:"size:255"`
+	Permissions string         `json:"permissions" gorm:"type:text"` // JSON格式存储权限数组
+	IsSystem    bool           `json:"is_system" gorm:"default:false"` // 是否系统角色（不可删除）
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// TableName 指定表名
+func (Role) TableName() string {
+	return "roles"
+}
+
+// Permission 权限模型
+type Permission struct {
+	ID          uint           `json:"id" gorm:"primaryKey"`
+	Name        string         `json:"name" gorm:"size:50;not null"`
+	Code        string         `json:"code" gorm:"uniqueIndex;size:100;not null"`
+	Module      string         `json:"module" gorm:"size:50;not null"` // 所属模块
+	Description string         `json:"description" gorm:"size:255"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+}
+
+// TableName 指定表名
+func (Permission) TableName() string {
+	return "permissions"
 }

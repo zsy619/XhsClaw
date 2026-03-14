@@ -170,3 +170,43 @@ func (s *PublishService) CancelPublish(userID, recordID uint) error {
 
 	return nil
 }
+
+// RetryPublish 重试发布
+func (s *PublishService) RetryPublish(userID, recordID uint) (*model.PublishRecord, error) {
+	record, err := s.publishRepo.FindByID(recordID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errno.NotFound
+		}
+		return nil, errno.InternalError
+	}
+
+	if record.UserID != userID {
+		return nil, errno.Forbidden
+	}
+
+	if record.Status != 3 {
+		return nil, errno.InvalidParams.WithMessage("只能重失败的记录")
+	}
+
+	// 重置记录状态
+	now := time.Now()
+	record.Status = 1
+	record.ErrorMsg = ""
+	record.UpdatedAt = now
+	if err := s.publishRepo.Update(record); err != nil {
+		return nil, errno.InternalError
+	}
+
+	// 更新内容状态
+	content, _ := s.contentRepo.FindByID(record.ContentID)
+	if content != nil {
+		content.Status = 1
+		s.contentRepo.Update(content)
+	}
+
+	// 重新执行发布
+	go s.doPublish(record.ID)
+
+	return record, nil
+}

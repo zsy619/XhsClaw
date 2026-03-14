@@ -2,14 +2,77 @@
 package app
 
 import (
+	"context"
+	"path/filepath"
+	"strings"
+
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 
 	"xiaohongshu/internal/handler"
 	"xiaohongshu/internal/middleware"
+	"xiaohongshu/internal/utils"
 )
+
+// getProjectRoot 获取项目根目录的绝对路径
+func getProjectRoot() string {
+	// 使用固定的绝对路径，避免 Air 热重载时的路径问题
+	return "/Volumes/E/JYW/创意项目/xiaohongshu/backend"
+}
+
+// serveImage 自定义静态图片文件处理器
+func serveImage(imagesDir string) app.HandlerFunc {
+	return func(c context.Context, ctx *app.RequestContext) {
+		filename := ctx.Param("filepath")
+		if filename == "" {
+			ctx.String(400, "文件名不能为空")
+			return
+		}
+
+		logger := utils.GetLogger()
+		logger.Info("请求图片: %s", filename)
+
+		// 安全地构建文件路径
+		imagePath := filepath.Join(imagesDir, filename)
+		
+		// 检查路径是否安全（防止路径遍历攻击）
+		absImagesDir, err := filepath.Abs(imagesDir)
+		if err != nil {
+			logger.Error("获取绝对路径失败: %v", err)
+			ctx.String(500, "服务器错误")
+			return
+		}
+		
+		absImagePath, err := filepath.Abs(imagePath)
+		if err != nil {
+			logger.Error("获取图片绝对路径失败: %v", err)
+			ctx.String(500, "服务器错误")
+			return
+		}
+		
+		// 确保图片路径在 imagesDir 目录下
+		if !strings.HasPrefix(absImagePath, absImagesDir) {
+			logger.Warn("非法的图片路径请求: %s", filename)
+			ctx.String(403, "访问被拒绝")
+			return
+		}
+
+		logger.Info("提供图片: %s", absImagePath)
+		
+		// 返回图片文件
+		ctx.File(absImagePath)
+	}
+}
 
 // SetupRouter 设置路由
 func SetupRouter(h *server.Hertz) {
+	// 获取项目根目录的绝对路径
+	projectRoot := getProjectRoot()
+	imagesDir := filepath.Join(projectRoot, "public", "images")
+
+	logger := utils.GetLogger()
+	logger.Info("静态文件目录: %s", imagesDir)
+
 	// 安全响应头中间件
 	h.Use(middleware.SecurityHeadersMiddleware())
 
@@ -29,6 +92,7 @@ func SetupRouter(h *server.Hertz) {
 	publishHandler := handler.NewPublishHandler()
 	generationHandler := handler.NewGenerationHandler()
 	rendererHandler := handler.NewRendererHandler()
+	roleHandler := handler.NewRoleHandler()
 
 	// 公共路由
 	api := h.Group("/api")
@@ -43,7 +107,7 @@ func SetupRouter(h *server.Hertz) {
 		}
 
 		// 公共静态资源 - 图片访问不需要认证（img标签无法携带token）
-		api.Static("/xiaohongshu-renderer/image", "./public/images")
+		api.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
 
 		// 需要认证的路由
 		authorized := api.Group("")
@@ -55,6 +119,17 @@ func SetupRouter(h *server.Hertz) {
 			authorized.GET("/auth/profile", userHandler.GetProfile)
 			authorized.GET("/user/info", userHandler.GetUserInfo)
 			authorized.GET("/users", userHandler.ListUsers)
+			
+			// 角色和权限管理
+			authorized.GET("/roles", roleHandler.ListRoles)
+			authorized.GET("/roles/all", roleHandler.ListAllRoles)
+			authorized.GET("/roles/:id", roleHandler.GetRole)
+			authorized.POST("/roles", roleHandler.CreateRole)
+			authorized.PUT("/roles/:id", roleHandler.UpdateRole)
+			authorized.DELETE("/roles/:id", roleHandler.DeleteRole)
+			authorized.GET("/permissions", roleHandler.ListPermissions)
+			authorized.PUT("/users/:id/role", roleHandler.UpdateUserRole)
+			authorized.PUT("/users/:id/status", roleHandler.UpdateUserStatus)
 
 			// 用户配置
 			config := authorized.Group("/user/config")
@@ -81,6 +156,10 @@ func SetupRouter(h *server.Hertz) {
 				content.GET("/:id", contentHandler.GetContent)
 				content.PUT("/:id", contentHandler.UpdateContent)
 				content.DELETE("/:id", contentHandler.DeleteContent)
+				// 历史记录
+				content.GET("/histories/list", contentHandler.ListContentHistories)
+				content.GET("/histories/:id", contentHandler.GetContentHistory)
+				content.POST("/histories/:id/restore", contentHandler.RestoreContentHistory)
 			}
 
 			// 发布管理 - /api/publish
@@ -90,7 +169,8 @@ func SetupRouter(h *server.Hertz) {
 				publish.POST("/now", publishHandler.PublishNow)
 				publish.GET("/list", publishHandler.ListPublishRecords)
 				publish.GET("/:id", publishHandler.GetPublishRecord)
-				publish.DELETE("/:id/cancel", publishHandler.CancelPublish)
+				publish.POST("/:id/cancel", publishHandler.CancelPublish)
+				publish.POST("/:id/retry", publishHandler.RetryPublish)
 			}
 
 			// 小红书渲染器 - /api/xiaohongshu-renderer
@@ -106,7 +186,7 @@ func SetupRouter(h *server.Hertz) {
 		v1 := api.Group("/v1")
 		{
 			// v1 版本公共静态资源
-			v1.Static("/xiaohongshu-renderer/image", "./public/images")
+			v1.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
 
 			// 用户认证
 			v1Auth := v1.Group("/auth")
@@ -121,6 +201,17 @@ func SetupRouter(h *server.Hertz) {
 			{
 				v1Authorized.GET("/user/info", userHandler.GetUserInfo)
 				v1Authorized.GET("/users", userHandler.ListUsers)
+				
+				// 角色和权限管理
+				v1Authorized.GET("/roles", roleHandler.ListRoles)
+				v1Authorized.GET("/roles/all", roleHandler.ListAllRoles)
+				v1Authorized.GET("/roles/:id", roleHandler.GetRole)
+				v1Authorized.POST("/roles", roleHandler.CreateRole)
+				v1Authorized.PUT("/roles/:id", roleHandler.UpdateRole)
+				v1Authorized.DELETE("/roles/:id", roleHandler.DeleteRole)
+				v1Authorized.GET("/permissions", roleHandler.ListPermissions)
+				v1Authorized.PUT("/users/:id/role", roleHandler.UpdateUserRole)
+				v1Authorized.PUT("/users/:id/status", roleHandler.UpdateUserStatus)
 
 				// 用户配置
 				v1Config := v1Authorized.Group("/user/config")
@@ -137,6 +228,10 @@ func SetupRouter(h *server.Hertz) {
 					v1Content.GET("/:id", contentHandler.GetContent)
 					v1Content.PUT("/:id", contentHandler.UpdateContent)
 					v1Content.DELETE("/:id", contentHandler.DeleteContent)
+					// 历史记录
+					v1Content.GET("/histories/list", contentHandler.ListContentHistories)
+					v1Content.GET("/histories/:id", contentHandler.GetContentHistory)
+					v1Content.POST("/histories/:id/restore", contentHandler.RestoreContentHistory)
 				}
 
 				v1Publish := v1Authorized.Group("/publish")
@@ -145,7 +240,8 @@ func SetupRouter(h *server.Hertz) {
 					v1Publish.POST("/now", publishHandler.PublishNow)
 					v1Publish.GET("/list", publishHandler.ListPublishRecords)
 					v1Publish.GET("/:id", publishHandler.GetPublishRecord)
-					v1Publish.DELETE("/:id/cancel", publishHandler.CancelPublish)
+					v1Publish.POST("/:id/cancel", publishHandler.CancelPublish)
+					v1Publish.POST("/:id/retry", publishHandler.RetryPublish)
 				}
 
 				// 内容生成 - /api/v1/generation

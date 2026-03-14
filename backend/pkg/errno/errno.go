@@ -33,6 +33,14 @@ var (
 	PublishFailed   = NewErrNo(30003, "发布失败")
 )
 
+// 角色和权限相关错误码
+var (
+	RoleNotFound         = NewErrNo(40001, "角色不存在")
+	RoleAlreadyExists    = NewErrNo(40002, "角色已存在")
+	RoleInUse            = NewErrNo(40003, "角色正在被使用，无法删除")
+	CannotDeleteSystemRole = NewErrNo(40004, "系统角色不可删除")
+)
+
 // NewErrNo 创建新的错误码
 func NewErrNo(code int, message string) *ErrNo {
 	return &ErrNo{

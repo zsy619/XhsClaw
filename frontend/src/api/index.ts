@@ -22,11 +22,15 @@ export interface UserInfo {
   email: string
   nickname: string
   avatar: string
-  role: string
+  role_id: number
+  role?: Role
   status: number
   created_at: string
   updated_at: string
 }
+
+// 兼容旧格式，导出为 User
+export type User = UserInfo
 
 export const login = (data: LoginParams) => {
   return http.post<LoginResult>('/auth/login', data)
@@ -101,6 +105,8 @@ export interface Content {
   id: number
   user_id: number
   title: string
+  title_options: string // JSON格式的备选标题数组
+  selected_title_index: number // 选中的备选标题索引
   description: string
   tags: string
   images: string
@@ -149,6 +155,55 @@ export const updateContent = (id: number, data: UpdateContentParams) => {
 // 删除内容
 export const deleteContent = (id: number) => {
   return http.delete(`/content/${id}`)
+}
+
+// ==========================================
+// 内容历史记录相关接口
+// ==========================================
+
+// 历史记录类型
+export interface ContentHistory {
+  id: number
+  content_id: number
+  user_id: number
+  type: string // 'create' | 'edit' | 'delete' | 'publish'
+  title: string
+  description: string
+  tags: string
+  title_options: string
+  selected_title_index: number
+  change_reason?: string
+  created_at: string
+}
+
+// 历史记录列表参数
+export interface HistoryListParams {
+  content_id?: number
+  page?: number
+  page_size?: number
+}
+
+// 历史记录列表结果
+export interface HistoryListResult {
+  list: ContentHistory[]
+  total: number
+  page: number
+  page_size: number
+}
+
+// 获取历史记录列表
+export const getHistoryList = (params?: HistoryListParams) => {
+  return http.get<HistoryListResult>('/content/histories/list', { params })
+}
+
+// 获取历史记录详情
+export const getHistoryDetail = (id: number) => {
+  return http.get<ContentHistory>(`/content/histories/${id}`)
+}
+
+// 恢复到历史版本
+export const restoreHistory = (id: number) => {
+  return http.post<Content>(`/content/histories/${id}/restore`)
 }
 
 // ==========================================
@@ -214,4 +269,115 @@ export const getPublishList = (params?: PublishListParams) => {
 // 取消发布
 export const cancelPublish = (id: number) => {
   return http.delete(`/publish/${id}/cancel`)
+}
+
+// ==========================================
+// 角色和权限相关接口
+// ==========================================
+
+// 角色信息
+export interface Role {
+  id: number
+  name: string
+  code: string
+  description: string
+  permissions: string // JSON格式的权限数组
+  is_system: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 权限信息
+export interface Permission {
+  id: number
+  name: string
+  code: string
+  module: string
+  description: string
+  created_at: string
+  updated_at: string
+}
+
+// 角色列表参数
+export interface RoleListParams {
+  page?: number
+  page_size?: number
+}
+
+// 角色列表结果
+export interface RoleListResult {
+  list: Role[]
+  total: number
+  page: number
+  page_size: number
+}
+
+// 获取角色列表
+export const getRoleList = (params?: RoleListParams) => {
+  return http.get<RoleListResult>('/roles', { params })
+}
+
+// 获取所有角色
+export const getAllRoles = () => {
+  return http.get<Role[]>('/roles/all')
+}
+
+// 获取角色详情
+export const getRole = (id: number) => {
+  return http.get<Role>(`/roles/${id}`)
+}
+
+// 创建角色参数
+export interface CreateRoleParams {
+  name: string
+  code: string
+  description?: string
+  permissions?: string[]
+}
+
+// 创建角色
+export const createRole = (data: CreateRoleParams) => {
+  return http.post<Role>('/roles', data)
+}
+
+// 更新角色参数
+export interface UpdateRoleParams {
+  name?: string
+  description?: string
+  permissions?: string[]
+}
+
+// 更新角色
+export const updateRole = (id: number, data: UpdateRoleParams) => {
+  return http.put<Role>(`/roles/${id}`, data)
+}
+
+// 删除角色
+export const deleteRole = (id: number) => {
+  return http.delete(`/roles/${id}`)
+}
+
+// 获取所有权限
+export const getPermissions = () => {
+  return http.get<Permission[]>('/permissions')
+}
+
+// 更新用户角色参数
+export interface UpdateUserRoleParams {
+  role_id: number
+}
+
+// 更新用户角色
+export const updateUserRole = (id: number, data: UpdateUserRoleParams) => {
+  return http.put<User>(`/users/${id}/role`, data)
+}
+
+// 更新用户状态参数
+export interface UpdateUserStatusParams {
+  status: number
+}
+
+// 更新用户状态
+export const updateUserStatus = (id: number, data: UpdateUserStatusParams) => {
+  return http.put<User>(`/users/${id}/status`, data)
 }

@@ -4,7 +4,7 @@
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-xiaohongshu-dark flex items-center" style="gap: 2px;">
         <el-icon class="text-primary-500"><Document /></el-icon>
-        内容管理
+        我的笔记
       </h1>
       <p class="mt-1 text-sm text-gray-500">管理和查看所有生成的内容</p>
     </div>
@@ -81,8 +81,11 @@
               <span class="text-gray-500 text-sm">{{ formatDate(row.created_at) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="240" fixed="right">
+          <el-table-column label="操作" width="320" fixed="right">
             <template #default="{ row }">
+              <el-button size="small" type="success" @click="handlePublish(row)" class="mr-1" :disabled="row.status === 1 || row.status === 2">
+                发布
+              </el-button>
               <el-button size="small" type="primary" @click="handleEdit(row)" class="mr-1">
                 编辑
               </el-button>
@@ -110,6 +113,109 @@
         />
       </div>
     </div>
+
+    <!-- 发布对话框 -->
+    <el-dialog
+      v-model="publishDialogVisible"
+      title="发布内容"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="publishForm" label-position="top">
+        <el-form-item label="发布方式">
+          <el-radio-group v-model="publishForm.publishType">
+            <el-radio value="now">立即发布</el-radio>
+            <el-radio value="schedule">定时发布</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="publishForm.publishType === 'schedule'" label="发布时间" required>
+          <el-date-picker
+            v-model="publishForm.publishTime"
+            type="datetime"
+            placeholder="选择发布时间"
+            style="width: 100%"
+            :disabled-date="disabledDate"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ssZ"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <el-button @click="publishDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="publishLoading" @click="handleConfirmPublish" class="bg-xiaohongshu-red border-none">
+            确认发布
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 查看详情对话框 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      title="内容详情"
+      width="700px"
+      :close-on-click-modal="false"
+    >
+      <div v-if="currentContent" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">标题</label>
+          <p class="text-gray-800">{{ currentContent.title }}</p>
+        </div>
+        <div v-if="currentContent.title_options && parseTitleOptions(currentContent.title_options).length > 0">
+          <label class="block text-sm font-medium text-gray-700 mb-1">备选标题</label>
+          <div class="space-y-1">
+            <el-tag
+              v-for="(title, index) in parseTitleOptions(currentContent.title_options)"
+              :key="index"
+              :type="index === currentContent.selected_title_index ? 'success' : 'info'"
+              size="small"
+            >
+              {{ index === currentContent.selected_title_index ? '✓ ' : '' }}{{ title }}
+            </el-tag>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">内容</label>
+          <div class="bg-gray-50 rounded-lg p-4 text-gray-800 whitespace-pre-wrap">
+            {{ currentContent.description }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">标签</label>
+          <div class="flex flex-wrap gap-1">
+            <el-tag
+              v-for="(tag, index) in parseTags(currentContent.tags)"
+              :key="index"
+              size="small"
+              type="info"
+            >
+              {{ tag }}
+            </el-tag>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+          <el-tag :type="getStatusTag(currentContent.status)" size="small">
+            {{ getStatusLabel(currentContent.status) }}
+          </el-tag>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">创建时间</label>
+            <p class="text-gray-500 text-sm">{{ formatDate(currentContent.created_at) }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">更新时间</label>
+            <p class="text-gray-500 text-sm">{{ formatDate(currentContent.updated_at) }}</p>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="viewDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="handleEdit(currentContent)">编辑</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -119,48 +225,34 @@ import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getContentList, deleteContent, getContent, type Content } from '@/api/index'
+import { publishNow, schedulePublish } from '@/api/publish'
 
 const router = useRouter()
 const loading = ref(false)
+const viewDialogVisible = ref(false)
+const currentContent = ref<Content | null>(null)
+const publishDialogVisible = ref(false)
+const publishLoading = ref(false)
+const publishForm = reactive({
+  publishType: 'now', // 'now' 或 'schedule'
+  publishTime: ''
+})
 
 const searchForm = reactive({
   keyword: '',
-  status: ''
+  status: '' as string | number
 })
 
-const tableData = ref<any[]>([
-  {
-    id: 1,
-    title: 'Python 效率工具推荐',
-    description: '今天给大家带来超棒的Python效率工具推荐，让你的工作效率翻倍！',
-    tags: '["Python","效率","工具"]',
-    status: 2,
-    created_at: '2026-03-13T10:30:00Z'
-  },
-  {
-    id: 2,
-    title: '美食探店指南',
-    description: '发现城市里的隐藏宝藏美食，带你探索不一样的味道！',
-    tags: '["美食","探店","推荐"]',
-    status: 1,
-    created_at: '2026-03-13T09:20:00Z'
-  },
-  {
-    id: 3,
-    title: '旅游攻略',
-    description: '省钱出行的小技巧，让你的旅行更划算更开心！',
-    tags: '["旅游","攻略","省钱"]',
-    status: 0,
-    created_at: '2026-03-12T16:45:00Z'
-  }
-])
+const tableData = ref<Content[]>([])
 
 const pagination = reactive({
   page: 1,
   pageSize: 10,
-  total: 3
+  total: 0
 })
 
+// 获取状态标签文本
 const getStatusLabel = (status: number) => {
   const map: Record<number, string> = {
     0: '草稿',
@@ -171,6 +263,7 @@ const getStatusLabel = (status: number) => {
   return map[status] || '未知'
 }
 
+// 获取状态标签类型
 const getStatusTag = (status: number) => {
   const map: Record<number, string> = {
     0: 'info',
@@ -181,6 +274,7 @@ const getStatusTag = (status: number) => {
   return map[status] || ''
 }
 
+// 解析标签
 const parseTags = (tagsStr: string) => {
   try {
     const tags = JSON.parse(tagsStr)
@@ -190,55 +284,176 @@ const parseTags = (tagsStr: string) => {
   }
 }
 
+// 解析备选标题
+const parseTitleOptions = (titleOptionsStr: string) => {
+  try {
+    const titles = JSON.parse(titleOptionsStr)
+    return Array.isArray(titles) ? titles : []
+  } catch {
+    return []
+  }
+}
+
+// 截断文本
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return ''
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
 }
 
+// 格式化日期
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '-'
   return dayjs(dateStr).format('YYYY-MM-DD HH:mm')
 }
 
-const handleSearch = () => {
-  console.log('搜索:', searchForm)
-  ElMessage.success('搜索功能已触发')
+// 加载内容列表
+const loadContentList = async () => {
+  loading.value = true
+  try {
+    const params: any = {
+      page: pagination.page,
+      page_size: pagination.pageSize
+    }
+    
+    if (searchForm.status !== '' && searchForm.status !== null) {
+      params.status = Number(searchForm.status)
+    }
+
+    const res = await getContentList(params)
+    
+    // 处理关键词过滤（后端暂不支持，先在前端过滤）
+    let list = res.data.list
+    if (searchForm.keyword) {
+      const keyword = searchForm.keyword.toLowerCase()
+      list = list.filter((item: Content) => 
+        item.title.toLowerCase().includes(keyword) || 
+        item.description.toLowerCase().includes(keyword)
+      )
+    }
+    
+    tableData.value = list
+    pagination.total = res.data.total
+  } catch (error) {
+    console.error('加载内容列表失败:', error)
+    ElMessage.error('加载内容列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
+// 搜索
+const handleSearch = () => {
+  pagination.page = 1
+  loadContentList()
+}
+
+// 重置搜索条件
 const handleReset = () => {
   searchForm.keyword = ''
   searchForm.status = ''
-  ElMessage.info('搜索条件已重置')
+  pagination.page = 1
+  loadContentList()
 }
 
-const handleEdit = (row: any) => {
-  ElMessage.info('编辑功能开发中')
+// 编辑内容
+const handleEdit = (row: Content) => {
+  // 跳转到创作中心并传递内容ID
+  router.push({
+    name: 'CreationCenter',
+    query: { contentId: row.id }
+  })
 }
 
-const handleView = (row: any) => {
-  ElMessage.info('查看功能开发中')
+// 查看内容详情
+const handleView = async (row: Content) => {
+  try {
+    const res = await getContent(row.id)
+    currentContent.value = res.data
+    viewDialogVisible.value = true
+  } catch (error) {
+    console.error('获取内容详情失败:', error)
+    ElMessage.error('获取内容详情失败')
+  }
 }
 
-const handleDelete = (row: any) => {
+// 处理发布
+const handlePublish = (row: Content) => {
+  currentContent.value = row
+  publishForm.publishType = 'now'
+  publishForm.publishTime = ''
+  publishDialogVisible.value = true
+}
+
+// 禁用过去的日期
+const disabledDate = (time: Date) => {
+  return time.getTime() < Date.now() - 8.64e7
+}
+
+// 确认发布
+const handleConfirmPublish = async () => {
+  if (!currentContent.value) return
+
+  if (publishForm.publishType === 'schedule' && !publishForm.publishTime) {
+    ElMessage.warning('请选择发布时间')
+    return
+  }
+
+  publishLoading.value = true
+  try {
+    if (publishForm.publishType === 'now') {
+      await publishNow({ content_id: currentContent.value.id })
+      ElMessage.success('发布成功！')
+    } else {
+      await schedulePublish({
+        content_id: currentContent.value.id,
+        publish_time: publishForm.publishTime
+      })
+      ElMessage.success('定时发布设置成功！')
+    }
+    publishDialogVisible.value = false
+    loadContentList()
+  } catch (error) {
+    console.error('发布失败:', error)
+    ElMessage.error('发布失败，请稍后重试')
+  } finally {
+    publishLoading.value = false
+  }
+}
+
+// 删除内容
+const handleDelete = (row: Content) => {
   ElMessageBox.confirm('确定要删除该内容吗？删除后无法恢复！', '删除警告', {
     confirmButtonText: '确定删除',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    ElMessage.success('内容删除成功')
+  }).then(async () => {
+    try {
+      await deleteContent(row.id)
+      ElMessage.success('内容删除成功')
+      loadContentList()
+    } catch (error) {
+      console.error('删除内容失败:', error)
+      ElMessage.error('删除内容失败')
+    }
   }).catch(() => {
   })
 }
 
+// 分页大小改变
 const handleSizeChange = (size: number) => {
   pagination.pageSize = size
+  pagination.page = 1
+  loadContentList()
 }
 
+// 页码改变
 const handlePageChange = (page: number) => {
   pagination.page = page
+  loadContentList()
 }
 
 onMounted(() => {
+  loadContentList()
 })
 </script>
 

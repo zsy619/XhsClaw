@@ -14,15 +14,17 @@ import (
 
 // ContentService 内容服务
 type ContentService struct {
-	contentRepo *repository.ContentRepository
-	aiService   *AIService
+	contentRepo        *repository.ContentRepository
+	contentHistoryRepo *repository.ContentHistoryRepository
+	aiService          *AIService
 }
 
 // NewContentService 创建内容服务实例
 func NewContentService() *ContentService {
 	return &ContentService{
-		contentRepo: repository.NewContentRepository(),
-		aiService:   NewAIService(),
+		contentRepo:        repository.NewContentRepository(),
+		contentHistoryRepo: repository.NewContentHistoryRepository(),
+		aiService:          NewAIService(),
 	}
 }
 
@@ -81,6 +83,11 @@ func (s *ContentService) SaveContent(userID uint, req *model.ContentSaveRequest)
 		return nil, errno.InternalError
 	}
 
+	// 创建历史记录
+	if err := s.contentHistoryRepo.CreateFromContent(content, "create", "创建新内容"); err != nil {
+		// 历史记录创建失败不影响主流程，只记录日志
+	}
+
 	return content, nil
 }
 
@@ -110,6 +117,11 @@ func (s *ContentService) UpdateContent(userID, id uint, req *model.UpdateContent
 			return nil, errno.ContentNotFound
 		}
 		return nil, errno.InternalError
+	}
+
+	// 更新前先保存历史记录
+	if err := s.contentHistoryRepo.CreateFromContent(content, "edit", "更新内容"); err != nil {
+		// 历史记录创建失败不影响主流程
 	}
 
 	if req.Title != "" {
@@ -145,7 +157,7 @@ func (s *ContentService) UpdateContent(userID, id uint, req *model.UpdateContent
 
 // DeleteContent 删除内容
 func (s *ContentService) DeleteContent(userID, id uint) error {
-	_, err := s.contentRepo.FindByUserIDAndID(userID, id)
+	content, err := s.contentRepo.FindByUserIDAndID(userID, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errno.ContentNotFound
@@ -153,9 +165,99 @@ func (s *ContentService) DeleteContent(userID, id uint) error {
 		return errno.InternalError
 	}
 
+	// 删除前先保存历史记录
+	if err := s.contentHistoryRepo.CreateFromContent(content, "delete", "删除内容"); err != nil {
+		// 历史记录创建失败不影响主流程
+	}
+
 	if err := s.contentRepo.Delete(id); err != nil {
 		return errno.InternalError
 	}
 
 	return nil
+}
+
+// ListContentHistories 获取历史记录列表
+func (s *ContentService) ListContentHistories(userID uint, page, pageSize int, contentID *uint) ([]model.ContentHistory, int64, error) {
+	offset := (page - 1) * pageSize
+	return s.contentHistoryRepo.ListByUserID(userID, offset, pageSize, contentID)
+}
+
+// GetContentHistory 获取历史记录详情
+func (s *ContentService) GetContentHistory(userID, id uint) (*model.ContentHistory, error) {
+	history, err := s.contentHistoryRepo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errno.ContentNotFound
+		}
+		return nil, errno.InternalError
+	}
+	
+	// 验证权限
+	if history.UserID != userID {
+		return nil, errno.ContentNotFound
+	}
+	
+	return history, nil
+}
+
+// RestoreContentHistory 恢复到历史版本
+func (s *ContentService) RestoreContentHistory(userID, historyID uint) (*model.Content, error) {
+	history, err := s.GetContentHistory(userID, historyID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// 查找内容
+	content, err := s.contentRepo.FindByUserIDAndID(userID, history.ContentID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 如果内容已被删除，重新创建
+			content = &model.Content{
+				UserID:            history.UserID,
+				Title:             history.Title,
+				TitleOptions:      history.TitleOptions,
+				SelectedTitleIndex: history.SelectedTitleIndex,
+				Description:       history.Description,
+				Tags:              history.Tags,
+				Images:            history.Images,
+				ContentAttributes: history.ContentAttributes,
+				RenderAttributes:  history.RenderAttributes,
+				Status:            0,
+			}
+			
+			if err := s.contentRepo.Create(content); err != nil {
+				return nil, errno.InternalError
+			}
+			
+			// 创建历史记录
+			if err := s.contentHistoryRepo.CreateFromContent(content, "create", "从历史记录恢复"); err != nil {
+				// 历史记录创建失败不影响主流程
+			}
+			
+			return content, nil
+		}
+		return nil, errno.InternalError
+	}
+	
+	// 更新前保存历史记录
+	if err := s.contentHistoryRepo.CreateFromContent(content, "edit", "恢复到历史版本"); err != nil {
+		// 历史记录创建失败不影响主流程
+	}
+	
+	// 更新内容
+	content.Title = history.Title
+	content.TitleOptions = history.TitleOptions
+	content.SelectedTitleIndex = history.SelectedTitleIndex
+	content.Description = history.Description
+	content.Tags = history.Tags
+	content.Images = history.Images
+	content.ContentAttributes = history.ContentAttributes
+	content.RenderAttributes = history.RenderAttributes
+	
+	if err := s.contentRepo.Update(content); err != nil {
+		return nil, errno.InternalError
+	}
+	
+	return content, nil
 }

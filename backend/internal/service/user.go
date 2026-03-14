@@ -55,7 +55,7 @@ func (s *UserService) Register(req *model.RegisterRequest) (*model.LoginResponse
 		Email:    req.Email,
 		Password: hashedPassword,
 		Nickname: req.Nickname,
-		Role:     "user",
+		RoleID:   3, // 默认普通用户角色ID为3
 		Status:   1,
 	}
 
@@ -63,8 +63,8 @@ func (s *UserService) Register(req *model.RegisterRequest) (*model.LoginResponse
 		return nil, errno.InternalError
 	}
 
-	// 生成token
-	token, err := utils.GenerateToken(user.ID, user.Username, user.Role)
+	// 生成token（默认用户角色代码为"user"）
+	token, err := utils.GenerateToken(user.ID, user.Username, "user")
 	if err != nil {
 		return nil, errno.InternalError
 	}
@@ -95,8 +95,14 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 		return nil, errno.UserDisabled
 	}
 
+	// 确定角色代码
+	roleCode := "user"
+	if user.Role != nil {
+		roleCode = user.Role.Code
+	}
+
 	// 生成token
-	token, err := utils.GenerateToken(user.ID, user.Username, user.Role)
+	token, err := utils.GenerateToken(user.ID, user.Username, roleCode)
 	if err != nil {
 		return nil, errno.InternalError
 	}
