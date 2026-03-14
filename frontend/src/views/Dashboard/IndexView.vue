@@ -184,14 +184,11 @@ const stats = reactive([
   }
 ])
 
-// 快捷操作 - 与左侧菜单完全对应
+// 快捷操作 - 只保留最常用的功能
 const actions = [
   { label: '创作中心', icon: 'Edit', path: '/creation' },
   { label: '我的笔记', icon: 'List', path: '/content/list' },
-  { label: '创作记录', icon: 'Timer', path: '/content/history' },
-  { label: '发布测试', icon: 'Connection', path: '/publish/test' },
-  { label: '发布历史', icon: 'DocumentCopy', path: '/publish/history' },
-  { label: '系统设置', icon: 'Setting', path: '/settings' }
+  { label: '发布历史', icon: 'DocumentCopy', path: '/publish/history' }
 ]
 
 // 最近活动

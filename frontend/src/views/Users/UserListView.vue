@@ -4,7 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-xiaohongshu-dark flex items-center" style="gap: 2px;">
-          <el-icon class="text-primary-500"><User /></el-icon>
+          <el-icon class="text-primary-500"><UserIcon /></el-icon>
           用户列表
         </h1>
         <p class="text-gray-500 mt-1">管理系统用户和角色权限</p>
@@ -174,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { Plus, User } from '@element-plus/icons-vue'
+import { Plus, User as UserIcon } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
