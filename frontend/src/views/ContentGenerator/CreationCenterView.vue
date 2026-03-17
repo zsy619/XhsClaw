@@ -1294,12 +1294,22 @@ const handleSave = async () => {
     const description = result.value.content
     const tags = result.value.tags || []
 
+    // 获取生成的图片路径列表
+    const images = generatedImages.value.map((url: string) => {
+      // 从完整URL中提取后端返回的图片路径
+      // URL格式: http://localhost:8000/api/v1/xiaohongshu-renderer/image/xxx.png
+      // 需要提取: /xiaohongshu-renderer/image/xxx.png
+      const match = url.match(/(\/xiaohongshu-renderer\/image\/.*\.png)/)
+      return match ? match[1] : ''
+    }).filter((path: string) => path !== '')
+
     await http.post('/content/save', {
       title: title,
       title_options: titleOptions.value,
       selected_title_index: selectedTitleIndex.value,
       description: description,
       tags: tags,
+      images: images,
       content_attributes: {
         content_style: form.style,
         custom_style: form.customStyle,

@@ -26,18 +26,21 @@ func main() {
 2. 互动评论区，增加账号权重
 3. 分析数据，优化内容策略
 
-记住：内容为王，质量第一！`
+记住：内容为王，质量第一！
+
+#小红书运营 #内容创作 #涨粉技巧`
 
 	fmt.Println("正在生成小红书笔记图片...")
 
 	// 生成图片
 	images, err := renderer.RenderMarkdownToImage(
 		markdownContent,
-		"playful-geometric",
-		"test_note",
-		1080,
-		1440,
-		2160,
+		"default",                         // 主题样式
+		"test_note",                       // 输出前缀
+		service.PaginationSeparator,       // 分页模式
+		1080,                              // 宽度
+		1440,                              // 高度
+		4320,                              // 最大高度
 	)
 	if err != nil {
 		log.Fatalf("生成图片失败: %v", err)

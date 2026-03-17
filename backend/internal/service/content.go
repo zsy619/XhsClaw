@@ -52,6 +52,7 @@ func (s *ContentService) GenerateContent(userID uint, req *model.GenerateContent
 // SaveContent 保存内容（支持备选标题）
 func (s *ContentService) SaveContent(userID uint, req *model.ContentSaveRequest) (*model.Content, error) {
 	tagsJSON, _ := json.Marshal(req.Tags)
+	imagesJSON, _ := json.Marshal(req.Images)
 	contentAttrsJSON, _ := json.Marshal(req.ContentAttributes)
 	renderAttrsJSON, _ := json.Marshal(req.RenderAttributes)
 	
@@ -74,6 +75,7 @@ func (s *ContentService) SaveContent(userID uint, req *model.ContentSaveRequest)
 		SelectedTitleIndex: req.SelectedTitleIndex,
 		Description:       req.Description,
 		Tags:              string(tagsJSON),
+		Images:            string(imagesJSON),
 		ContentAttributes: string(contentAttrsJSON),
 		RenderAttributes:  string(renderAttrsJSON),
 		Status:            0,

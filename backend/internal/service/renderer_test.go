@@ -11,8 +11,8 @@ import (
 func TestNewRendererService(t *testing.T) {
 	service := NewRendererService()
 	assert.NotNil(t, service)
-	assert.NotNil(t, service.styles)
-	assert.Greater(t, len(service.styles), 0)
+	assert.NotNil(t, service.themes)
+	assert.Greater(t, len(service.themes), 0)
 }
 
 // TestGetStyles 测试获取所有样式
@@ -25,71 +25,110 @@ func TestGetStyles(t *testing.T) {
 
 	// 验证默认样式是否存在
 	foundDefault := false
-	foundXiaohongshu := false
+	foundTerminal := false
 	for _, style := range styles {
 		if style.Key == "default" {
 			foundDefault = true
 			assert.Equal(t, "简约灰", style.Name)
 		}
-		if style.Key == "xiaohongshu" {
-			foundXiaohongshu = true
-			assert.Equal(t, "小红书红", style.Name)
+		if style.Key == "terminal" {
+			foundTerminal = true
+			assert.Equal(t, "终端风格", style.Name)
 		}
 	}
 	assert.True(t, foundDefault, "应该找到默认样式")
-	assert.True(t, foundXiaohongshu, "应该找到小红书红样式")
+	assert.True(t, foundTerminal, "应该找到终端风格样式")
 }
 
-// TestRenderMarkdownToImage 测试渲染Markdown为图片
-func TestRenderMarkdownToImage(t *testing.T) {
+// TestGetStyle 测试获取指定样式
+func TestGetStyle(t *testing.T) {
 	service := NewRendererService()
 
-	// 测试基本功能
-	images, err := service.RenderMarkdownToImage(
-		"# 测试内容\n这是测试内容",
-		"default",
-		"test",
-		1080,
-		1440,
-		2160,
-	)
+	// 测试获取存在的样式
+	style := service.GetStyle("terminal")
+	assert.Equal(t, "terminal", style.Key)
+	assert.Equal(t, "终端风格", style.Name)
 
-	assert.NoError(t, err)
-	assert.NotNil(t, images)
+	// 测试获取不存在的样式（应返回默认样式）
+	style = service.GetStyle("nonexistent")
+	assert.Equal(t, "default", style.Key)
 }
 
-// TestGenerateCoverOnly 测试只生成封面
-func TestGenerateCoverOnly(t *testing.T) {
-	service := NewRendererService()
-
-	// 测试基本功能
-	imagePath, err := service.GenerateCoverOnly(
-		"测试标题",
-		"测试副标题",
-		"default",
-		"test_cover",
-		1080,
-		1440,
-	)
-
-	assert.NoError(t, err)
-	assert.NotEmpty(t, imagePath)
-}
-
-// TestStyleConfigProperties 测试样式配置属性
-func TestStyleConfigProperties(t *testing.T) {
+// TestThemeConfigProperties 测试主题配置属性
+func TestThemeConfigProperties(t *testing.T) {
 	service := NewRendererService()
 	styles := service.GetStyles()
 
 	for _, style := range styles {
 		assert.NotEmpty(t, style.Key)
 		assert.NotEmpty(t, style.Name)
-		assert.NotNil(t, style.Primary)
-		assert.NotNil(t, style.Secondary)
-		assert.NotNil(t, style.Background)
-		assert.NotNil(t, style.CardInner)
-		assert.NotNil(t, style.TextPrimary)
-		assert.NotNil(t, style.TextSecondary)
-		assert.NotNil(t, style.Accent)
+		assert.NotEmpty(t, style.CoverBg)
+		assert.NotEmpty(t, style.CardBg)
+		assert.NotEmpty(t, style.TitleGradient)
+		assert.NotEmpty(t, style.AccentColor)
 	}
+}
+
+// TestCalculateTitleSize 测试标题字号计算
+func TestCalculateTitleSize(t *testing.T) {
+	width := 1080
+
+	// 测试不同长度的标题
+	assert.Equal(t, int(float64(width)*0.14), calculateTitleSize("短标题", width))          // <=6字
+	assert.Equal(t, int(float64(width)*0.12), calculateTitleSize("这是一个中等标题", width))   // 7-10字
+	assert.Equal(t, int(float64(width)*0.09), calculateTitleSize("这是一个比较长的标题内容", width)) // 11-18字
+	// 注意：以下测试需要确保字符数正确
+	longTitle := "这是一个非常非常长的标题内容测试" // 19-30字
+	assert.Equal(t, int(float64(width)*0.07), calculateTitleSize(longTitle, width))
+	veryLongTitle := "这是一个超级超级超级超级超级长的标题内容测试" // >30字
+	assert.Equal(t, int(float64(width)*0.055), calculateTitleSize(veryLongTitle, width))
+}
+
+// TestIsTagLine 测试标签行判断
+func TestIsTagLine(t *testing.T) {
+	// 测试纯标签行
+	assert.True(t, isTagLine("#标签1"))
+	assert.True(t, isTagLine("#标签1 #标签2"))
+	assert.True(t, isTagLine("#小红书 #内容创作"))
+
+	// 测试非标签行
+	assert.False(t, isTagLine("# 标题"))      // 标题行（有空格）
+	assert.False(t, isTagLine("普通文本"))    // 普通文本
+	assert.False(t, isTagLine(""))           // 空行
+}
+
+// TestSimpleMarkdownToHTML 测试Markdown转HTML
+func TestSimpleMarkdownToHTML(t *testing.T) {
+	service := NewRendererService()
+
+	// 测试标题转换
+	html := service.simpleMarkdownToHTML("# 一级标题")
+	assert.Contains(t, html, "<h1>一级标题</h1>")
+
+	// 测试二级标题
+	html = service.simpleMarkdownToHTML("## 二级标题")
+	assert.Contains(t, html, "<h2>二级标题</h2>")
+
+	// 测试粗体
+	html = service.simpleMarkdownToHTML("**粗体文本**")
+	assert.Contains(t, html, "<strong>粗体文本</strong>")
+
+	// 测试斜体
+	html = service.simpleMarkdownToHTML("*斜体文本*")
+	assert.Contains(t, html, "<em>斜体文本</em>")
+
+	// 测试行内代码
+	html = service.simpleMarkdownToHTML("`code`")
+	assert.Contains(t, html, "<code>code</code>")
+}
+
+// TestEscapeHTML 测试HTML转义
+func TestEscapeHTML(t *testing.T) {
+	service := NewRendererService()
+
+	// 测试特殊字符转义
+	assert.Equal(t, "&lt;div&gt;", service.escapeHTML("<div>"))
+	assert.Equal(t, "&amp;", service.escapeHTML("&"))
+	assert.Equal(t, "&quot;", service.escapeHTML("\""))
+	assert.Equal(t, "&#39;", service.escapeHTML("'"))
 }

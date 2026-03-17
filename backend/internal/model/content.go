@@ -102,6 +102,7 @@ type ContentSaveRequest struct {
 	SelectedTitleIndex  int              `json:"selected_title_index"` // 选中的备选标题索引
 	Description         string           `json:"description" binding:"required"`
 	Tags                []string         `json:"tags"`
+	Images              []string         `json:"images"` // 生成的图片路径数组
 	ContentAttributes   ContentAttributes `json:"content_attributes"`
 	RenderAttributes    RenderAttributes  `json:"render_attributes"`
 }

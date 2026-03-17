@@ -34,16 +34,16 @@ type StyleInfo struct {
 // RenderRequest 渲染请求
 type RenderRequest struct {
 	MarkdownContent      string `json:"markdown_content" binding:"required"`
-	StyleKey            string `json:"style_key"`
-	OutputPrefix        string `json:"output_prefix"`
-	Mode                string `json:"mode"`
-	Width               int    `json:"width"`
-	Height              int    `json:"height"`
-	MaxHeight           int    `json:"max_height"`
-	CardWidth           int    `json:"card_width"`
-	CardHeight          int    `json:"card_height"`
-	MaxContentHeight    int    `json:"max_content_height"`
-	EnableSmartPagination bool `json:"enable_smart_pagination"`
+	StyleKey             string `json:"style_key"`
+	OutputPrefix         string `json:"output_prefix"`
+	Mode                 string `json:"mode"`
+	Width                int    `json:"width"`
+	Height               int    `json:"height"`
+	MaxHeight            int    `json:"max_height"`
+	CardWidth            int    `json:"card_width"`
+	CardHeight           int    `json:"card_height"`
+	MaxContentHeight     int    `json:"max_content_height"`
+	EnableSmartPagination bool   `json:"enable_smart_pagination"`
 }
 
 // CoverRequest 封面生成请求
@@ -127,12 +127,13 @@ func (h *RendererHandler) RenderMarkdown(c context.Context, ctx *app.RequestCont
 		maxHeight = req.MaxContentHeight
 	}
 	if maxHeight == 0 {
-		maxHeight = 1100
+		maxHeight = 4320
 	}
 
+	// 解析分页模式
 	mode := service.PaginationMode(req.Mode)
 	if mode == "" {
-		mode = service.PaginationAutoSplit
+		mode = service.PaginationSeparator
 	}
 
 	// 生成图片

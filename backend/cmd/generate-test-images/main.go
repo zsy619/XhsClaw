@@ -1,158 +1,145 @@
-// Package main 测试图片生成程序
+// Package main 完整图片生成测试程序
 package main
 
 import (
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
-	"os"
-	"path/filepath"
+	"log"
+
+	"xiaohongshu/internal/service"
 )
 
-// 颜色配置
-var themeColors = map[string]struct {
-	bg   color.Color
-	text color.Color
-}{
-	"playful-geometric": {
-		bg:   color.RGBA{R: 255, G: 250, B: 251, A: 255},
-		text: color.RGBA{R: 51, G: 51, B: 51, A: 255},
-	},
-	"retro": {
-		bg:   color.RGBA{R: 250, G: 248, B: 255, A: 255},
-		text: color.RGBA{R: 51, G: 51, B: 51, A: 255},
-	},
-	"Sketch": {
-		bg:   color.RGBA{R: 240, G: 253, B: 244, A: 255},
-		text: color.RGBA{R: 51, G: 51, B: 51, A: 255},
-	},
-	"terminal": {
-		bg:   color.RGBA{R: 239, G: 246, B: 255, A: 255},
-		text: color.RGBA{R: 51, G: 51, B: 51, A: 255},
-	},
-	"auto-fit": {
-		bg:   color.RGBA{R: 255, G: 255, B: 255, A: 255},
-		text: color.RGBA{R: 51, G: 51, B: 51, A: 255},
-	},
-}
-
-// drawRect 绘制矩形
-func drawRect(img *image.RGBA, x1, y1, x2, y2 int, c color.Color) {
-	for y := y1; y < y2; y++ {
-		for x := x1; x < x2; x++ {
-			img.Set(x, y, c)
-		}
-	}
-}
-
-// drawTextLine 绘制简单的文本行（使用方块模拟文字）
-func drawTextLine(img *image.RGBA, x, y, width int, c color.Color) {
-	for i := 0; i < width; i++ {
-		if i%8 < 6 {
-			img.Set(x+i, y, c)
-			img.Set(x+i, y+1, c)
-			img.Set(x+i, y+2, c)
-			img.Set(x+i, y+3, c)
-			img.Set(x+i, y+4, c)
-		}
-		if i%8 == 7 {
-			x += 2
-		}
-	}
-}
-
-// generateTestImage 生成测试图片
-func generateTestImage(filename string, theme string, cardNum int) error {
-	width := 1080
-	height := 1440
-
-	// 创建图片
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-
-	// 获取主题颜色
-	colors, ok := themeColors[theme]
-	if !ok {
-		colors = themeColors["playful-geometric"]
-	}
-
-	// 填充背景
-	drawRect(img, 0, 0, width, height, colors.bg)
-
-	// 绘制顶部装饰条
-	decorColor := color.RGBA{R: 255, G: 66, B: 99, A: 255}
-	drawRect(img, 0, 0, width, 80, decorColor)
-
-	// 绘制标题区域
-	titleBg := color.RGBA{R: 255, G: 255, B: 255, A: 255}
-	drawRect(img, 40, 100, width-40, 200, titleBg)
-
-	// 绘制标题文本（模拟）
-	for i := 0; i < 3; i++ {
-		drawTextLine(img, 60, 120+i*20, 300, colors.text)
-	}
-
-	// 绘制内容区域
-	contentBg := color.RGBA{R: 255, G: 255, B: 255, A: 200}
-	drawRect(img, 40, 220, width-40, 1200, contentBg)
-
-	// 绘制内容行
-	for i := 0; i < 20; i++ {
-		lineWidth := 200 + (i%5)*50
-		drawTextLine(img, 60, 250+i*40, lineWidth, colors.text)
-	}
-
-	// 添加卡片编号装饰
-	drawRect(img, width-150, height-100, width-50, height-50, decorColor)
-
-	// 确保目录存在
-	dir := filepath.Dir(filename)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
-	}
-
-	// 保存图片
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	return png.Encode(file, img)
-}
-
 func main() {
-	fmt.Println("开始生成测试图片...")
+	// 创建渲染服务
+	renderer := service.NewRendererService()
 
-	themes := []string{"playful-geometric", "retro", "Sketch", "terminal", "auto-fit"}
-	basePath := "./public/images/all_themes"
+	fmt.Println("========================================")
+	fmt.Println("小红书图片生成测试")
+	fmt.Println("========================================")
 
+	// 测试1: 生成封面
+	fmt.Println("\n📝 测试1: 生成封面图片...")
+	coverPath, err := renderer.GenerateCoverOnly(
+		"小红书运营秘籍",
+		"让你快速涨粉的10个技巧",
+		"playful-geometric",
+		"test_cover",
+		1080,
+		1440,
+	)
+	if err != nil {
+		log.Fatalf("生成封面失败: %v", err)
+	}
+	fmt.Printf("✅ 封面生成成功: %s\n", coverPath)
+
+	// 测试2: 测试不同主题
+	themes := []string{"default", "playful-geometric", "neo-brutalism", "terminal", "sketch"}
+	
 	for _, theme := range themes {
-		fmt.Printf("正在生成主题: %s\n", theme)
+		fmt.Printf("\n📝 测试主题: %s\n", theme)
+		
+		// 测试Markdown内容
+		markdownContent := fmt.Sprintf(`# %s主题测试
 
-		// 生成5张卡片
-		for i := 1; i <= 5; i++ {
-			filename := filepath.Join(basePath, theme, fmt.Sprintf("card_%d.png", i))
-			if err := generateTestImage(filename, theme, i); err != nil {
-				fmt.Printf("  生成卡片 %d 失败: %v\n", i, err)
-			} else {
-				fmt.Printf("  ✓ 卡片 %d 生成成功\n", i)
-			}
+这是一个使用 **%s** 主题生成的测试卡片。
 
-			// 有些主题只需要1张卡片
-			if theme == "auto-fit" && i == 1 {
-				break
-			}
+## 功能特点
+
+- 支持 Markdown 语法
+- 支持多种主题样式
+- 支持自动分页
+
+> 这是一条引用文字
+
+代码示例: ` + "`print('Hello')`" + `
+
+#测试 #%s主题`, theme, theme, theme)
+
+		images, err := renderer.RenderMarkdownToImage(
+			markdownContent,
+			theme,
+			fmt.Sprintf("test_%s", theme),
+			service.PaginationSeparator,
+			1080,
+			1440,
+			4320,
+		)
+		if err != nil {
+			log.Printf("❌ 主题 %s 生成失败: %v", theme, err)
+			continue
 		}
-
-		// 生成封面
-		coverFilename := filepath.Join(basePath, theme, "cover.png")
-		if err := generateTestImage(coverFilename, theme, 0); err != nil {
-			fmt.Printf("  生成封面失败: %v\n", err)
-		} else {
-			fmt.Println("  ✓ 封面生成成功")
+		fmt.Printf("✅ 主题 %s 生成成功，共 %d 张图片\n", theme, len(images))
+		for i, img := range images {
+			fmt.Printf("   %d. %s\n", i+1, img)
 		}
 	}
 
-	fmt.Println("✅ 所有测试图片生成完成！")
+	// 测试3: 测试分页功能
+	fmt.Println("\n📝 测试3: 分页功能测试...")
+	multiPageContent := `# 第一页内容
+
+这是第一页的内容。
+
+---
+
+# 第二页内容
+
+这是第二页的内容。
+
+---
+
+# 第三页内容
+
+这是第三页的内容。
+
+#分页测试`
+
+	images, err := renderer.RenderMarkdownToImage(
+		multiPageContent,
+		"default",
+		"test_multipage",
+		service.PaginationSeparator,
+		1080,
+		1440,
+		4320,
+	)
+	if err != nil {
+		log.Fatalf("分页测试失败: %v", err)
+	}
+	fmt.Printf("✅ 分页测试成功，共生成 %d 张图片\n", len(images))
+	for i, img := range images {
+		fmt.Printf("   %d. %s\n", i+1, img)
+	}
+
+	// 测试4: 测试标题长度自适应
+	fmt.Println("\n📝 测试4: 标题长度自适应测试...")
+	titleTests := []struct {
+		title    string
+		expected string
+	}{
+		{"短标题", "极大字号"},
+		{"这是一个中等标题", "大字号"},
+		{"这是一个比较长的标题内容", "中字号"},
+		{"这是一个非常非常长的标题内容测试", "小字号"},
+		{"这是一个超级超级超级超级超级长的标题内容测试", "极小字号"},
+	}
+
+	for _, tt := range titleTests {
+		coverPath, err := renderer.GenerateCoverOnly(
+			tt.title,
+			tt.expected,
+			"default",
+			fmt.Sprintf("test_title_%d", len(tt.title)),
+			1080,
+			1440,
+		)
+		if err != nil {
+			log.Printf("❌ 标题测试失败: %v", err)
+			continue
+		}
+		fmt.Printf("✅ 标题 '%s' (%s): %s\n", tt.title, tt.expected, coverPath)
+	}
+
+	fmt.Println("\n========================================")
+	fmt.Println("所有测试完成！")
+	fmt.Println("========================================")
 }
