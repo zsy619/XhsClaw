@@ -1,0 +1,139 @@
+/* ============================================
+   Caramel Macchiato - 焦糖玛奇朵风格
+   温暖焦糖棕色系，复古优雅
+   ============================================ */
+
+.card-inner {
+  background-color: #faf5f0;
+  background-image: linear-gradient(135deg, #f8f0e8 0%, #faf5f0 50%, #f5e8d8 100%);
+}
+
+.card-content {
+  color: #5d4a3a;
+  font-size: 42px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 72px;
+  font-weight: 700;
+  padding: 0.5em 0.7em;
+  background: linear-gradient(135deg, #d4a574 0%, #c49464 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(196, 148, 100, 0.3);
+}
+
+.card-content h2 {
+  font-size: 52px;
+  font-weight: 700;
+  color: #8f6b4a;
+  margin: 40px 0 20px 0;
+  padding-left: 20px;
+  border-left: 6px solid #c49464;
+}
+
+.card-content h3 {
+  font-size: 44px;
+  font-weight: 600;
+  color: #7a5a3a;
+  margin: 30px 0 15px 0;
+}
+
+.card-content p {
+  font-size: 42px;
+  line-height: 1.8;
+  margin: 20px 0;
+  color: #5d4a3a;
+}
+
+.card-content strong {
+  color: #8f6b4a;
+  font-weight: 700;
+}
+
+.card-content em {
+  color: #a07b5a;
+  font-style: italic;
+}
+
+.card-content a {
+  color: #c49464;
+  text-decoration: none;
+  border-bottom: 2px solid #d4a574;
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin: 12px 0;
+  color: #5d4a3a;
+}
+
+.card-content blockquote {
+  margin: 30px 0;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #f8f0e8 0%, #f5e8d8 100%);
+  border-left: 6px solid #c49464;
+  border-radius: 12px;
+  color: #7a5a3a;
+  font-style: italic;
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4a574, transparent);
+  margin: 40px 0;
+}
+
+.card-content code {
+  background: #f5e8d8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #8f6b4a;
+  font-family: "Courier New", monospace;
+  font-size: 38px;
+}
+
+.card-content pre {
+  background: #f8f0e8;
+  padding: 20px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.card-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.tags-container {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag {
+  background: linear-gradient(135deg, #f8f0e8 0%, #f5e8d8 100%);
+  color: #8f6b4a;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 32px;
+  border: 2px solid #d4a574;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 25px;
+  right: 30px;
+  font-size: 32px;
+  color: #c49464;
+  font-weight: 600;
+}

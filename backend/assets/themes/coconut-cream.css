@@ -1,0 +1,139 @@
+/* ============================================
+   Coconut Cream - 椰子奶油风格
+   清新椰奶白色，自然纯净
+   ============================================ */
+
+.card-inner {
+  background-color: #fefefe;
+  background-image: linear-gradient(135deg, #fdfcfb 0%, #fefefe 50%, #f9f8f5 100%);
+}
+
+.card-content {
+  color: #5a5a5a;
+  font-size: 42px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 72px;
+  font-weight: 700;
+  padding: 0.5em 0.7em;
+  background: linear-gradient(135deg, #c8d8c8 0%, #b8c8b8 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(184, 200, 184, 0.3);
+}
+
+.card-content h2 {
+  font-size: 52px;
+  font-weight: 700;
+  color: #7a8f7a;
+  margin: 40px 0 20px 0;
+  padding-left: 20px;
+  border-left: 6px solid #b8c8b8;
+}
+
+.card-content h3 {
+  font-size: 44px;
+  font-weight: 600;
+  color: #6a7f6a;
+  margin: 30px 0 15px 0;
+}
+
+.card-content p {
+  font-size: 42px;
+  line-height: 1.8;
+  margin: 20px 0;
+  color: #5a5a5a;
+}
+
+.card-content strong {
+  color: #7a8f7a;
+  font-weight: 700;
+}
+
+.card-content em {
+  color: #8a9f8a;
+  font-style: italic;
+}
+
+.card-content a {
+  color: #b8c8b8;
+  text-decoration: none;
+  border-bottom: 2px solid #c8d8c8;
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin: 12px 0;
+  color: #5a5a5a;
+}
+
+.card-content blockquote {
+  margin: 30px 0;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #fdfcfb 0%, #f9f8f5 100%);
+  border-left: 6px solid #b8c8b8;
+  border-radius: 12px;
+  color: #6a7f6a;
+  font-style: italic;
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #c8d8c8, transparent);
+  margin: 40px 0;
+}
+
+.card-content code {
+  background: #f9f8f5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #7a8f7a;
+  font-family: "Courier New", monospace;
+  font-size: 38px;
+}
+
+.card-content pre {
+  background: #fdfcfb;
+  padding: 20px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.card-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.tags-container {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag {
+  background: linear-gradient(135deg, #fdfcfb 0%, #f9f8f5 100%);
+  color: #7a8f7a;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 32px;
+  border: 2px solid #c8d8c8;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 25px;
+  right: 30px;
+  font-size: 32px;
+  color: #b8c8b8;
+  font-weight: 600;
+}

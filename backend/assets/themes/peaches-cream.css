@@ -1,0 +1,139 @@
+/* ============================================
+   Peaches Cream - 蜜桃奶油风格
+   温柔蜜桃色配奶油白，甜美优雅
+   ============================================ */
+
+.card-inner {
+  background-color: #fff9f7;
+  background-image: linear-gradient(135deg, #fff5f0 0%, #fff9f7 50%, #ffe8e0 100%);
+}
+
+.card-content {
+  color: #8b6a5a;
+  font-size: 42px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 72px;
+  font-weight: 700;
+  padding: 0.5em 0.7em;
+  background: linear-gradient(135deg, #ffb7a5 0%, #ff9d8a 100%);
+  color: #ffffff;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(255, 157, 138, 0.3);
+}
+
+.card-content h2 {
+  font-size: 52px;
+  font-weight: 700;
+  color: #c48a7a;
+  margin: 40px 0 20px 0;
+  padding-left: 20px;
+  border-left: 6px solid #ff9d8a;
+}
+
+.card-content h3 {
+  font-size: 44px;
+  font-weight: 600;
+  color: #a87a6a;
+  margin: 30px 0 15px 0;
+}
+
+.card-content p {
+  font-size: 42px;
+  line-height: 1.8;
+  margin: 20px 0;
+  color: #8b6a5a;
+}
+
+.card-content strong {
+  color: #c48a7a;
+  font-weight: 700;
+}
+
+.card-content em {
+  color: #d49a8a;
+  font-style: italic;
+}
+
+.card-content a {
+  color: #ff9d8a;
+  text-decoration: none;
+  border-bottom: 2px solid #ffb7a5;
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin: 12px 0;
+  color: #8b6a5a;
+}
+
+.card-content blockquote {
+  margin: 30px 0;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe8e0 100%);
+  border-left: 6px solid #ff9d8a;
+  border-radius: 12px;
+  color: #a87a6a;
+  font-style: italic;
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ffb7a5, transparent);
+  margin: 40px 0;
+}
+
+.card-content code {
+  background: #ffe8e0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #c48a7a;
+  font-family: "Courier New", monospace;
+  font-size: 38px;
+}
+
+.card-content pre {
+  background: #fff5f0;
+  padding: 20px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.card-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.tags-container {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag {
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe8e0 100%);
+  color: #c48a7a;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 32px;
+  border: 2px solid #ffb7a5;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 25px;
+  right: 30px;
+  font-size: 32px;
+  color: #ff9d8a;
+  font-weight: 600;
+}

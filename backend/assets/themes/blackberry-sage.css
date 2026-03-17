@@ -1,0 +1,139 @@
+/* ============================================
+   Blackberry Sage - 黑莓鼠尾草风格
+   深邃黑莓紫配鼠尾草绿，优雅自然
+   ============================================ */
+
+.card-inner {
+  background-color: #f8f5f8;
+  background-image: linear-gradient(135deg, #f5f0f5 0%, #f8f5f8 50%, #f0f5f0 100%);
+}
+
+.card-content {
+  color: #5a4a6a;
+  font-size: 42px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 72px;
+  font-weight: 700;
+  padding: 0.5em 0.7em;
+  background: linear-gradient(135deg, #8b6b9b 0%, #7a5a8a 100%);
+  color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(122, 90, 138, 0.3);
+}
+
+.card-content h2 {
+  font-size: 52px;
+  font-weight: 700;
+  color: #7a6b8f;
+  margin: 40px 0 20px 0;
+  padding-left: 20px;
+  border-left: 6px solid #7a5a8a;
+}
+
+.card-content h3 {
+  font-size: 44px;
+  font-weight: 600;
+  color: #6a5a7a;
+  margin: 30px 0 15px 0;
+}
+
+.card-content p {
+  font-size: 42px;
+  line-height: 1.8;
+  margin: 20px 0;
+  color: #5a4a6a;
+}
+
+.card-content strong {
+  color: #7a6b8f;
+  font-weight: 700;
+}
+
+.card-content em {
+  color: #8a7b9f;
+  font-style: italic;
+}
+
+.card-content a {
+  color: #7a5a8a;
+  text-decoration: none;
+  border-bottom: 2px solid #8b6b9b;
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin: 12px 0;
+  color: #5a4a6a;
+}
+
+.card-content blockquote {
+  margin: 30px 0;
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #f5f0f5 0%, #f0f5f0 100%);
+  border-left: 6px solid #7a5a8a;
+  border-radius: 12px;
+  color: #6a5a7a;
+  font-style: italic;
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8b6b9b, transparent);
+  margin: 40px 0;
+}
+
+.card-content code {
+  background: #f0f5f0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #7a6b8f;
+  font-family: "Courier New", monospace;
+  font-size: 38px;
+}
+
+.card-content pre {
+  background: #f5f0f5;
+  padding: 20px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.card-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.tags-container {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag {
+  background: linear-gradient(135deg, #f5f0f5 0%, #f0f5f0 100%);
+  color: #7a6b8f;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 32px;
+  border: 2px solid #8b6b9b;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 25px;
+  right: 30px;
+  font-size: 32px;
+  color: #7a5a8a;
+  font-weight: 600;
+}

@@ -1131,6 +1131,161 @@ const styleOptions = [
     icon: '💜',
     description: '低调优雅，温柔气质',
     previewClass: 'bg-gray-100'
+  },
+  // ========== 新增 20 个小红书风格样式 ==========
+  {
+    value: 'cream-custard',
+    label: '奶油布丁',
+    icon: '🧁',
+    description: '温柔奶黄色调，甜美治愈系',
+    previewClass: 'bg-amber-100'
+  },
+  {
+    value: 'sakura-pink',
+    label: '樱花粉',
+    icon: '🌸',
+    description: '浪漫樱花色调，温柔少女心',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'matcha-latte',
+    label: '抹茶拿铁',
+    icon: '🍵',
+    description: '清新抹茶绿色调，文艺治愈',
+    previewClass: 'bg-green-200'
+  },
+  {
+    value: 'blueberry-cheese',
+    label: '蓝莓芝士',
+    icon: '🫐',
+    description: '优雅蓝莓紫色调，高级浪漫',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'caramel-macchiato',
+    label: '焦糖玛奇朵',
+    icon: '☕',
+    description: '温暖焦糖棕色系，复古优雅',
+    previewClass: 'bg-amber-200'
+  },
+  {
+    value: 'honey-peach',
+    label: '蜜桃蜂蜜',
+    icon: '🍑',
+    description: '甜美蜜桃粉色调，温柔可爱',
+    previewClass: 'bg-orange-200'
+  },
+  {
+    value: 'vanilla-milk',
+    label: '香草牛奶',
+    icon: '🥛',
+    description: '纯净奶白色调，简约温柔',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'chocolate-mint',
+    label: '巧克力薄荷',
+    icon: '🍫',
+    description: '浓郁巧克力配清新薄荷，复古撞色',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'strawberry-milk',
+    label: '草莓牛奶',
+    icon: '🍓',
+    description: '甜美草莓粉色，少女心满满',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'mango-pudding',
+    label: '芒果布丁',
+    icon: '🥭',
+    description: '明亮芒果黄色，活力清新',
+    previewClass: 'bg-yellow-200'
+  },
+  {
+    value: 'taro-milktea',
+    label: '芋头奶茶',
+    icon: '🧋',
+    description: '温柔芋泥紫色，治愈系',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'coconut-cream',
+    label: '椰子奶油',
+    icon: '🥥',
+    description: '清新椰奶白色，自然纯净',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'red-velvet',
+    label: '红丝绒',
+    icon: '🍰',
+    description: '高贵酒红色调，奢华复古',
+    previewClass: 'bg-red-200'
+  },
+  {
+    value: 'pistachio-green',
+    label: '开心果绿',
+    icon: '🥜',
+    description: '清新开心果绿色，自然治愈',
+    previewClass: 'bg-green-200'
+  },
+  {
+    value: 'bubblegum-pink',
+    label: '泡泡糖粉',
+    icon: '🫧',
+    description: '活力泡泡糖粉色，甜美可爱',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'lemon-meringue',
+    label: '柠檬蛋白',
+    icon: '🍋',
+    description: '清新柠檬黄色，轻盈甜美',
+    previewClass: 'bg-yellow-200'
+  },
+  {
+    value: 'blackberry-sage',
+    label: '黑莓鼠尾草',
+    icon: '🌿',
+    description: '深邃黑莓紫配鼠尾草绿，优雅自然',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'peaches-cream',
+    label: '蜜桃奶油',
+    icon: '🍑',
+    description: '温柔蜜桃色配奶油白，甜美优雅',
+    previewClass: 'bg-orange-200'
+  },
+  {
+    value: 'earl-grey',
+    label: '伯爵茶',
+    icon: '☕',
+    description: '优雅伯爵茶灰色，高级简约',
+    previewClass: 'bg-gray-200'
+  },
+  {
+    value: 'tiramisu',
+    label: '提拉米苏',
+    icon: '🎂',
+    description: '经典提拉米苏配色，温暖复古',
+    previewClass: 'bg-amber-200'
+  },
+  {
+    value: 'pomegranate',
+    label: '石榴',
+    icon: '🍎',
+    description: '鲜艳石榴红色，活力热情',
+    previewClass: 'bg-red-200'
+  },
+  {
+    value: 'sage-green',
+    label: '鼠尾草绿',
+    icon: '🌿',
+    description: '自然鼠尾草绿色，宁静治愈',
+    previewClass: 'bg-green-200'
   }
 ]
 
@@ -1866,52 +2021,70 @@ const handleSave = async () => {
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    max-height: 360px;
+    max-height: 480px;
     overflow-y: auto;
     z-index: 1000;
+    
+    // 使用 Grid 布局，每行两列
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
     
     .select-option {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
+      gap: 10px;
+      padding: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
+      border-radius: 8px;
+      border: 1px solid transparent;
       
       &:hover {
         background-color: #f9fafb;
+        border-color: #e5e7eb;
       }
       
       &.selected {
         background-color: #f5f3ff;
+        border-color: #6366f1;
       }
       
       .option-icon {
-        font-size: 20px;
+        font-size: 24px;
         flex-shrink: 0;
       }
       
       .option-content {
         flex: 1;
+        min-width: 0; // 允许内容收缩
         
         .option-label {
           display: block;
           font-weight: 500;
           color: #1f2937;
           font-size: 14px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         
         .option-desc {
           display: block;
           color: #9ca3af;
-          font-size: 13px;
+          font-size: 12px;
           margin-top: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
       
       .check-icon {
         color: #6366f1;
         font-size: 18px;
+        flex-shrink: 0;
       }
     }
   }
