@@ -1,0 +1,172 @@
+/* ============================================
+   Sand Brown - 沙滩棕
+   温暖自然，度假风情
+   ============================================ */
+
+.card-inner {
+  background-color: #fffbeb;
+}
+
+.card-content {
+  color: #78350f;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 40px;
+  line-height: 1.3;
+  text-shadow: 0 0 12px rgba(146, 64, 14, 0.4);
+}
+
+.card-content h1::after {
+  content: ' 🏖️';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 50px 0 25px 0;
+  line-height: 1.4;
+  text-shadow: 0 0 10px rgba(146, 64, 14, 0.3);
+}
+
+.card-content h3 {
+  font-size: 48px;
+  font-weight: 600;
+  color: #b45309;
+  margin: 40px 0 20px 0;
+  text-shadow: 0 0 8px rgba(180, 83, 9, 0.2);
+}
+
+.card-content p {
+  margin-bottom: 30px;
+}
+
+.card-content strong,
+.card-content b {
+  font-weight: 700;
+  color: #92400e;
+  text-shadow: 0 0 6px rgba(146, 64, 14, 0.3);
+}
+
+.card-content em,
+.card-content i {
+  font-style: italic;
+  color: #b45309;
+}
+
+.card-content a {
+  color: #92400e;
+  text-decoration: none;
+  border-bottom: 2px solid #b45309;
+  text-shadow: 0 0 4px rgba(146, 64, 14, 0.2);
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 30px 0;
+  padding-left: 60px;
+}
+
+.card-content li {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.card-content li::marker {
+  color: #92400e;
+}
+
+.card-content blockquote {
+  border-left: 8px solid #92400e;
+  padding-left: 40px;
+  background: #fef3c7;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  padding-right: 30px;
+  margin: 35px 0;
+  color: #78350f;
+  font-style: italic;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 0 15px rgba(146, 64, 14, 0.1);
+}
+
+.card-content blockquote p {
+  margin: 0;
+}
+
+.card-content code {
+  background: #fef3c7;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 38px;
+  color: #92400e;
+  box-shadow: 0 0 8px rgba(146, 64, 14, 0.2);
+}
+
+.card-content pre {
+  background: #fef3c7;
+  color: #78350f;
+  padding: 40px;
+  border-radius: 16px;
+  margin: 35px 0;
+  overflow-x: visible;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  font-size: 36px;
+  line-height: 1.5;
+  border: 2px solid #fde68a;
+  box-shadow: 0 0 20px rgba(146, 64, 14, 0.15);
+}
+
+.card-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+  box-shadow: none;
+}
+
+.card-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  margin: 35px auto;
+  display: block;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.2);
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: #fde68a;
+  margin: 50px 0;
+  box-shadow: 0 0 8px rgba(146, 64, 14, 0.3);
+}
+
+.tags-container {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 2px solid #fde68a;
+}
+
+.tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-size: 34px;
+  margin: 10px 15px 10px 0;
+  font-weight: 500;
+  box-shadow: 0 0 15px rgba(146, 64, 14, 0.3);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}

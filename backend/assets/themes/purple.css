@@ -1,0 +1,108 @@
+/* ============================================
+   Purple - 紫韵风格
+   梦幻紫色，优雅浪漫
+   ============================================ */
+
+.card-inner {
+  background-color: #f5f3ff;
+}
+
+.card-content {
+  color: #3730a3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #7c3aed;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h1::before {
+  content: '💜 ';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #6d28d9;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.card-content p {
+  margin-bottom: 25px;
+}
+
+.card-content ul, .card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin-bottom: 15px;
+}
+
+.card-content strong {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.card-content em {
+  color: #a78bfa;
+}
+
+.card-content code {
+  background-color: #ede9fe;
+  color: #7c3aed;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 36px;
+}
+
+.card-content pre {
+  background-color: #f3e8ff;
+  border: 2px solid #c4b5fd;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 25px 0;
+  overflow-x: auto;
+}
+
+.card-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-content blockquote {
+  background-color: #f5f3ff;
+  border-left: 6px solid #7c3aed;
+  padding: 25px 30px;
+  margin: 25px 0;
+  border-radius: 0 16px 16px 0;
+}
+
+.card-content blockquote p {
+  margin-bottom: 0;
+  color: #5b21b6;
+}
+
+.card-content .tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 32px;
+  margin: 8px 8px 8px 0;
+}
+
+.card-content .page-number {
+  color: #a78bfa;
+  font-size: 28px;
+}

@@ -7,6 +7,9 @@ type GenerationRequest struct {
 	StylePreference string `json:"style_preference"`
 	TargetAudience  string `json:"target_audience"`
 	Length          int    `json:"length"`
+	// 分页相关参数
+	EnablePagination bool   `json:"enable_pagination"`          // 是否启用分页
+	PaginationFormat string `json:"pagination_format"`          // 分页格式：markdown, separator
 }
 
 // GenerationResponse 主题生成响应

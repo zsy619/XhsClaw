@@ -1,0 +1,108 @@
+/* ============================================
+   Peach - 蜜桃粉
+   水嫩甜美，元气少女
+   ============================================ */
+
+.card-inner {
+  background-color: #fff1f2;
+}
+
+.card-content {
+  color: #9f1239;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #fb7185;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h1::before {
+  content: '🍑 ';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #f43f5e;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.card-content p {
+  margin-bottom: 25px;
+}
+
+.card-content ul, .card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin-bottom: 15px;
+}
+
+.card-content strong {
+  color: #f43f5e;
+  font-weight: 600;
+}
+
+.card-content em {
+  color: #fb7185;
+}
+
+.card-content code {
+  background-color: #ffe4e6;
+  color: #e11d48;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 36px;
+}
+
+.card-content pre {
+  background-color: #fff1f2;
+  border: 2px solid #fda4af;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 25px 0;
+  overflow-x: auto;
+}
+
+.card-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-content blockquote {
+  background-color: #ffe4e6;
+  border-left: 6px solid #fb7185;
+  padding: 25px 30px;
+  margin: 25px 0;
+  border-radius: 0 16px 16px 0;
+}
+
+.card-content blockquote p {
+  margin-bottom: 0;
+  color: #be123c;
+}
+
+.card-content .tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #fda4af 0%, #f43f5e 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 32px;
+  margin: 8px 8px 8px 0;
+}
+
+.card-content .page-number {
+  color: #fda4af;
+  font-size: 28px;
+}

@@ -3,6 +3,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -20,8 +21,12 @@ type RendererHandler struct {
 
 // NewRendererHandler 创建渲染处理器实例
 func NewRendererHandler() *RendererHandler {
+	rendererService, err := service.NewRendererService()
+	if err != nil {
+		panic(fmt.Sprintf("初始化渲染服务失败: %v", err))
+	}
 	return &RendererHandler{
-		rendererService: service.NewRendererService(),
+		rendererService: rendererService,
 	}
 }
 

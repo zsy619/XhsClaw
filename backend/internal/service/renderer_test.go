@@ -9,7 +9,8 @@ import (
 
 // TestNewRendererService 测试创建渲染服务实例
 func TestNewRendererService(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.themes)
 	assert.Greater(t, len(service.themes), 0)
@@ -17,7 +18,8 @@ func TestNewRendererService(t *testing.T) {
 
 // TestGetStyles 测试获取所有样式
 func TestGetStyles(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 	styles := service.GetStyles()
 
 	assert.NotNil(t, styles)
@@ -42,7 +44,8 @@ func TestGetStyles(t *testing.T) {
 
 // TestGetStyle 测试获取指定样式
 func TestGetStyle(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 
 	// 测试获取存在的样式
 	style := service.GetStyle("terminal")
@@ -56,7 +59,8 @@ func TestGetStyle(t *testing.T) {
 
 // TestThemeConfigProperties 测试主题配置属性
 func TestThemeConfigProperties(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 	styles := service.GetStyles()
 
 	for _, style := range styles {
@@ -78,10 +82,13 @@ func TestCalculateTitleSize(t *testing.T) {
 	assert.Equal(t, int(float64(width)*0.12), calculateTitleSize("这是一个中等标题", width))   // 7-10字
 	assert.Equal(t, int(float64(width)*0.09), calculateTitleSize("这是一个比较长的标题内容", width)) // 11-18字
 	// 注意：以下测试需要确保字符数正确
-	longTitle := "这是一个非常非常长的标题内容测试" // 19-30字
-	assert.Equal(t, int(float64(width)*0.07), calculateTitleSize(longTitle, width))
-	veryLongTitle := "这是一个超级超级超级超级超级长的标题内容测试" // >30字
-	assert.Equal(t, int(float64(width)*0.055), calculateTitleSize(veryLongTitle, width))
+	longTitle := "这是一个非常非常长的标题内容测试" // 11-18字
+	assert.Equal(t, int(float64(width)*0.09), calculateTitleSize(longTitle, width))
+	veryLongTitle := "这是一个超级超级超级超级超级长的标题内容测试" // 19-30字
+	assert.Equal(t, int(float64(width)*0.07), calculateTitleSize(veryLongTitle, width))
+	// 测试真正的超长标题 (>30字)
+	veryVeryLongTitle := "这是一个超级超级超级超级超级超级超级超级超级超级超级超级长的标题内容测试"
+	assert.Equal(t, int(float64(width)*0.055), calculateTitleSize(veryVeryLongTitle, width))
 }
 
 // TestIsTagLine 测试标签行判断
@@ -99,7 +106,8 @@ func TestIsTagLine(t *testing.T) {
 
 // TestSimpleMarkdownToHTML 测试Markdown转HTML
 func TestSimpleMarkdownToHTML(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 
 	// 测试标题转换
 	html := service.simpleMarkdownToHTML("# 一级标题")
@@ -124,7 +132,8 @@ func TestSimpleMarkdownToHTML(t *testing.T) {
 
 // TestEscapeHTML 测试HTML转义
 func TestEscapeHTML(t *testing.T) {
-	service := NewRendererService()
+	service, err := NewRendererService()
+	assert.NoError(t, err)
 
 	// 测试特殊字符转义
 	assert.Equal(t, "&lt;div&gt;", service.escapeHTML("<div>"))

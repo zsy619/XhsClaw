@@ -1,0 +1,108 @@
+/* ============================================
+   Ocean - 深海蓝
+   深邃宁静，理性优雅
+   ============================================ */
+
+.card-inner {
+  background-color: #f0f9ff;
+}
+
+.card-content {
+  color: #0c4a6e;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #0284c7;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h1::before {
+  content: '🌊 ';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #0369a1;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.card-content p {
+  margin-bottom: 25px;
+}
+
+.card-content ul, .card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin-bottom: 15px;
+}
+
+.card-content strong {
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.card-content em {
+  color: #38bdf8;
+}
+
+.card-content code {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 36px;
+}
+
+.card-content pre {
+  background-color: #f0f9ff;
+  border: 2px solid #7dd3fc;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 25px 0;
+  overflow-x: auto;
+}
+
+.card-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-content blockquote {
+  background-color: #e0f2fe;
+  border-left: 6px solid #0284c7;
+  padding: 25px 30px;
+  margin: 25px 0;
+  border-radius: 0 16px 16px 0;
+}
+
+.card-content blockquote p {
+  margin-bottom: 0;
+  color: #075985;
+}
+
+.card-content .tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 32px;
+  margin: 8px 8px 8px 0;
+}
+
+.card-content .page-number {
+  color: #38bdf8;
+  font-size: 28px;
+}

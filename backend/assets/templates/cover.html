@@ -5,7 +5,7 @@
     <meta name="viewport" content="width={{.Width}}, height={{.Height}}">
     <title>小红书封面</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+        @import url('../fonts/noto-sans-sc.css');
         
         * {
             margin: 0;
@@ -45,16 +45,21 @@
             font-size: {{.EmojiSize}}px;
             line-height: 1.2;
             margin-bottom: {{.EmojiMarginBottom}}px;
+            {{if .EmojiColor}}color: {{.EmojiColor}};{{end}}
         }
         
         .cover-title {
             font-weight: 900;
             font-size: {{.TitleSize}}px;
             line-height: 1.4;
+            {{if .TitleColor}}
+            color: {{.TitleColor}};
+            {{else}}
             background: {{.TitleGradient}};
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            {{end}}
             flex: 1;
             display: flex;
             align-items: flex-start;
@@ -65,7 +70,7 @@
             font-weight: 350;
             font-size: {{.SubtitleSize}}px;
             line-height: 1.4;
-            color: #000000;
+            color: {{if .SubtitleColor}}{{.SubtitleColor}}{{else}}#000000{{end}};
             margin-top: auto;
         }
     </style>

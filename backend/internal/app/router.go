@@ -3,15 +3,16 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/app/server"
-
 	"xiaohongshu/internal/handler"
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/utils"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
 // getProjectRoot 获取项目根目录的绝对路径
@@ -23,13 +24,19 @@ func getProjectRoot() string {
 func serveImage(imagesDir string) app.HandlerFunc {
 	return func(c context.Context, ctx *app.RequestContext) {
 		filename := ctx.Param("filepath")
+		logger := utils.GetLogger()
+
+		logger.Info("=== serveImage 被调用 ===")
+		logger.Info("请求 filepath 参数：%s", filename)
+		logger.Info("请求 URL: %s", string(ctx.Request.URI().Path()))
+
 		if filename == "" {
+			logger.Warn("文件名为空")
 			ctx.String(400, "文件名不能为空")
 			return
 		}
 
-		logger := utils.GetLogger()
-		logger.Info("请求图片: %s", filename)
+		logger.Info("请求图片：%s", filename)
 
 		// 安全地构建文件路径
 		imagePath := filepath.Join(imagesDir, filename)
@@ -51,15 +58,34 @@ func serveImage(imagesDir string) app.HandlerFunc {
 
 		// 确保图片路径在 imagesDir 目录下
 		if !strings.HasPrefix(absImagePath, absImagesDir) {
-			logger.Warn("非法的图片路径请求: %s", filename)
+			logger.Warn("非法的图片路径请求：%s", filename)
 			ctx.String(403, "访问被拒绝")
 			return
 		}
 
-		logger.Info("提供图片: %s", absImagePath)
+		// 检查文件是否存在
+		if _, err := os.Stat(absImagePath); os.IsNotExist(err) {
+			logger.Warn("图片文件不存在：%s", absImagePath)
+			ctx.String(404, "图片不存在")
+			return
+		}
 
-		// 返回图片文件
-		ctx.File(absImagePath)
+		logger.Info("提供图片：%s", absImagePath)
+
+		// 读取文件内容
+		fileContent, err := os.ReadFile(absImagePath)
+		if err != nil {
+			logger.Error("读取图片文件失败：%v", err)
+			ctx.String(500, "读取文件失败")
+			return
+		}
+
+		// 设置 Content-Type
+		ctx.Header("Content-Type", "image/png")
+		ctx.Header("Content-Length", fmt.Sprintf("%d", len(fileContent)))
+
+		// 直接写入响应
+		ctx.Write(fileContent)
 	}
 }
 
@@ -82,6 +108,7 @@ func SetupRouter(h *server.Hertz) {
 	publishHandler := handler.NewPublishHandler()
 	generationHandler := handler.NewGenerationHandler()
 	rendererHandler := handler.NewRendererHandler()
+	enhancedRendererHandler := handler.NewEnhancedRendererHandler()
 	roleHandler := handler.NewRoleHandler()
 
 	// 健康检查 - 不需要认证
@@ -105,19 +132,15 @@ func SetupRouter(h *server.Hertz) {
 			auth.POST("/login", userHandler.Login)
 		}
 
-		// 公共静态资源 - 图片访问不需要认证
-		api.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
-
 		// ======== 重要：/api/v1 路由组放在认证路由之前 ========
 		v1 := api.Group("/v1")
 		{
-			// v1 版本公共静态资源 - 不需要认证
-			v1.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
-
 			// v1 版本小红书渲染器 - 不需要认证
 			v1.GET("/xiaohongshu-renderer/styles", rendererHandler.GetRendererStyles)
 			v1.POST("/xiaohongshu-renderer/render", rendererHandler.RenderMarkdown)
 			v1.POST("/xiaohongshu-renderer/cover", rendererHandler.GenerateCover)
+			// 增强版渲染器 - 支持 AI 生成和智能分页
+			v1.POST("/xiaohongshu-renderer/render-with-ai", enhancedRendererHandler.RenderWithAI)
 
 			// v1 用户认证
 			v1Auth := v1.Group("/auth")
@@ -181,6 +204,9 @@ func SetupRouter(h *server.Hertz) {
 				}
 			}
 		}
+
+		// 图片路由 - 在 v1 组外单独注册，避免通配符路由问题
+		api.GET("/v1/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
 
 		// ======== 需要认证的路由 ========
 		authorized := api.Group("")
@@ -253,5 +279,4 @@ func SetupRouter(h *server.Hertz) {
 			}
 		}
 	}
-
 }

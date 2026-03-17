@@ -413,37 +413,60 @@
             </h3>
             <p class="text-xs text-gray-500">选择适合您内容的视觉风格</p>
           </div>
-          <div class="style-grid">
-            <div
-              v-for="style in styleOptions"
-              :key="style.value"
-              @click="imageConfig.styleKey = style.value"
-              :class="[
-                'style-option p-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                imageConfig.styleKey === style.value
-                  ? 'border-primary-500 bg-primary-50 shadow-sm'
-                  : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
-              ]"
+          
+          <!-- 自定义下拉选择器 -->
+          <div class="custom-select">
+            <div 
+              class="select-trigger" 
+              @click="toggleStyleDropdown"
+              :class="{ 'active': showStyleDropdown }"
             >
-              <div class="flex items-center gap-3">
-                <div 
-                  class="style-preview w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                  :class="style.previewClass"
-                >
-                  {{ style.icon }}
+              <span class="selected-icon">{{ getCurrentStyle?.icon || '🎨' }}</span>
+              <span class="selected-label">{{ getCurrentStyle?.label || '请选择样式主题' }}</span>
+              <el-icon class="arrow-icon" :class="{ 'rotate': showStyleDropdown }">
+                <ArrowDown />
+              </el-icon>
+            </div>
+            
+            <div 
+              v-if="showStyleDropdown" 
+              class="select-dropdown"
+            >
+              <div 
+                v-for="style in styleOptions" 
+                :key="style.value"
+                class="select-option"
+                :class="{ 'selected': imageConfig.styleKey === style.value }"
+                @click="selectStyle(style.value)"
+              >
+                <span class="option-icon">{{ style.icon }}</span>
+                <div class="option-content">
+                  <span class="option-label">{{ style.label }}</span>
+                  <span class="option-desc">{{ style.description }}</span>
                 </div>
-                <div class="flex-1">
-                  <div class="font-medium text-gray-800">{{ style.label }}</div>
-                  <div class="text-xs text-gray-500">{{ style.description }}</div>
-                </div>
-                <el-icon 
-                  v-if="imageConfig.styleKey === style.value"
-                  class="text-primary-500"
-                  :size="20"
-                >
+                <el-icon v-if="imageConfig.styleKey === style.value" class="check-icon">
                   <CircleCheck />
                 </el-icon>
               </div>
+            </div>
+          </div>
+          
+          <!-- 选中样式预览 -->
+          <div v-if="false" class="selected-style-preview mt-4 p-4 rounded-xl border-2 border-gray-200 bg-gray-50">
+            <div class="flex items-center gap-3">
+              <div 
+                class="style-preview w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                :class="getCurrentStyle?.previewClass || 'bg-gray-200'"
+              >
+                {{ getCurrentStyle?.icon || '🎨' }}
+              </div>
+              <div class="flex-1">
+                <div class="font-semibold text-gray-800 text-lg">{{ getCurrentStyle?.label || '请选择' }}</div>
+                <div class="text-sm text-gray-500">{{ getCurrentStyle?.description || '选择一种样式主题' }}</div>
+              </div>
+              <el-icon class="text-primary-500" :size="24">
+                <CircleCheck v-if="imageConfig.styleKey" />
+              </el-icon>
             </div>
           </div>
         </div>
@@ -802,11 +825,53 @@ const styleOptions = [
     previewClass: 'bg-red-100'
   },
   {
+    value: 'purple',
+    label: '紫韵',
+    icon: '💜',
+    description: '梦幻紫色，优雅浪漫',
+    previewClass: 'bg-purple-100'
+  },
+  {
+    value: 'mint',
+    label: '清新薄荷',
+    icon: '🌿',
+    description: '清新自然，清爽舒适',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'sunset',
+    label: '日落橙',
+    icon: '🌅',
+    description: '温暖夕阳，活力满满',
+    previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'ocean',
+    label: '深海蓝',
+    icon: '🌊',
+    description: '深邃宁静，理性优雅',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'elegant',
+    label: '优雅白',
+    icon: '⚪',
+    description: '简约纯粹，经典永恒',
+    previewClass: 'bg-gray-50'
+  },
+  {
+    value: 'dark',
+    label: '暗黑模式',
+    icon: '🌙',
+    description: '深邃神秘，炫酷潮流',
+    previewClass: 'bg-gray-900'
+  },
+  {
     value: 'playful-geometric',
     label: '活泼几何',
     icon: '🔷',
     description: '充满活力的几何图形设计',
-    previewClass: 'bg-blue-100'
+    previewClass: 'bg-indigo-100'
   },
   {
     value: 'neo-brutalism',
@@ -818,9 +883,9 @@ const styleOptions = [
   {
     value: 'botanical',
     label: '植物系',
-    icon: '🌿',
+    icon: '🌱',
     description: '清新自然的植物风格',
-    previewClass: 'bg-green-100'
+    previewClass: 'bg-emerald-100'
   },
   {
     value: 'professional',
@@ -834,14 +899,14 @@ const styleOptions = [
     label: '复古风格',
     icon: '📺',
     description: '怀旧复古的设计风格',
-    previewClass: 'bg-orange-100'
+    previewClass: 'bg-amber-100'
   },
   {
     value: 'terminal',
     label: '终端风格',
     icon: '💻',
     description: '程序员专属终端风格',
-    previewClass: 'bg-emerald-100'
+    previewClass: 'bg-zinc-900'
   },
   {
     value: 'sketch',
@@ -849,6 +914,223 @@ const styleOptions = [
     icon: '✏️',
     description: '温馨可爱的手绘风格',
     previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'pink-cream',
+    label: '粉色奶油',
+    icon: '💕',
+    description: '甜美温柔，少女心爆棚',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'coral',
+    label: '珊瑚粉',
+    icon: '🪸',
+    description: '活力清新，元气满满',
+    previewClass: 'bg-rose-200'
+  },
+  {
+    value: 'lavender',
+    label: '薰衣草紫',
+    icon: '💐',
+    description: '清新淡雅，温柔浪漫',
+    previewClass: 'bg-violet-200'
+  },
+  {
+    value: 'cream',
+    label: '奶黄包',
+    icon: '🧁',
+    description: '温暖甜蜜，清新可爱',
+    previewClass: 'bg-amber-200'
+  },
+  {
+    value: 'nordic',
+    label: '北欧风格',
+    icon: '🏔️',
+    description: '清新冷淡，简约时尚',
+    previewClass: 'bg-slate-200'
+  },
+  {
+    value: 'peach',
+    label: '蜜桃粉',
+    icon: '🍑',
+    description: '水嫩甜美，元气少女',
+    previewClass: 'bg-orange-200'
+  },
+  {
+    value: 'matcha',
+    label: '抹茶绿',
+    icon: '🍵',
+    description: '日式清新，自然健康',
+    previewClass: 'bg-green-200'
+  },
+  {
+    value: 'cherry',
+    label: '樱花浪漫',
+    icon: '🌸',
+    description: '樱花浪漫，甜美梦幻',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'strawberry',
+    label: '草莓甜心',
+    icon: '🍓',
+    description: '甜美可爱，元气少女',
+    previewClass: 'bg-red-200'
+  },
+  {
+    value: 'blueberry',
+    label: '蓝莓之夜',
+    icon: '🫐',
+    description: '深邃静谧，优雅神秘',
+    previewClass: 'bg-blue-300'
+  },
+  {
+    value: 'grape',
+    label: '葡萄紫',
+    icon: '🍇',
+    description: '优雅高贵，神秘魅惑',
+    previewClass: 'bg-violet-300'
+  },
+  {
+    value: 'lemon',
+    label: '柠檬黄',
+    icon: '🍋',
+    description: '清新酸甜，元气满满',
+    previewClass: 'bg-yellow-200'
+  },
+  {
+    value: 'lavender-gray',
+    label: '薰衣草灰',
+    icon: '💜',
+    description: '低调优雅，温柔气质',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'rose',
+    label: '玫瑰金',
+    icon: '🌹',
+    description: '优雅浪漫，温柔女人味',
+    previewClass: 'bg-rose-300'
+  },
+  {
+    value: 'sky-blue',
+    label: '天空蓝',
+    icon: '☁️',
+    description: '清新明亮，心旷神怡',
+    previewClass: 'bg-sky-200'
+  },
+  {
+    value: 'candy-pink',
+    label: '糖果粉',
+    icon: '🍭',
+    description: '甜美可爱，少女心爆棚',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'peach-blossom',
+    label: '桃花粉',
+    icon: '🌸',
+    description: '温柔浪漫，春天的气息',
+    previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'mint-green',
+    label: '薄荷绿',
+    icon: '🌿',
+    description: '清新自然，治愈系风格',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'lemon-yellow',
+    label: '柠檬黄',
+    icon: '🍋',
+    description: '明亮活泼，充满阳光',
+    previewClass: 'bg-yellow-100'
+  },
+  {
+    value: 'strawberry-red',
+    label: '草莓红',
+    icon: '🍓',
+    description: '甜美可爱，少女心十足',
+    previewClass: 'bg-red-100'
+  },
+  {
+    value: 'ocean-blue',
+    label: '海洋蓝',
+    icon: '🌊',
+    description: '深邃宁静，理性优雅',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'forest-green',
+    label: '森林绿',
+    icon: '🌲',
+    description: '自然清新，充满生机',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'sunset-orange',
+    label: '日落橙',
+    icon: '🌅',
+    description: '温暖夕阳，活力满满',
+    previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'neon-pink',
+    label: '霓虹粉',
+    icon: '💖',
+    description: '炫酷时尚，活力四射',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'crystal-purple',
+    label: '水晶紫',
+    icon: '🔮',
+    description: '优雅梦幻，神秘高贵',
+    previewClass: 'bg-purple-100'
+  },
+  {
+    value: 'ice-blue',
+    label: '冰蓝色',
+    icon: '❄️',
+    description: '清新冷淡，简约时尚',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'rose-gold',
+    label: '玫瑰金',
+    icon: '🌹',
+    description: '优雅浪漫，温柔女人味',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'sand-brown',
+    label: '沙滩棕',
+    icon: '🏖️',
+    description: '温暖自然，度假风情',
+    previewClass: 'bg-amber-100'
+  },
+  {
+    value: 'kiwi-green',
+    label: '猕猴桃绿',
+    icon: '🥝',
+    description: '清新自然，健康活力',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'blueberry-night',
+    label: '蓝莓之夜',
+    icon: '🫐',
+    description: '深邃静谧，优雅神秘',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'lavender-gray',
+    label: '薰衣草灰',
+    icon: '💜',
+    description: '低调优雅，温柔气质',
+    previewClass: 'bg-gray-100'
   }
 ]
 
@@ -857,6 +1139,7 @@ const sizePresets = [
   { label: '小红书 3:4', width: 1080, height: 1440 },
   { label: '正方形 1:1', width: 1080, height: 1080 },
   { label: '横屏 4:3', width: 1440, height: 1080 },
+  { label: '横屏 16:9', width: 1920, height: 1080 },
   { label: '手机壁纸 9:16', width: 1080, height: 1920 }
 ]
 
@@ -866,9 +1149,15 @@ const getAspectRatio = () => {
   if (Math.abs(ratio - 3/4) < 0.01) return '3:4 (小红书标准)'
   if (Math.abs(ratio - 1) < 0.01) return '1:1 (正方形)'
   if (Math.abs(ratio - 4/3) < 0.01) return '4:3 (横屏)'
+  if (Math.abs(ratio - 16/9) < 0.01) return '16:9 (宽屏)'
   if (Math.abs(ratio - 9/16) < 0.01) return '9:16 (手机壁纸)'
   return `${ratio.toFixed(2)}:1`
 }
+
+// 获取当前选中的样式
+const getCurrentStyle = computed(() => {
+  return styleOptions.find(s => s.value === imageConfig.styleKey)
+})
 
 // 表单数据
 const form = reactive({
@@ -885,6 +1174,30 @@ const imageConfig = reactive({
   enableSmartPagination: true,
   cardWidth: 1080,
   cardHeight: 1440
+})
+
+// 下拉菜单状态
+const showStyleDropdown = ref(false)
+
+// 切换下拉菜单
+const toggleStyleDropdown = () => {
+  showStyleDropdown.value = !showStyleDropdown.value
+}
+
+// 选择样式
+const selectStyle = (value: string) => {
+  imageConfig.styleKey = value
+  showStyleDropdown.value = false
+}
+
+// 点击外部关闭下拉菜单
+onMounted(() => {
+  document.addEventListener('click', (e) => {
+    const dropdown = document.querySelector('.custom-select')
+    if (dropdown && !dropdown.contains(e.target as Node)) {
+      showStyleDropdown.value = false
+    }
+  })
 })
 
 // 验证规则
@@ -1076,37 +1389,119 @@ const handleRenderImages = async () => {
   generatedImages.value = []
   
   try {
-    imageRenderProgress.value = 30
+    // 步骤 1: 准备所有参数
+    imageRenderProgress.value = 20
+    
+    // 获取当前选中的标题
+    const selectedTitle = titleOptions.value.length > 0 
+      ? titleOptions.value[selectedTitleIndex.value] 
+      : (result.value.title || form.content)
+    
+    // 构建标签字符串
+    const tagsText = result.value.tags ? result.value.tags.join(',') : ''
+    
+    // 步骤 2: 根据是否启用智能分页来决定是否调用 DeepSeek 重新生成内容
+    let finalContent = result.value.content
+    let finalTitle = selectedTitle
+    let finalTags = result.value.tags || []
+    
+    if (imageConfig.enableSmartPagination) {
+      imageRenderProgress.value = 40
+      ElMessage.info('正在使用 AI 优化内容以适应分页...')
+      
+      try {
+        // 调用 DeepSeek API 重新生成符合分页要求的内容
+        const audiencesText = form.audiences.length > 0 ? form.audiences.join(', ') : ''
+        const styleText = form.customStyle || form.style
+        
+        const aiResponse = await http.post('/generation/theme', {
+          keywords: form.content,
+          style_preference: styleText,
+          target_audience: audiencesText,
+          length: form.wordCount,
+          enable_pagination: true,  // 启用分页模式
+          pagination_format: 'markdown'  // 使用 Markdown 格式便于分页
+        }, { timeout: 120000 })
+        
+        if (aiResponse.data?.generated_content) {
+          finalContent = aiResponse.data.generated_content
+          if (aiResponse.data.generated_title) {
+            finalTitle = aiResponse.data.generated_title
+          }
+          if (aiResponse.data.generated_tags && aiResponse.data.generated_tags.length > 0) {
+            finalTags = aiResponse.data.generated_tags
+          }
+        }
+      } catch (aiError) {
+        console.warn('AI 内容生成失败，使用原始内容:', aiError)
+        ElMessage.warning('AI 优化失败，将使用原始内容')
+      }
+    }
+    
+    imageRenderProgress.value = 50
+    
+    // 步骤 3: 构建完整的 Markdown 内容（包含 YAML 头部）
+    const markdownContent = buildMarkdownContent(finalTitle, finalContent, finalTags)
+    
+    // 步骤 4: 生成封面图片
+    imageRenderProgress.value = 60
+    ElMessage.info('正在生成封面...')
+    
+    try {
+      const coverResponse = await http.post('/xiaohongshu-renderer/cover', {
+        title: finalTitle,
+        subtitle: finalTags.length > 0 ? finalTags.slice(0, 3).join(' ') : '',
+        style_key: imageConfig.styleKey,
+        output_prefix: `cover_${Date.now()}`,
+        width: imageConfig.cardWidth,
+        height: imageConfig.cardHeight
+      })
+      
+      console.log('封面生成响应:', coverResponse)
+      
+      // 响应格式：{ code: 0, message: '成功', data: { success: true, message: '封面生成成功', image: '...' } }
+      let coverUrl = ''
+      if (coverResponse.data?.data?.image) {
+        coverUrl = getRenderedImage(coverResponse.data.data.image)
+      } else if (coverResponse.data?.image) {
+        coverUrl = getRenderedImage(coverResponse.data.image)
+      }
+      
+      if (coverUrl) {
+        generatedImages.value.push(coverUrl)
+        console.log('封面图片 URL:', coverUrl)
+      } else {
+        console.warn('封面图片 URL 为空')
+      }
+    } catch (coverError) {
+      console.warn('封面生成失败:', coverError)
+      // 封面生成失败不影响后续流程
+    }
+    
+    // 步骤 5: 生成内容图片（带分页）
+    imageRenderProgress.value = 75
+    ElMessage.info('正在生成内容图片...')
     
     const response = await renderMarkdown({
-      markdown_content: result.value.content,
+      markdown_content: markdownContent,
       style_key: imageConfig.styleKey,
+      output_prefix: `content_${Date.now()}`,
       enable_smart_pagination: imageConfig.enableSmartPagination,
       card_width: imageConfig.cardWidth,
       card_height: imageConfig.cardHeight,
-      max_content_height: imageConfig.cardHeight - 340
+      max_content_height: imageConfig.cardHeight * 3  // 允许最大高度为 3 倍卡片高度
     })
 
-    imageRenderProgress.value = 70
+    imageRenderProgress.value = 90
 
-    console.log('=== 调试信息 ===')
-    console.log('完整响应:', response)
-    console.log('response.data:', response.data)
-    
-    // 响应拦截器已经处理，response 就是 { code, message, data }
-    // data 里面是 { success, message, images }
     const renderData = response.data
-    console.log('renderData:', renderData)
-    
-    if (renderData) {
-      const images = renderData.images || []
-      console.log('图片路径列表:', images)
-      
-      generatedImages.value = images.map((path: string) => {
-        const imageUrl = getRenderedImage(path)
-        console.log('生成的图片URL:', imageUrl)
-        return imageUrl
+    if (renderData && renderData.images && renderData.images.length > 0) {
+      const contentImages = renderData.images.map((path: string) => {
+        return getRenderedImage(path)
       })
+      
+      // 将内容图片添加到封面图片后面
+      generatedImages.value = [...generatedImages.value, ...contentImages]
       
       currentImageIndex.value = 0
       imageRenderProgress.value = 100
@@ -1114,7 +1509,7 @@ const handleRenderImages = async () => {
       setTimeout(() => {
         showImageRenderDialog.value = false
         imageRenderProgress.value = 0
-        ElMessage.success(`成功生成 ${generatedImages.value.length} 张图片`)
+        ElMessage.success(`成功生成 ${generatedImages.value.length} 张图片（包含封面）`)
       }, 500)
     } else {
       throw new Error(renderData?.message || response.message || '渲染失败')
@@ -1126,6 +1521,18 @@ const handleRenderImages = async () => {
   } finally {
     renderingImages.value = false
   }
+}
+
+// 构建 Markdown 内容（包含 YAML 头部）
+const buildMarkdownContent = (title: string, content: string, tags: string[]) => {
+  let markdown = '---\n'
+  markdown += `title: ${title}\n`
+  if (tags && tags.length > 0) {
+    markdown += `tags: [${tags.join(', ')}]\n`
+  }
+  markdown += '---\n\n'
+  markdown += content
+  return markdown
 }
 
 // 取消图片渲染
@@ -1397,6 +1804,129 @@ const handleSave = async () => {
     &:hover {
       transform: translateY(-1px);
     }
+  }
+}
+
+// 自定义下拉选择器样式
+.custom-select {
+  position: relative;
+  width: 100%;
+  
+  .select-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    &.active {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .selected-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .selected-label {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 500;
+      color: #1f2937;
+    }
+    
+    .arrow-icon {
+      font-size: 16px;
+      color: #6b7280;
+      transition: transform 0.2s ease;
+      
+      &.rotate {
+        transform: rotate(180deg);
+      }
+    }
+  }
+  
+  .select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 1000;
+    
+    .select-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #f9fafb;
+      }
+      
+      &.selected {
+        background-color: #f5f3ff;
+      }
+      
+      .option-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      
+      .option-content {
+        flex: 1;
+        
+        .option-label {
+          display: block;
+          font-weight: 500;
+          color: #1f2937;
+          font-size: 14px;
+        }
+        
+        .option-desc {
+          display: block;
+          color: #9ca3af;
+          font-size: 13px;
+          margin-top: 2px;
+        }
+      }
+      
+      .check-icon {
+        color: #6366f1;
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+// 选中样式预览
+.selected-style-preview {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #6366f1;
+  }
+  
+  .style-preview {
+    flex-shrink: 0;
   }
 }
 

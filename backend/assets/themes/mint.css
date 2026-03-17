@@ -1,0 +1,108 @@
+/* ============================================
+   Mint - 清新薄荷
+   清新自然，清爽舒适
+   ============================================ */
+
+.card-inner {
+  background-color: #f0fdf4;
+}
+
+.card-content {
+  color: #14532d;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #22c55e;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h1::before {
+  content: '🌿 ';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #16a34a;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.card-content p {
+  margin-bottom: 25px;
+}
+
+.card-content ul, .card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin-bottom: 15px;
+}
+
+.card-content strong {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.card-content em {
+  color: #4ade80;
+}
+
+.card-content code {
+  background-color: #dcfce7;
+  color: #16a34a;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 36px;
+}
+
+.card-content pre {
+  background-color: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 25px 0;
+  overflow-x: auto;
+}
+
+.card-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-content blockquote {
+  background-color: #ecfccb;
+  border-left: 6px solid #22c55e;
+  padding: 25px 30px;
+  margin: 25px 0;
+  border-radius: 0 16px 16px 0;
+}
+
+.card-content blockquote p {
+  margin-bottom: 0;
+  color: #166534;
+}
+
+.card-content .tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 32px;
+  margin: 8px 8px 8px 0;
+}
+
+.card-content .page-number {
+  color: #4ade80;
+  font-size: 28px;
+}

@@ -1,0 +1,108 @@
+/* ============================================
+   Pink Cream - 粉色奶油
+   甜美温柔，少女心爆棚
+   ============================================ */
+
+.card-inner {
+  background-color: #fff0f5;
+}
+
+.card-content {
+  color: #8b5a7c;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 40px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 68px;
+  font-weight: 700;
+  color: #ec4899;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h1::before {
+  content: '💕 ';
+}
+
+.card-content h2 {
+  font-size: 54px;
+  font-weight: 600;
+  color: #db2777;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.card-content p {
+  margin-bottom: 25px;
+}
+
+.card-content ul, .card-content ol {
+  margin: 20px 0;
+  padding-left: 40px;
+}
+
+.card-content li {
+  margin-bottom: 15px;
+}
+
+.card-content strong {
+  color: #ec4899;
+  font-weight: 600;
+}
+
+.card-content em {
+  color: #f472b6;
+}
+
+.card-content code {
+  background-color: #fce7f3;
+  color: #db2777;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 36px;
+}
+
+.card-content pre {
+  background-color: #fdf2f8;
+  border: 2px solid #f9a8d4;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 25px 0;
+  overflow-x: auto;
+}
+
+.card-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-content blockquote {
+  background-color: #fce7f3;
+  border-left: 6px solid #ec4899;
+  padding: 25px 30px;
+  margin: 25px 0;
+  border-radius: 0 16px 16px 0;
+}
+
+.card-content blockquote p {
+  margin-bottom: 0;
+  color: #9d174d;
+}
+
+.card-content .tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 32px;
+  margin: 8px 8px 8px 0;
+}
+
+.card-content .page-number {
+  color: #f472b6;
+  font-size: 28px;
+}

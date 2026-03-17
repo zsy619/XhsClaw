@@ -45,38 +45,51 @@ type ThemeConfig struct {
 	AccentColor   string // 强调色
 }
 
+// templateCache 模板缓存
+type templateCache struct {
+	templates    map[string]*template.Template
+	lastModified map[string]time.Time
+}
+
 // RendererService 渲染服务
 type RendererService struct {
 	themes    map[string]ThemeConfig
-	templates map[string]*template.Template
+	templates *templateCache
 	imagesDir string
 	assetsDir string
 }
 
 // NewRendererService 创建渲染服务实例
-func NewRendererService() *RendererService {
+func NewRendererService() (*RendererService, error) {
 	// 获取项目根目录
 	projectRoot := getProjectRoot()
 	assetsDir := filepath.Join(projectRoot, "assets")
 	imagesDir := filepath.Join(projectRoot, "public", "images")
 
 	// 确保目录存在
-	os.MkdirAll(imagesDir, 0755)
+	if err := os.MkdirAll(imagesDir, 0755); err != nil {
+		return nil, fmt.Errorf("创建图片目录失败: %v", err)
+	}
 
 	s := &RendererService{
 		imagesDir: imagesDir,
 		assetsDir: assetsDir,
 		themes:    make(map[string]ThemeConfig),
-		templates: make(map[string]*template.Template),
+		templates: &templateCache{
+			templates:    make(map[string]*template.Template),
+			lastModified: make(map[string]time.Time),
+		},
 	}
 
 	// 初始化主题配置
 	s.initThemes()
 
 	// 加载模板
-	s.loadTemplates()
+	if err := s.loadTemplates(); err != nil {
+		return nil, fmt.Errorf("加载模板失败: %v", err)
+	}
 
-	return s
+	return s, nil
 }
 
 // getProjectRoot 获取项目根目录
@@ -99,6 +112,62 @@ func (s *RendererService) initThemes() {
 			CardBg:        "linear-gradient(180deg, #f3f3f3 0%, #f9f9f9 100%)",
 			TitleGradient: "linear-gradient(180deg, #111827 0%, #4B5563 100%)",
 			AccentColor:   "#6366f1",
+		},
+		"xiaohongshu": {
+			Key:           "xiaohongshu",
+			Name:          "小红书红",
+			CoverBg:       "linear-gradient(180deg, #ff4757 0%, #ff6b81 100%)",
+			CardBg:        "linear-gradient(135deg, #ff4757 0%, #ff6b81 100%)",
+			TitleGradient: "linear-gradient(180deg, #ff2442 0%, #ff6b81 100%)",
+			AccentColor:   "#ff2442",
+		},
+		"purple": {
+			Key:           "purple",
+			Name:          "紫韵",
+			CoverBg:       "linear-gradient(180deg, #8b5cf6 0%, #a78bfa 100%)",
+			CardBg:        "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)",
+			TitleGradient: "linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%)",
+			AccentColor:   "#8b5cf6",
+		},
+		"mint": {
+			Key:           "mint",
+			Name:          "清新薄荷",
+			CoverBg:       "linear-gradient(180deg, #22c55e 0%, #4ade80 100%)",
+			CardBg:        "linear-gradient(135deg, #22c55e 0%, #4ade80 100%)",
+			TitleGradient: "linear-gradient(180deg, #16a34a 0%, #4ade80 100%)",
+			AccentColor:   "#22c55e",
+		},
+		"sunset": {
+			Key:           "sunset",
+			Name:          "日落橙",
+			CoverBg:       "linear-gradient(180deg, #f97316 0%, #fb923c 100%)",
+			CardBg:        "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
+			TitleGradient: "linear-gradient(180deg, #ea580c 0%, #fb923c 100%)",
+			AccentColor:   "#f97316",
+		},
+		"ocean": {
+			Key:           "ocean",
+			Name:          "深海蓝",
+			CoverBg:       "linear-gradient(180deg, #0284c7 0%, #38bdf8 100%)",
+			CardBg:        "linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)",
+			TitleGradient: "linear-gradient(180deg, #0369a1 0%, #38bdf8 100%)",
+			AccentColor:   "#0284c7",
+		},
+		"elegant": {
+			Key:           "elegant",
+			Name:          "优雅白",
+			CoverBg:       "linear-gradient(180deg, #e5e5e5 0%, #f5f5f5 100%)",
+			CardBg:        "linear-gradient(135deg, #e5e5e5 0%, #fafafa 100%)",
+			TitleGradient: "linear-gradient(180deg, #171717 0%, #404040 100%)",
+			AccentColor:   "#171717",
+		},
+		"dark": {
+			Key:           "dark",
+			Name:          "暗黑模式",
+			CoverBg:       "linear-gradient(180deg, #171717 0%, #262626 100%)",
+			CardBg:        "linear-gradient(135deg, #0a0a0a 0%, #171717 100%)",
+			TitleGradient: "linear-gradient(180deg, #ffffff 0%, #a3a3a3 100%)",
+			AccentColor:   "#3b82f6",
 		},
 		"playful-geometric": {
 			Key:           "playful-geometric",
@@ -156,24 +225,120 @@ func (s *RendererService) initThemes() {
 			TitleGradient: "linear-gradient(180deg, #111827 0%, #6B7280 100%)",
 			AccentColor:   "#ec4899",
 		},
+		"pink-cream": {
+			Key:           "pink-cream",
+			Name:          "粉色奶油",
+			CoverBg:       "linear-gradient(180deg, #f472b6 0%, #ec4899 100%)",
+			CardBg:        "linear-gradient(135deg, #f472b6 0%, #ec4899 100%)",
+			TitleGradient: "linear-gradient(180deg, #db2777 0%, #f472b6 100%)",
+			AccentColor:   "#ec4899",
+		},
+		"coral": {
+			Key:           "coral",
+			Name:          "珊瑚粉",
+			CoverBg:       "linear-gradient(180deg, #fb7185 0%, #f43f5e 100%)",
+			CardBg:        "linear-gradient(135deg, #fb7185 0%, #f43f5e 100%)",
+			TitleGradient: "linear-gradient(180deg, #e11d48 0%, #fb7185 100%)",
+			AccentColor:   "#f43f5e",
+		},
+		"lavender": {
+			Key:           "lavender",
+			Name:          "薰衣草紫",
+			CoverBg:       "linear-gradient(180deg, #a78bfa 0%, #8b5cf6 100%)",
+			CardBg:        "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)",
+			TitleGradient: "linear-gradient(180deg, #7c3aed 0%, #a78bfa 100%)",
+			AccentColor:   "#8b5cf6",
+		},
+		"cream": {
+			Key:           "cream",
+			Name:          "奶黄包",
+			CoverBg:       "linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)",
+			CardBg:        "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+			TitleGradient: "linear-gradient(180deg, #d97706 0%, #fbbf24 100%)",
+			AccentColor:   "#f59e0b",
+		},
+		"nordic": {
+			Key:           "nordic",
+			Name:          "北欧风格",
+			CoverBg:       "linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 100%)",
+			CardBg:        "linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%)",
+			TitleGradient: "linear-gradient(180deg, #1e293b 0%, #475569 100%)",
+			AccentColor:   "#334155",
+		},
+		"peach": {
+			Key:           "peach",
+			Name:          "蜜桃粉",
+			CoverBg:       "linear-gradient(180deg, #fda4af 0%, #f43f5e 100%)",
+			CardBg:        "linear-gradient(135deg, #fda4af 0%, #f43f5e 100%)",
+			TitleGradient: "linear-gradient(180deg, #e11d48 0%, #fb7185 100%)",
+			AccentColor:   "#f43f5e",
+		},
 	}
 }
 
 // loadTemplates 加载HTML模板
-func (s *RendererService) loadTemplates() {
+func (s *RendererService) loadTemplates() error {
 	templatesDir := filepath.Join(s.assetsDir, "templates")
 
 	// 加载封面模板
 	coverPath := filepath.Join(templatesDir, "cover.html")
-	if content, err := os.ReadFile(coverPath); err == nil {
-		s.templates["cover"] = template.Must(template.New("cover").Parse(string(content)))
+	if err := s.loadTemplate("cover", coverPath); err != nil {
+		return err
 	}
 
 	// 加载卡片模板
 	cardPath := filepath.Join(templatesDir, "card.html")
-	if content, err := os.ReadFile(cardPath); err == nil {
-		s.templates["card"] = template.Must(template.New("card").Parse(string(content)))
+	if err := s.loadTemplate("card", cardPath); err != nil {
+		return err
 	}
+
+	return nil
+}
+
+// loadTemplate 加载单个模板
+func (s *RendererService) loadTemplate(name, path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("读取%s模板失败: %v", name, err)
+	}
+
+	tmpl := template.Must(template.New(name).Parse(string(content)))
+	s.templates.templates[name] = tmpl
+
+	// 更新最后修改时间
+	if info, err := os.Stat(path); err == nil {
+		s.templates.lastModified[name] = info.ModTime()
+	}
+
+	return nil
+}
+
+// getTemplate 获取模板（带缓存检查）
+func (s *RendererService) getTemplate(name string) (*template.Template, error) {
+	templatesDir := filepath.Join(s.assetsDir, "templates")
+	path := filepath.Join(templatesDir, name+".html")
+
+	// 检查文件是否存在
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("模板文件不存在: %v", err)
+	}
+
+	// 检查是否需要重新加载
+	lastModified, exists := s.templates.lastModified[name]
+	if !exists || info.ModTime().After(lastModified) {
+		// 重新加载模板
+		if err := s.loadTemplate(name, path); err != nil {
+			return nil, err
+		}
+	}
+
+	tmpl, exists := s.templates.templates[name]
+	if !exists {
+		return nil, fmt.Errorf("模板未加载: %s", name)
+	}
+
+	return tmpl, nil
 }
 
 // GetImagesDir 获取图片存储目录
@@ -213,6 +378,67 @@ func (s *RendererService) loadThemeCSS(theme string) string {
 	return ""
 }
 
+// renderTemplate 统一渲染模板
+func (s *RendererService) renderTemplate(templateName string, data interface{}) (string, error) {
+	// 验证模板数据
+	if err := s.validateTemplateData(data); err != nil {
+		return "", err
+	}
+	
+	// 获取模板（带缓存检查）
+	tmpl, err := s.getTemplate(templateName)
+	if err != nil {
+		return "", err
+	}
+	
+	var htmlBuf bytes.Buffer
+	if err := tmpl.Execute(&htmlBuf, data); err != nil {
+		return "", fmt.Errorf("渲染%s模板失败: %v", templateName, err)
+	}
+	return htmlBuf.String(), nil
+}
+
+// validateTemplateData 验证模板数据
+func (s *RendererService) validateTemplateData(data interface{}) error {
+	switch d := data.(type) {
+	case CardData:
+		if d.Width <= 0 {
+			return fmt.Errorf("无效的卡片宽度: %d", d.Width)
+		}
+		if d.Height <= 0 {
+			return fmt.Errorf("无效的卡片高度: %d", d.Height)
+		}
+		if d.Content == "" {
+			return fmt.Errorf("卡片内容不能为空")
+		}
+		if d.FontSize < 0 {
+			return fmt.Errorf("无效的字体大小: %d", d.FontSize)
+		}
+		if d.LineHeight < 0 {
+			return fmt.Errorf("无效的行高: %f", d.LineHeight)
+		}
+		if d.Padding < 0 {
+			return fmt.Errorf("无效的内边距: %d", d.Padding)
+		}
+		if d.BorderRadius < 0 {
+			return fmt.Errorf("无效的边框圆角: %d", d.BorderRadius)
+		}
+	case CoverData:
+		if d.Width <= 0 {
+			return fmt.Errorf("无效的封面宽度: %d", d.Width)
+		}
+		if d.Height <= 0 {
+			return fmt.Errorf("无效的封面高度: %d", d.Height)
+		}
+		if d.Title == "" {
+			return fmt.Errorf("封面标题不能为空")
+		}
+	default:
+		return fmt.Errorf("未知的模板数据类型")
+	}
+	return nil
+}
+
 // CoverData 封面模板数据
 type CoverData struct {
 	Width             int
@@ -227,11 +453,14 @@ type CoverData struct {
 	Emoji             string
 	EmojiSize         int
 	EmojiMarginBottom int
+	EmojiColor        string
 	Title             string
 	TitleSize         int
 	TitleGradient     string
+	TitleColor        string
 	Subtitle          string
 	SubtitleSize      int
+	SubtitleColor     string
 }
 
 // CardData 卡片模板数据
@@ -242,6 +471,10 @@ type CardData struct {
 	Content    string
 	ThemeCSS   string
 	PageNumber string
+	FontSize   int
+	LineHeight float64
+	Padding    int
+	BorderRadius int
 }
 
 // calculateTitleSize 根据标题长度计算字体大小
@@ -286,25 +519,24 @@ func (s *RendererService) GenerateCoverOnly(title, subtitle, styleKey, outputPre
 		Emoji:             "📝",
 		EmojiSize:         int(float64(width) * 0.167),
 		EmojiMarginBottom: int(float64(height) * 0.035),
+		EmojiColor:        "",
 		Title:             title,
 		TitleSize:         calculateTitleSize(title, width),
 		TitleGradient:     theme.TitleGradient,
+		TitleColor:        "",
 		Subtitle:          subtitle,
 		SubtitleSize:      int(float64(width) * 0.067),
+		SubtitleColor:     "",
 	}
 
 	// 渲染HTML
-	var htmlBuf bytes.Buffer
-	if tmpl, ok := s.templates["cover"]; ok {
-		if err := tmpl.Execute(&htmlBuf, data); err != nil {
-			return "", fmt.Errorf("渲染封面HTML失败: %v", err)
-		}
-	} else {
-		return "", fmt.Errorf("封面模板未加载")
+	htmlContent, err := s.renderTemplate("cover", data)
+	if err != nil {
+		return "", err
 	}
 
 	// 使用Chromium渲染图片
-	imagePath, err := s.renderHTMLToImage(htmlBuf.String(), outputPrefix, "cover", width, height)
+	imagePath, err := s.renderHTMLToImage(htmlContent, outputPrefix, "cover", width, height)
 	if err != nil {
 		return "", err
 	}
@@ -348,20 +580,20 @@ func (s *RendererService) RenderMarkdownToImage(markdown, styleKey, outputPrefix
 			Content:    htmlContent,
 			ThemeCSS:   s.loadThemeCSS(styleKey),
 			PageNumber: pageNumber,
+			FontSize:   42,
+			LineHeight: 1.7,
+			Padding:    60,
+			BorderRadius: 20,
 		}
 
 		// 渲染HTML
-		var htmlBuf bytes.Buffer
-		if tmpl, ok := s.templates["card"]; ok {
-			if err := tmpl.Execute(&htmlBuf, data); err != nil {
-				return nil, fmt.Errorf("渲染卡片HTML失败: %v", err)
-			}
-		} else {
-			return nil, fmt.Errorf("卡片模板未加载")
+		htmlContent, err := s.renderTemplate("card", data)
+		if err != nil {
+			return nil, err
 		}
 
 		// 使用Chromium渲染图片
-		imagePath, err := s.renderHTMLToImage(htmlBuf.String(), outputPrefix, fmt.Sprintf("card_%d", i+1), width, height)
+		imagePath, err := s.renderHTMLToImage(htmlContent, outputPrefix, fmt.Sprintf("card_%d", i+1), width, height)
 		if err != nil {
 			return nil, err
 		}
@@ -541,8 +773,29 @@ func (s *RendererService) escapeHTML(text string) string {
 
 // renderHTMLToImage 使用Chromium渲染HTML为图片
 func (s *RendererService) renderHTMLToImage(htmlContent, outputPrefix, suffix string, width, height int) (string, error) {
-	// 创建chromedp上下文
-	ctx, cancel := chromedp.NewContext(context.Background())
+	// 指定 Chrome 浏览器路径（macOS）
+	chromePath := "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+	
+	// 检查 Chrome 是否存在
+	if _, err := os.Stat(chromePath); os.IsNotExist(err) {
+		// 尝试其他可能的路径
+		chromePath = "/Applications/Chromium.app/Contents/MacOS/Chromium"
+	}
+	
+	// 创建 chromedp 执行分配器，指定 Chrome 路径
+	allocCtx, cancelAlloc := chromedp.NewExecAllocator(context.Background(),
+		append(chromedp.DefaultExecAllocatorOptions[:],
+			chromedp.ExecPath(chromePath),
+			chromedp.Headless,
+			chromedp.NoSandbox,
+			chromedp.DisableGPU,
+			chromedp.WindowSize(width, height),
+		)...,
+	)
+	defer cancelAlloc()
+
+	// 创建 chromedp 上下文
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	// 设置超时
