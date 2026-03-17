@@ -66,8 +66,9 @@ service.interceptors.response.use(
     if (res.code !== 0) {
       ElMessage.error(res.message || '请求失败')
       
-      // 10002: 未授权，跳转到登录页
-      if (res.code === 10002) {
+      // 10002: 未授权，跳转到登录页 - 但渲染相关接口除外
+      const isRendererEndpoint = config?.url?.includes('/xiaohongshu-renderer/')
+      if (res.code === 10002 && !isRendererEndpoint) {
         localStorage.removeItem('token')
         router.push('/login')
       }
@@ -82,6 +83,7 @@ service.interceptors.response.use(
     
     const config = error.config as any
     const isAuthEndpoint = config?.url?.includes('/auth/login') || config?.url?.includes('/auth/register')
+    const isRendererEndpoint = config?.url?.includes('/xiaohongshu-renderer/')
     
     // 登录和注册接口的 401 错误不需要特殊处理，直接返回错误给调用方
     if (isAuthEndpoint && error.response?.status === 401) {
@@ -97,8 +99,11 @@ service.interceptors.response.use(
           break
         case 401:
           message = '未授权，请重新登录'
-          localStorage.removeItem('token')
-          router.push('/login')
+          // 渲染相关接口不自动跳转登录
+          if (!isRendererEndpoint) {
+            localStorage.removeItem('token')
+            router.push('/login')
+          }
           break
         case 403:
           message = '拒绝访问'

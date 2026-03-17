@@ -721,32 +721,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import {
-  MagicStick,
-  Edit,
-  DocumentCopy,
-  Download,
-  Document,
-  Star,
-  Picture,
-  Timer,
-  RefreshLeft,
-  Brush,
-  CircleCheck,
-  Plus,
-  Minus,
-  InfoFilled,
-  Close,
-  ArrowLeft,
-  ArrowRight
-} from '@element-plus/icons-vue'
 import { http } from '@/api/request'
-import { renderMarkdown, getRenderedImage } from '@/api/xiaohongshuRenderer'
-import { useUserStore } from '@/stores/user'
+import { getRenderedImage, renderMarkdown } from '@/api/xiaohongshuRenderer'
 import XiaohongshuEditor from '@/components/editor/XiaohongshuEditor.vue'
+import { useUserStore } from '@/stores/user'
+import {
+    ArrowLeft,
+    ArrowRight,
+    Brush,
+    CircleCheck,
+    Close,
+    Document,
+    DocumentCopy,
+    Download,
+    Edit,
+    InfoFilled,
+    MagicStick,
+    Minus,
+    Picture,
+    Plus,
+    RefreshLeft,
+    Star,
+    Timer
+} from '@element-plus/icons-vue'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -1365,7 +1365,7 @@ const handleSave = async () => {
 
   .style-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 12px;
 
     .style-option {

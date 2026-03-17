@@ -3,11 +3,11 @@ package handler
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 
 	"github.com/cloudwego/hertz/pkg/app"
 
-	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
@@ -34,16 +34,16 @@ type StyleInfo struct {
 // RenderRequest 渲染请求
 type RenderRequest struct {
 	MarkdownContent      string `json:"markdown_content" binding:"required"`
-	StyleKey           string `json:"style_key"`
-	OutputPrefix       string `json:"output_prefix"`
-	Mode               string `json:"mode"` // separator, auto-fit, auto-split, dynamic
-	Width              int    `json:"width"`
-	Height             int    `json:"height"`
-	MaxHeight          int    `json:"max_height"`
-	CardWidth          int    `json:"card_width"`           // 兼容前端字段
-	CardHeight         int    `json:"card_height"`          // 兼容前端字段
-	MaxContentHeight   int    `json:"max_content_height"`   // 兼容前端字段
-	EnableSmartPagination bool `json:"enable_smart_pagination"` // 兼容前端字段
+	StyleKey            string `json:"style_key"`
+	OutputPrefix        string `json:"output_prefix"`
+	Mode                string `json:"mode"`
+	Width               int    `json:"width"`
+	Height              int    `json:"height"`
+	MaxHeight           int    `json:"max_height"`
+	CardWidth           int    `json:"card_width"`
+	CardHeight          int    `json:"card_height"`
+	MaxContentHeight    int    `json:"max_content_height"`
+	EnableSmartPagination bool `json:"enable_smart_pagination"`
 }
 
 // CoverRequest 封面生成请求
@@ -73,36 +73,11 @@ type CoverResponse struct {
 
 // GetRendererStyles 获取渲染样式
 func (h *RendererHandler) GetRendererStyles(c context.Context, ctx *app.RequestContext) {
-	userID := middleware.GetUserID(c)
-	if userID == 0 {
-		response.Error(ctx, errno.Unauthorized)
-		return
-	}
-
 	styleConfigs := h.rendererService.GetStyles()
 	styles := make([]StyleInfo, len(styleConfigs))
 	for i, sc := range styleConfigs {
 		styles[i] = StyleInfo{
-			Key: func() string {
-				switch sc.Name {
-				case "小红书红":
-					return "xiaohongshu"
-				case "紫韵":
-					return "purple"
-				case "清新薄荷":
-					return "mint"
-				case "日落橙":
-					return "sunset"
-				case "深海蓝":
-					return "ocean"
-				case "优雅白":
-					return "elegant"
-				case "暗黑模式":
-					return "dark"
-				default:
-					return "xiaohongshu"
-				}
-			}(),
+			Key:  sc.Key,
 			Name: sc.Name,
 		}
 	}
@@ -114,27 +89,29 @@ func (h *RendererHandler) GetRendererStyles(c context.Context, ctx *app.RequestC
 	})
 }
 
+// verifyImageFile 验证图片文件是否存在
+func (h *RendererHandler) verifyImageFile(imagePath string) bool {
+	fullPath := filepath.Join(h.rendererService.GetImagesDir(), filepath.Base(imagePath))
+	if _, err := os.Stat(fullPath); err != nil {
+		return false
+	}
+	return true
+}
+
 // RenderMarkdown 渲染Markdown为图片
 func (h *RendererHandler) RenderMarkdown(c context.Context, ctx *app.RequestContext) {
-	userID := middleware.GetUserID(c)
-	if userID == 0 {
-		response.Error(ctx, errno.Unauthorized)
-		return
-	}
-
 	var req RenderRequest
 	if err := ctx.BindAndValidate(&req); err != nil {
 		response.ParamError(ctx, err.Error())
 		return
 	}
 
-	// 兼容前端字段 - 优先使用 card_width 等字段
 	width := req.Width
 	if req.CardWidth > 0 {
 		width = req.CardWidth
 	}
 	if width == 0 {
-		width = 1080 // 默认宽度
+		width = 1080
 	}
 
 	height := req.Height
@@ -142,7 +119,7 @@ func (h *RendererHandler) RenderMarkdown(c context.Context, ctx *app.RequestCont
 		height = req.CardHeight
 	}
 	if height == 0 {
-		height = 1440 // 默认高度
+		height = 1440
 	}
 
 	maxHeight := req.MaxHeight
@@ -150,13 +127,20 @@ func (h *RendererHandler) RenderMarkdown(c context.Context, ctx *app.RequestCont
 		maxHeight = req.MaxContentHeight
 	}
 	if maxHeight == 0 {
-		maxHeight = height - 340 // 默认最大内容高度
+		maxHeight = 1100
 	}
 
+	mode := service.PaginationMode(req.Mode)
+	if mode == "" {
+		mode = service.PaginationAutoSplit
+	}
+
+	// 生成图片
 	images, err := h.rendererService.RenderMarkdownToImage(
 		req.MarkdownContent,
 		req.StyleKey,
 		req.OutputPrefix,
+		mode,
 		width,
 		height,
 		maxHeight,
@@ -166,21 +150,28 @@ func (h *RendererHandler) RenderMarkdown(c context.Context, ctx *app.RequestCont
 		return
 	}
 
+	// 自我校验：验证生成的图片文件是否存在
+	validImages := make([]string, 0)
+	for _, imgPath := range images {
+		if h.verifyImageFile(imgPath) {
+			validImages = append(validImages, imgPath)
+		}
+	}
+
+	if len(validImages) == 0 && len(images) > 0 {
+		// 如果验证失败但有路径，仍返回原始路径
+		validImages = images
+	}
+
 	response.Success(ctx, RenderResponse{
 		Success: true,
 		Message: "渲染成功",
-		Images:  images,
+		Images:  validImages,
 	})
 }
 
 // GenerateCover 生成封面
 func (h *RendererHandler) GenerateCover(c context.Context, ctx *app.RequestContext) {
-	userID := middleware.GetUserID(c)
-	if userID == 0 {
-		response.Error(ctx, errno.Unauthorized)
-		return
-	}
-
 	var req CoverRequest
 	if err := ctx.BindAndValidate(&req); err != nil {
 		response.ParamError(ctx, err.Error())
@@ -200,6 +191,12 @@ func (h *RendererHandler) GenerateCover(c context.Context, ctx *app.RequestConte
 		return
 	}
 
+	// 验证封面图片
+	if !h.verifyImageFile(imagePath) {
+		response.Error(ctx, errno.InternalError.WithMessage("封面图片生成失败"))
+		return
+	}
+
 	response.Success(ctx, CoverResponse{
 		Success: true,
 		Message: "封面生成成功",
@@ -215,9 +212,6 @@ func GetRenderedImage(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 
-	// 安全地构建文件路径
 	imagePath := filepath.Join("./public/images", filename)
-
-	// 返回图片文件
 	ctx.File(imagePath)
 }

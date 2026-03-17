@@ -62,3 +62,4 @@ docs/*
 frontend/VITE_UPGRADE_GUIDE.md
 frontend/package.json.v5.backup
 frontend/UPGRADE_GUIDE.md
+.dropstone

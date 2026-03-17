@@ -18,7 +18,6 @@ const routes: RouteRecordRaw[] = [
     name: 'Layout',
     component: () => import('@/components/layout/MainLayout.vue'),
     redirect: '/dashboard',
-    meta: { requiresAuth: true },
     children: [
       {
         path: 'dashboard',
@@ -30,7 +29,7 @@ const routes: RouteRecordRaw[] = [
         path: 'creation',
         name: 'Creation',
         component: () => import('@/views/ContentGenerator/CreationCenterView.vue'),
-        meta: { title: '创作中心', icon: 'Edit' }
+        meta: { title: '创作中心', icon: 'Edit', requiresAuth: false }
       },
       {
         path: 'content',

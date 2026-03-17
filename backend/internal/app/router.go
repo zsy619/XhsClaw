@@ -16,8 +16,7 @@ import (
 
 // getProjectRoot 获取项目根目录的绝对路径
 func getProjectRoot() string {
-	// 使用固定的绝对路径，避免 Air 热重载时的路径问题
-	return "/Volumes/E/JYW/创意项目/xiaohongshu/backend"
+	return "/Volumes/E/JYW/创意项目/XhsClaw/backend"
 }
 
 // serveImage 自定义静态图片文件处理器
@@ -34,7 +33,7 @@ func serveImage(imagesDir string) app.HandlerFunc {
 
 		// 安全地构建文件路径
 		imagePath := filepath.Join(imagesDir, filename)
-		
+
 		// 检查路径是否安全（防止路径遍历攻击）
 		absImagesDir, err := filepath.Abs(imagesDir)
 		if err != nil {
@@ -42,14 +41,14 @@ func serveImage(imagesDir string) app.HandlerFunc {
 			ctx.String(500, "服务器错误")
 			return
 		}
-		
+
 		absImagePath, err := filepath.Abs(imagePath)
 		if err != nil {
 			logger.Error("获取图片绝对路径失败: %v", err)
 			ctx.String(500, "服务器错误")
 			return
 		}
-		
+
 		// 确保图片路径在 imagesDir 目录下
 		if !strings.HasPrefix(absImagePath, absImagesDir) {
 			logger.Warn("非法的图片路径请求: %s", filename)
@@ -58,7 +57,7 @@ func serveImage(imagesDir string) app.HandlerFunc {
 		}
 
 		logger.Info("提供图片: %s", absImagePath)
-		
+
 		// 返回图片文件
 		ctx.File(absImagePath)
 	}
@@ -72,15 +71,6 @@ func SetupRouter(h *server.Hertz) {
 
 	logger := utils.GetLogger()
 	logger.Info("静态文件目录: %s", imagesDir)
-
-	// 安全响应头中间件
-	h.Use(middleware.SecurityHeadersMiddleware())
-
-	// 请求ID中间件
-	h.Use(middleware.RequestIDMiddleware())
-
-	// 通用限流中间件
-	h.Use(middleware.RateLimitMiddleware())
 
 	// CORS中间件
 	h.Use(middleware.CORSMiddleware())
@@ -98,7 +88,7 @@ func SetupRouter(h *server.Hertz) {
 	h.GET("/health", handler.HealthCheck)
 	h.GET("/ready", handler.ReadyCheck)
 	h.GET("/live", handler.LivenessCheck)
-	
+
 	// 公共路由
 	api := h.Group("/api")
 	{
@@ -115,102 +105,34 @@ func SetupRouter(h *server.Hertz) {
 			auth.POST("/login", userHandler.Login)
 		}
 
-		// 公共静态资源 - 图片访问不需要认证（img标签无法携带token）
+		// 公共静态资源 - 图片访问不需要认证
 		api.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
 
-		// 需要认证的路由
-		authorized := api.Group("")
-		authorized.Use(middleware.AuthMiddleware())
-		{
-			// 用户信息
-			authorized.GET("/auth/me", userHandler.GetUserInfo)
-			authorized.POST("/auth/logout", userHandler.Logout)
-			authorized.GET("/auth/profile", userHandler.GetProfile)
-			authorized.GET("/user/info", userHandler.GetUserInfo)
-			authorized.GET("/users", userHandler.ListUsers)
-			
-			// 角色和权限管理
-			authorized.GET("/roles", roleHandler.ListRoles)
-			authorized.GET("/roles/all", roleHandler.ListAllRoles)
-			authorized.GET("/roles/:id", roleHandler.GetRole)
-			authorized.POST("/roles", roleHandler.CreateRole)
-			authorized.PUT("/roles/:id", roleHandler.UpdateRole)
-			authorized.DELETE("/roles/:id", roleHandler.DeleteRole)
-			authorized.GET("/permissions", roleHandler.ListPermissions)
-			authorized.PUT("/users/:id/role", roleHandler.UpdateUserRole)
-			authorized.PUT("/users/:id/status", roleHandler.UpdateUserStatus)
-
-			// 用户配置
-			config := authorized.Group("/user/config")
-			{
-				config.GET("", userConfigHandler.GetConfig)
-				config.PUT("", userConfigHandler.UpdateConfig)
-			}
-
-			// 内容生成 - /api/generation
-			generation := authorized.Group("/generation")
-			{
-				// 生成内容限流中间件
-				generation.Use(middleware.GenerateRateLimitMiddleware())
-				generation.POST("/theme", generationHandler.GenerateContent)
-				generation.POST("/rewrite", generationHandler.RewriteContent)
-			}
-
-			// 内容管理 - /api/content
-			content := authorized.Group("/content")
-			{
-				content.POST("/generate", contentHandler.GenerateContent)
-				content.POST("/save", generationHandler.SaveContent)
-				content.GET("/list", contentHandler.ListContents)
-				content.GET("/:id", contentHandler.GetContent)
-				content.PUT("/:id", contentHandler.UpdateContent)
-				content.DELETE("/:id", contentHandler.DeleteContent)
-				// 历史记录
-				content.GET("/histories/list", contentHandler.ListContentHistories)
-				content.GET("/histories/:id", contentHandler.GetContentHistory)
-				content.POST("/histories/:id/restore", contentHandler.RestoreContentHistory)
-			}
-
-			// 发布管理 - /api/publish
-			publish := authorized.Group("/publish")
-			{
-				publish.POST("/schedule", publishHandler.SchedulePublish)
-				publish.POST("/now", publishHandler.PublishNow)
-				publish.GET("/list", publishHandler.ListPublishRecords)
-				publish.GET("/:id", publishHandler.GetPublishRecord)
-				publish.POST("/:id/cancel", publishHandler.CancelPublish)
-				publish.POST("/:id/retry", publishHandler.RetryPublish)
-			}
-
-			// 小红书渲染器 - /api/xiaohongshu-renderer
-			renderer := authorized.Group("/xiaohongshu-renderer")
-			{
-				renderer.GET("/styles", rendererHandler.GetRendererStyles)
-				renderer.POST("/render", rendererHandler.RenderMarkdown)
-				renderer.POST("/cover", rendererHandler.GenerateCover)
-			}
-		}
-
-		// 旧版本兼容 - /api/v1
+		// ======== 重要：/api/v1 路由组放在认证路由之前 ========
 		v1 := api.Group("/v1")
 		{
-			// v1 版本公共静态资源
+			// v1 版本公共静态资源 - 不需要认证
 			v1.GET("/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
 
-			// 用户认证
+			// v1 版本小红书渲染器 - 不需要认证
+			v1.GET("/xiaohongshu-renderer/styles", rendererHandler.GetRendererStyles)
+			v1.POST("/xiaohongshu-renderer/render", rendererHandler.RenderMarkdown)
+			v1.POST("/xiaohongshu-renderer/cover", rendererHandler.GenerateCover)
+
+			// v1 用户认证
 			v1Auth := v1.Group("/auth")
 			{
 				v1Auth.POST("/register", userHandler.Register)
 				v1Auth.POST("/login", userHandler.Login)
 			}
 
-			// 需要认证的路由
+			// v1 需要认证的路由
 			v1Authorized := v1.Group("")
 			v1Authorized.Use(middleware.AuthMiddleware())
 			{
 				v1Authorized.GET("/user/info", userHandler.GetUserInfo)
 				v1Authorized.GET("/users", userHandler.ListUsers)
-				
+
 				// 角色和权限管理
 				v1Authorized.GET("/roles", roleHandler.ListRoles)
 				v1Authorized.GET("/roles/all", roleHandler.ListAllRoles)
@@ -237,7 +159,6 @@ func SetupRouter(h *server.Hertz) {
 					v1Content.GET("/:id", contentHandler.GetContent)
 					v1Content.PUT("/:id", contentHandler.UpdateContent)
 					v1Content.DELETE("/:id", contentHandler.DeleteContent)
-					// 历史记录
 					v1Content.GET("/histories/list", contentHandler.ListContentHistories)
 					v1Content.GET("/histories/:id", contentHandler.GetContentHistory)
 					v1Content.POST("/histories/:id/restore", contentHandler.RestoreContentHistory)
@@ -253,21 +174,84 @@ func SetupRouter(h *server.Hertz) {
 					v1Publish.POST("/:id/retry", publishHandler.RetryPublish)
 				}
 
-				// 内容生成 - /api/v1/generation
 				v1Generation := v1Authorized.Group("/generation")
 				{
 					v1Generation.POST("/theme", generationHandler.GenerateContent)
 					v1Generation.POST("/rewrite", generationHandler.RewriteContent)
 				}
+			}
+		}
 
-				// 小红书渲染器 - /api/v1/xiaohongshu-renderer
-				v1Renderer := v1Authorized.Group("/xiaohongshu-renderer")
-				{
-					v1Renderer.GET("/styles", rendererHandler.GetRendererStyles)
-					v1Renderer.POST("/render", rendererHandler.RenderMarkdown)
-					v1Renderer.POST("/cover", rendererHandler.GenerateCover)
-				}
+		// ======== 需要认证的路由 ========
+		authorized := api.Group("")
+		authorized.Use(middleware.AuthMiddleware())
+		{
+			// 用户信息
+			authorized.GET("/auth/me", userHandler.GetUserInfo)
+			authorized.POST("/auth/logout", userHandler.Logout)
+			authorized.GET("/auth/profile", userHandler.GetProfile)
+			authorized.GET("/user/info", userHandler.GetUserInfo)
+			authorized.GET("/users", userHandler.ListUsers)
+
+			// 角色和权限管理
+			authorized.GET("/roles", roleHandler.ListRoles)
+			authorized.GET("/roles/all", roleHandler.ListAllRoles)
+			authorized.GET("/roles/:id", roleHandler.GetRole)
+			authorized.POST("/roles", roleHandler.CreateRole)
+			authorized.PUT("/roles/:id", roleHandler.UpdateRole)
+			authorized.DELETE("/roles/:id", roleHandler.DeleteRole)
+			authorized.GET("/permissions", roleHandler.ListPermissions)
+			authorized.PUT("/users/:id/role", roleHandler.UpdateUserRole)
+			authorized.PUT("/users/:id/status", roleHandler.UpdateUserStatus)
+
+			// 用户配置
+			config := authorized.Group("/user/config")
+			{
+				config.GET("", userConfigHandler.GetConfig)
+				config.PUT("", userConfigHandler.UpdateConfig)
+			}
+
+			// 内容生成 - /api/generation
+			generation := authorized.Group("/generation")
+			{
+				generation.Use(middleware.GenerateRateLimitMiddleware())
+				generation.POST("/theme", generationHandler.GenerateContent)
+				generation.POST("/rewrite", generationHandler.RewriteContent)
+			}
+
+			// 内容管理 - /api/content
+			content := authorized.Group("/content")
+			{
+				content.POST("/generate", contentHandler.GenerateContent)
+				content.POST("/save", generationHandler.SaveContent)
+				content.GET("/list", contentHandler.ListContents)
+				content.GET("/:id", contentHandler.GetContent)
+				content.PUT("/:id", contentHandler.UpdateContent)
+				content.DELETE("/:id", contentHandler.DeleteContent)
+				content.GET("/histories/list", contentHandler.ListContentHistories)
+				content.GET("/histories/:id", contentHandler.GetContentHistory)
+				content.POST("/histories/:id/restore", contentHandler.RestoreContentHistory)
+			}
+
+			// 发布管理 - /api/publish
+			publish := authorized.Group("/publish")
+			{
+				publish.POST("/schedule", publishHandler.SchedulePublish)
+				publish.POST("/now", publishHandler.PublishNow)
+				publish.GET("/list", publishHandler.ListPublishRecords)
+				publish.GET("/:id", publishHandler.GetPublishRecord)
+				publish.POST("/:id/cancel", publishHandler.CancelPublish)
+				publish.POST("/:id/retry", publishHandler.RetryPublish)
+			}
+
+			// 小红书渲染器 - /api/xiaohongshu-renderer
+			renderer := authorized.Group("/xiaohongshu-renderer")
+			{
+				renderer.GET("/styles", rendererHandler.GetRendererStyles)
+				renderer.POST("/render", rendererHandler.RenderMarkdown)
+				renderer.POST("/cover", rendererHandler.GenerateCover)
 			}
 		}
 	}
+
 }

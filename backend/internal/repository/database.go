@@ -4,6 +4,7 @@ package repository
 import (
 	"encoding/json"
 	"log"
+	"sync"
 	"time"
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/model"
@@ -15,112 +16,126 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+var (
+	// DB 全局数据库连接实例
+	DB *gorm.DB
+	// once 确保数据库只初始化一次
+	once sync.Once
+)
 
 // InitDatabase 初始化数据库连接
 func InitDatabase(cfg *config.DatabaseConfig) error {
-	var err error
+	var initErr error
 	
-	// 根据运行模式配置日志级别
-	logLevel := logger.Info
-	if config.AppConfig.Server.Mode == "production" {
-		logLevel = logger.Error
-	}
+	once.Do(func() {
+		var err error
+		
+		// 根据运行模式配置日志级别
+		logLevel := logger.Info
+		if config.AppConfig.Server.Mode == "production" {
+			logLevel = logger.Error
+		}
+		
+		// 配置GORM日志
+		gormConfig := &gorm.Config{
+			Logger: logger.Default.LogMode(logLevel),
+			// 启用准备语句缓存，提高性能
+			PrepareStmt: true,
+			// 禁用默认事务，提高性能（需要时手动开启）
+			SkipDefaultTransaction: true,
+		}
+
+		// 根据数据库类型选择驱动
+		var dialector gorm.Dialector
+		if cfg.Type == "mysql" {
+			dialector = mysql.Open(cfg.GetDSN())
+		} else {
+			dialector = postgres.Open(cfg.GetDSN())
+		}
+
+		// 连接数据库
+		DB, err = gorm.Open(dialector, gormConfig)
+		if err != nil {
+			initErr = err
+			return
+		}
+
+		// 获取底层数据库连接池
+		sqlDB, err := DB.DB()
+		if err != nil {
+			initErr = err
+			return
+		}
+
+		// 配置连接池
+		sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+		sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+		sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
+		sqlDB.SetConnMaxIdleTime(time.Duration(cfg.ConnMaxIdleTime) * time.Second)
+
+		// 验证连接
+		if err := sqlDB.Ping(); err != nil {
+			initErr = err
+			return
+		}
+
+		log.Printf("Database connection pool configured: MaxOpenConns=%d, MaxIdleConns=%d",
+			cfg.MaxOpenConns, cfg.MaxIdleConns)
+
+		// 先迁移角色和权限表
+		err = DB.AutoMigrate(
+			&model.Role{},
+			&model.Permission{},
+		)
+		if err != nil {
+			initErr = err
+			return
+		}
+
+		// 初始化角色和权限数据（在迁移用户表之前）
+		if err := initPermissions(); err != nil {
+			log.Printf("Failed to init permissions: %v", err)
+		}
+		if err := initRoles(); err != nil {
+			log.Printf("Failed to init roles: %v", err)
+		}
+
+		// 临时禁用外键约束，处理旧数据
+		if cfg.Type == "postgres" {
+			DB.Exec("SET CONSTRAINTS ALL DEFERRED")
+		}
+
+		// 迁移用户表
+		err = DB.AutoMigrate(
+			&model.User{},
+			&model.UserConfig{},
+			&model.Content{},
+			&model.ContentHistory{},
+			&model.PublishRecord{},
+			&model.TokenBlacklist{},
+		)
+		if err != nil {
+			initErr = err
+			return
+		}
+
+		// 修复旧用户数据的 role_id（设置为默认的普通用户角色ID=3）
+		var count int64
+		DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Count(&count)
+		if count > 0 {
+			log.Printf("Fixing %d users with invalid role_id...", count)
+			DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Update("role_id", 3)
+		}
+
+		log.Println("Database initialized successfully")
+		
+		// 初始化admin用户
+		if err := initAdminUser(); err != nil {
+			log.Printf("Failed to init admin user: %v", err)
+		}
+	})
 	
-	// 配置GORM日志
-	gormConfig := &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
-		// 启用准备语句缓存，提高性能
-		PrepareStmt: true,
-		// 禁用默认事务，提高性能（需要时手动开启）
-		SkipDefaultTransaction: true,
-	}
-
-	// 根据数据库类型选择驱动
-	var dialector gorm.Dialector
-	if cfg.Type == "mysql" {
-		dialector = mysql.Open(cfg.GetDSN())
-	} else {
-		dialector = postgres.Open(cfg.GetDSN())
-	}
-
-	// 连接数据库
-	DB, err = gorm.Open(dialector, gormConfig)
-	if err != nil {
-		return err
-	}
-
-	// 获取底层数据库连接池
-	sqlDB, err := DB.DB()
-	if err != nil {
-		return err
-	}
-
-	// 配置连接池
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
-	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.ConnMaxIdleTime) * time.Second)
-
-	// 验证连接
-	if err := sqlDB.Ping(); err != nil {
-		return err
-	}
-
-	log.Printf("Database connection pool configured: MaxOpenConns=%d, MaxIdleConns=%d",
-		cfg.MaxOpenConns, cfg.MaxIdleConns)
-
-	// 先迁移角色和权限表
-	err = DB.AutoMigrate(
-		&model.Role{},
-		&model.Permission{},
-	)
-	if err != nil {
-		return err
-	}
-
-	// 初始化角色和权限数据（在迁移用户表之前）
-	if err := initPermissions(); err != nil {
-		log.Printf("Failed to init permissions: %v", err)
-	}
-	if err := initRoles(); err != nil {
-		log.Printf("Failed to init roles: %v", err)
-	}
-
-	// 临时禁用外键约束，处理旧数据
-	if cfg.Type == "postgres" {
-		DB.Exec("SET CONSTRAINTS ALL DEFERRED")
-	}
-
-	// 迁移用户表
-	err = DB.AutoMigrate(
-		&model.User{},
-		&model.UserConfig{},
-		&model.Content{},
-		&model.ContentHistory{},
-		&model.PublishRecord{},
-		&model.TokenBlacklist{},
-	)
-	if err != nil {
-		return err
-	}
-
-	// 修复旧用户数据的 role_id（设置为默认的普通用户角色ID=3）
-	var count int64
-	DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Count(&count)
-	if count > 0 {
-		log.Printf("Fixing %d users with invalid role_id...", count)
-		DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Update("role_id", 3)
-	}
-
-	log.Println("Database initialized successfully")
-	
-	// 初始化admin用户
-	if err := initAdminUser(); err != nil {
-		log.Printf("Failed to init admin user: %v", err)
-	}
-	
-	return nil
+	return initErr
 }
 
 // GetDB 获取数据库实例
