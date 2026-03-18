@@ -802,15 +802,15 @@ type CoverData struct {
 
 // CardData 卡片模板数据
 type CardData struct {
-	Width      int
-	Height     int
-	Background string
-	Content    string
-	ThemeCSS   string
-	PageNumber string
-	FontSize   int
-	LineHeight float64
-	Padding    int
+	Width       int
+	Height      int
+	Background  string
+	Content     string
+	ThemeCSS    string
+	PageNumber  string
+	FontSize    int
+	LineHeight  float64
+	Padding     int
 	BorderRadius int
 }
 

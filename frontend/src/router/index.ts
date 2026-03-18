@@ -96,6 +96,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Settings',
         component: () => import('@/views/Settings/IndexView.vue'),
         meta: { title: '系统设置', icon: 'Setting' }
+      },
+      {
+        path: 'token-usage',
+        name: 'TokenUsage',
+        component: () => import('@/views/TokenUsage/TokenUsageView.vue'),
+        meta: { title: 'Token使用统计', icon: 'Coin' }
       }
     ]
   },

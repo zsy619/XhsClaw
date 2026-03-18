@@ -37,6 +37,13 @@ type DeepSeekChoice struct {
 	FinishReason string         `json:"finish_reason"`
 }
 
+// DeepSeekUsage DeepSeek使用量结构
+type DeepSeekUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+
 // DeepSeekResponse DeepSeek响应结构
 type DeepSeekResponse struct {
 	ID      string          `json:"id"`
@@ -44,6 +51,7 @@ type DeepSeekResponse struct {
 	Created int64           `json:"created"`
 	Model   string          `json:"model"`
 	Choices []DeepSeekChoice `json:"choices"`
+	Usage   DeepSeekUsage   `json:"usage"`
 }
 
 // GeneratedContent 生成的内容结构
@@ -55,7 +63,8 @@ type GeneratedContent struct {
 
 // AIService AI服务
 type AIService struct {
-	defaultCfg *config.DeepSeekConfig
+	defaultCfg     *config.DeepSeekConfig
+	tokenUsageSvc  *TokenUsageService
 }
 
 // NewAIService 创建AI服务实例
@@ -71,7 +80,8 @@ func NewAIService() *AIService {
 		}
 	}
 	return &AIService{
-		defaultCfg: defaultCfg,
+		defaultCfg:    defaultCfg,
+		tokenUsageSvc: NewTokenUsageService(),
 	}
 }
 
@@ -134,16 +144,30 @@ func (s *AIService) GenerateXiaohongshuContent(skillContent string, count int, l
 	}
 
 	response, err := s.callDeepSeekAPI(messages, apiKey, baseURL, model)
+	
+	// 记录Token使用情况
+	var promptTokens, completionTokens int
+	if err == nil && response != nil {
+		promptTokens = response.Usage.PromptTokens
+		completionTokens = response.Usage.CompletionTokens
+	}
+	
 	if err != nil {
+		// 记录失败的请求
+		go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
 		return nil, err
 	}
 
 	// 解析响应
 	if len(response.Choices) == 0 {
+		go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "failed", "empty response", "", "", promptTokens, completionTokens)
 		return nil, errno.GenerateFailed
 	}
 
 	content := response.Choices[0].Message.Content
+	
+	// 记录成功的请求
+	go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
 	
 	// 解析JSON
 	var items []ContentItem
@@ -170,7 +194,7 @@ func (s *AIService) GenerateXiaohongshuContent(skillContent string, count int, l
 	return items, nil
 }
 
-// callDeepSeekAPI 调用DeepSeek API
+// callDeepSeekAPI 调用DeepSeek API，返回响应和使用量
 func (s *AIService) callDeepSeekAPI(messages []DeepSeekMessage, apiKey, baseURL, model string) (*DeepSeekResponse, error) {
 	reqBody := DeepSeekRequest{
 		Model:    model,
@@ -214,4 +238,19 @@ func (s *AIService) callDeepSeekAPI(messages []DeepSeekMessage, apiKey, baseURL,
 	}
 
 	return &result, nil
+}
+
+// RecordUsage 记录Token使用情况
+func (s *AIService) RecordUsage(
+	userID uint,
+	model, provider, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string,
+	promptTokens, completionTokens int,
+) error {
+	if s.tokenUsageSvc == nil {
+		s.tokenUsageSvc = NewTokenUsageService()
+	}
+	return s.tokenUsageSvc.RecordTokenUsage(
+		userID, model, provider, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent,
+		promptTokens, completionTokens,
+	)
 }

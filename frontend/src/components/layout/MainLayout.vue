@@ -130,6 +130,7 @@
 import {
   ArrowDown,
   ArrowRight,
+  Coin,
   DataAnalysis,
   Edit,
   Folder,
@@ -228,6 +229,11 @@ const menuItems = [
     path: '/settings',
     title: '系统设置',
     icon: Setting
+  },
+  {
+    path: '/token-usage',
+    title: 'Token统计',
+    icon: Coin
   }
 ]
 

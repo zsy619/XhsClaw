@@ -113,6 +113,7 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 			&model.ContentHistory{},
 			&model.PublishRecord{},
 			&model.TokenBlacklist{},
+			&model.TokenUsage{},
 		)
 		if err != nil {
 			initErr = err
@@ -205,6 +206,10 @@ func initPermissions() error {
 		// 系统设置模块
 		{Name: "查看系统设置", Code: "settings:view", Module: "settings", Description: "查看系统配置"},
 		{Name: "修改系统设置", Code: "settings:edit", Module: "settings", Description: "修改系统配置"},
+		
+		// Token使用统计模块
+		{Name: "查看Token使用统计", Code: "token:view", Module: "token", Description: "查看Token使用统计"},
+		{Name: "查看全局Token统计", Code: "token:view_global", Module: "token", Description: "查看全局Token使用统计（管理员）"},
 	}
 	
 	for _, p := range permissions {
@@ -245,6 +250,7 @@ func initRoles() error {
 		"content:delete",
 		"content:history",
 		"content:restore",
+		"token:view",
 	}
 	userPermissionsJSON, _ := json.Marshal(userPermissions)
 	
@@ -255,6 +261,7 @@ func initRoles() error {
 		"publish:schedule",
 		"publish:history",
 		"publish:cancel",
+		"token:view",
 	)
 	contentManagerPermissionsJSON, _ := json.Marshal(contentManagerPermissions)
 	

@@ -149,10 +149,23 @@ func SetupRouter(h *server.Hertz) {
 				v1Auth.POST("/login", userHandler.Login)
 			}
 
+			// Token使用记录路由
+			tokenUsageHandler := handler.NewTokenUsageHandler()
+			
 			// v1 需要认证的路由
 			v1Authorized := v1.Group("")
 			v1Authorized.Use(middleware.AuthMiddleware())
 			{
+				// Token使用记录
+				v1Authorized.GET("/token-usage", tokenUsageHandler.GetUserTokenUsage)
+				v1Authorized.GET("/token-usage/stats", tokenUsageHandler.GetUserTokenStats)
+				v1Authorized.GET("/token-usage/daily", tokenUsageHandler.GetUserDailyStats)
+				v1Authorized.GET("/token-usage/by-model", tokenUsageHandler.GetUserStatsByModel)
+				
+				// 全局Token使用统计（仅管理员）
+				v1Authorized.GET("/admin/token-usage/global", tokenUsageHandler.GetGlobalTokenStats)
+				v1Authorized.GET("/admin/token-usage/global/daily", tokenUsageHandler.GetGlobalDailyStats)
+
 				v1Authorized.GET("/user/info", userHandler.GetUserInfo)
 				v1Authorized.GET("/users", userHandler.ListUsers)
 
