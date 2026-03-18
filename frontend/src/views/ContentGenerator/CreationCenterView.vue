@@ -1286,6 +1286,146 @@ const styleOptions = [
     icon: '🌿',
     description: '自然鼠尾草绿色，宁静治愈',
     previewClass: 'bg-green-200'
+  },
+  {
+    value: 'honey-ginger',
+    label: '蜂蜜姜茶',
+    icon: '🍯',
+    description: '温暖蜂蜜姜茶色，温馨甜蜜',
+    previewClass: 'bg-amber-200'
+  },
+  {
+    value: 'rose-milk',
+    label: '玫瑰奶茶',
+    icon: '🥤',
+    description: '浪漫玫瑰奶茶色，温柔优雅',
+    previewClass: 'bg-pink-200'
+  },
+  {
+    value: 'lavender-honey',
+    label: '薰衣草蜂蜜',
+    icon: '💐',
+    description: '梦幻薰衣草紫色，浪漫唯美',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'blue-lagoon',
+    label: '蓝色泻湖',
+    icon: '🏊',
+    description: '清新蓝色泻湖，清爽宁静',
+    previewClass: 'bg-cyan-200'
+  },
+  {
+    value: 'aurora-green',
+    label: '极光绿',
+    icon: '✨',
+    description: '神秘极光绿色，梦幻清新',
+    previewClass: 'bg-emerald-200'
+  },
+  {
+    value: 'pearl-white',
+    label: '珍珠白',
+    icon: '⚪',
+    description: '优雅珍珠白色，纯洁高贵',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'blush-pink',
+    label: '腮红粉',
+    icon: '😊',
+    description: '温柔腮红粉色，甜美可爱',
+    previewClass: 'bg-rose-200'
+  },
+  {
+    value: 'ocean-mist',
+    label: '海雾',
+    icon: '🌫️',
+    description: '轻柔海雾蓝色，朦胧唯美',
+    previewClass: 'bg-sky-200'
+  },
+  {
+    value: 'lily-white',
+    label: '百合白',
+    icon: '百合',
+    description: '纯净百合白色，优雅清新',
+    previewClass: 'bg-gray-50'
+  },
+  {
+    value: 'sun-kissed',
+    label: '阳光亲吻',
+    icon: '☀️',
+    description: '温暖阳光亲吻色，活力四射',
+    previewClass: 'bg-yellow-200'
+  },
+  {
+    value: 'berry-smoothie',
+    label: '莓果奶昔',
+    icon: '🍓',
+    description: '甜美莓果奶昔色，浓郁浪漫',
+    previewClass: 'bg-fuchsia-200'
+  },
+  {
+    value: 'winter-sky',
+    label: '冬日天空',
+    icon: '❄️',
+    description: '清冷冬日天空色，宁静高远',
+    previewClass: 'bg-sky-100'
+  },
+  {
+    value: 'ivory-cream',
+    label: '象牙奶油',
+    icon: '🧈',
+    description: '温柔象牙奶油色，柔软细腻',
+    previewClass: 'bg-yellow-50'
+  },
+  {
+    value: 'floral-pink',
+    label: '花漾粉',
+    icon: '🌺',
+    description: '灿烂花漾粉色，热情浪漫',
+    previewClass: 'bg-fuchsia-200'
+  },
+  {
+    value: 'mint-chocolate',
+    label: '薄荷巧克力',
+    icon: '🍫',
+    description: '清凉薄荷巧克力色，独特风味',
+    previewClass: 'bg-teal-200'
+  },
+  {
+    value: 'autumn-leaves',
+    label: '秋日落叶',
+    icon: '🍂',
+    description: '温暖秋日落叶色，浓郁醇厚',
+    previewClass: 'bg-orange-200'
+  },
+  {
+    value: 'rainbow-sorbet',
+    label: '彩虹冰糕',
+    icon: '🌈',
+    description: '绚丽彩虹冰糕色，多彩活力',
+    previewClass: 'bg-yellow-200'
+  },
+  {
+    value: 'cherry-blush',
+    label: 'Cherry腮红',
+    icon: '🍒',
+    description: '甜美Cherry腮红色，活泼可爱',
+    previewClass: 'bg-red-200'
+  },
+  {
+    value: 'sea-glass',
+    label: '海玻璃',
+    icon: '🫧',
+    description: '透亮海玻璃色，清澈透明',
+    previewClass: 'bg-teal-100'
+  },
+  {
+    value: 'cotton-candy',
+    label: '棉花糖',
+    icon: '🍬',
+    description: '蓬松棉花糖色，梦幻甜蜜',
+    previewClass: 'bg-pink-100'
   }
 ]
 

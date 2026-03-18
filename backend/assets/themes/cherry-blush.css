@@ -1,0 +1,155 @@
+/* ============================================
+   Cherry Blush - Cherry腮红风格
+   适配小红书卡片渲染
+   ============================================ */
+
+.card-inner {
+  background-color: #fff0f3;
+}
+
+.card-content {
+  color: #9f1239;
+  font-size: 42px;
+  line-height: 1.7;
+}
+
+.card-content h1 {
+  font-size: 72px;
+  font-weight: 700;
+  color: #be123c;
+  margin-bottom: 40px;
+  line-height: 1.3;
+}
+
+.card-content h2 {
+  font-size: 56px;
+  font-weight: 600;
+  color: #e11d48;
+  margin: 50px 0 25px 0;
+  line-height: 1.4;
+}
+
+.card-content h3 {
+  font-size: 48px;
+  font-weight: 600;
+  color: #f43f5e;
+  margin: 40px 0 20px 0;
+}
+
+.card-content p {
+  margin-bottom: 35px;
+}
+
+.card-content strong,
+.card-content b {
+  font-weight: 700;
+  color: #be123c;
+}
+
+.card-content em,
+.card-content i {
+  font-style: italic;
+  color: #fb7185;
+}
+
+.card-content a {
+  color: #e11d48;
+  text-decoration: none;
+  border-bottom: 2px solid #e11d48;
+}
+
+.card-content ul,
+.card-content ol {
+  margin: 30px 0;
+  padding-left: 60px;
+}
+
+.card-content li {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.card-content li::marker {
+  color: #fda4af;
+}
+
+.card-content blockquote {
+  border-left: 8px solid #fb7185;
+  padding-left: 40px;
+  background: #fff1f2;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  padding-right: 30px;
+  margin: 35px 0;
+  color: #e11d48;
+  font-style: italic;
+  border-radius: 0 12px 12px 0;
+}
+
+.card-content blockquote p {
+  margin: 0;
+}
+
+.card-content code {
+  background: #fff1f2;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 38px;
+  color: #f43f5e;
+}
+
+.card-content pre {
+  background: #9f1239;
+  color: #fecdd3;
+  padding: 40px;
+  border-radius: 16px;
+  margin: 35px 0;
+  overflow-x: visible;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
+  font-size: 36px;
+  line-height: 1.5;
+}
+
+.card-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+.card-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  margin: 35px auto;
+  display: block;
+  box-shadow: 0 4px 20px rgba(225, 29, 72, 0.15);
+}
+
+.card-content hr {
+  border: none;
+  height: 2px;
+  background: #fecdd3;
+  margin: 50px 0;
+}
+
+.tags-container {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 2px solid #fecdd3;
+}
+
+.tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-size: 34px;
+  margin: 10px 15px 10px 0;
+  font-weight: 500;
+}
