@@ -10,7 +10,10 @@ import (
 
 func main() {
 	// 创建渲染服务
-	renderer := service.NewRendererService()
+	renderer, err := service.NewRendererService()
+	if err != nil {
+		log.Fatalf("初始化渲染服务失败: %v", err)
+	}
 
 	// 示例 Markdown 内容
 	markdownContent := `📖 小红书运营技巧分享

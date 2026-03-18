@@ -1134,298 +1134,144 @@ const styleOptions = [
   },
   // ========== 新增 20 个小红书风格样式 ==========
   {
-    value: 'cream-custard',
-    label: '奶油布丁',
-    icon: '🧁',
-    description: '温柔奶黄色调，甜美治愈系',
-    previewClass: 'bg-amber-100'
-  },
-  {
-    value: 'sakura-pink',
-    label: '樱花粉',
-    icon: '🌸',
-    description: '浪漫樱花色调，温柔少女心',
-    previewClass: 'bg-pink-200'
-  },
-  {
-    value: 'matcha-latte',
-    label: '抹茶拿铁',
-    icon: '🍵',
-    description: '清新抹茶绿色调，文艺治愈',
-    previewClass: 'bg-green-200'
-  },
-  {
-    value: 'blueberry-cheese',
-    label: '蓝莓芝士',
-    icon: '🫐',
-    description: '优雅蓝莓紫色调，高级浪漫',
+    value: 'lavender-purple',
+    label: '薰衣草紫调',
+    icon: '💜',
+    description: '梦幻薰衣草紫色，优雅浪漫',
     previewClass: 'bg-purple-200'
   },
   {
-    value: 'caramel-macchiato',
-    label: '焦糖玛奇朵',
-    icon: '☕',
-    description: '温暖焦糖棕色系，复古优雅',
-    previewClass: 'bg-amber-200'
-  },
-  {
-    value: 'honey-peach',
-    label: '蜜桃蜂蜜',
-    icon: '🍑',
-    description: '甜美蜜桃粉色调，温柔可爱',
-    previewClass: 'bg-orange-200'
-  },
-  {
-    value: 'vanilla-milk',
-    label: '香草牛奶',
-    icon: '🥛',
-    description: '纯净奶白色调，简约温柔',
-    previewClass: 'bg-gray-100'
-  },
-  {
-    value: 'chocolate-mint',
-    label: '巧克力薄荷',
-    icon: '🍫',
-    description: '浓郁巧克力配清新薄荷，复古撞色',
+    value: 'mint-breeze',
+    label: '薄荷绿风',
+    icon: '🌿',
+    description: '清新薄荷绿色，自然治愈',
     previewClass: 'bg-green-100'
   },
   {
-    value: 'strawberry-milk',
-    label: '草莓牛奶',
-    icon: '🍓',
-    description: '甜美草莓粉色，少女心满满',
+    value: 'sakura-blossom',
+    label: '樱花粉樱',
+    icon: '🌸',
+    description: '浪漫樱花粉色，温柔少女心',
     previewClass: 'bg-pink-200'
   },
   {
-    value: 'mango-pudding',
-    label: '芒果布丁',
-    icon: '🥭',
-    description: '明亮芒果黄色，活力清新',
-    previewClass: 'bg-yellow-200'
+    value: 'deep-ocean',
+    label: '深海蓝调',
+    icon: '🌊',
+    description: '深邃海洋蓝色，宁静优雅',
+    previewClass: 'bg-blue-200'
   },
   {
-    value: 'taro-milktea',
-    label: '芋头奶茶',
-    icon: '🧋',
-    description: '温柔芋泥紫色，治愈系',
-    previewClass: 'bg-purple-200'
+    value: 'sunset-glow',
+    label: '日落橙光',
+    icon: '🌅',
+    description: '温暖日落橙色，活力满满',
+    previewClass: 'bg-orange-200'
   },
   {
-    value: 'coconut-cream',
-    label: '椰子奶油',
-    icon: '🥥',
-    description: '清新椰奶白色，自然纯净',
-    previewClass: 'bg-gray-100'
-  },
-  {
-    value: 'red-velvet',
-    label: '红丝绒',
-    icon: '🍰',
-    description: '高贵酒红色调，奢华复古',
-    previewClass: 'bg-red-200'
-  },
-  {
-    value: 'pistachio-green',
-    label: '开心果绿',
-    icon: '🥜',
-    description: '清新开心果绿色，自然治愈',
-    previewClass: 'bg-green-200'
-  },
-  {
-    value: 'bubblegum-pink',
-    label: '泡泡糖粉',
-    icon: '🫧',
-    description: '活力泡泡糖粉色，甜美可爱',
-    previewClass: 'bg-pink-200'
-  },
-  {
-    value: 'lemon-meringue',
-    label: '柠檬蛋白',
-    icon: '🍋',
-    description: '清新柠檬黄色，轻盈甜美',
-    previewClass: 'bg-yellow-200'
-  },
-  {
-    value: 'blackberry-sage',
-    label: '黑莓鼠尾草',
-    icon: '🌿',
-    description: '深邃黑莓紫配鼠尾草绿，优雅自然',
-    previewClass: 'bg-purple-200'
-  },
-  {
-    value: 'peaches-cream',
-    label: '蜜桃奶油',
+    value: 'peach-blossom',
+    label: '蜜桃粉桃',
     icon: '🍑',
-    description: '温柔蜜桃色配奶油白，甜美优雅',
-    previewClass: 'bg-orange-200'
+    description: '甜美蜜桃粉色，温柔可爱',
+    previewClass: 'bg-orange-100'
   },
   {
-    value: 'earl-grey',
-    label: '伯爵茶',
-    icon: '☕',
-    description: '优雅伯爵茶灰色，高级简约',
-    previewClass: 'bg-gray-200'
-  },
-  {
-    value: 'tiramisu',
-    label: '提拉米苏',
-    icon: '🎂',
-    description: '经典提拉米苏配色，温暖复古',
-    previewClass: 'bg-amber-200'
-  },
-  {
-    value: 'pomegranate',
-    label: '石榴',
-    icon: '🍎',
-    description: '鲜艳石榴红色，活力热情',
-    previewClass: 'bg-red-200'
-  },
-  {
-    value: 'sage-green',
-    label: '鼠尾草绿',
-    icon: '🌿',
-    description: '自然鼠尾草绿色，宁静治愈',
+    value: 'matcha-green',
+    label: '抹茶绿调',
+    icon: '🍵',
+    description: '清新抹茶绿色，自然健康',
     previewClass: 'bg-green-200'
   },
   {
-    value: 'honey-ginger',
-    label: '蜂蜜姜茶',
-    icon: '🍯',
-    description: '温暖蜂蜜姜茶色，温馨甜蜜',
-    previewClass: 'bg-amber-200'
+    value: 'blueberry-night',
+    label: '蓝莓之夜',
+    icon: '🫐',
+    description: '深邃蓝莓紫色，神秘优雅',
+    previewClass: 'bg-indigo-200'
   },
   {
-    value: 'rose-milk',
-    label: '玫瑰奶茶',
-    icon: '🥤',
-    description: '浪漫玫瑰奶茶色，温柔优雅',
+    value: 'cherry-blossom',
+    label: '樱花浪漫',
+    icon: '🌸',
+    description: '浪漫樱花粉色，甜美梦幻',
     previewClass: 'bg-pink-200'
   },
   {
-    value: 'lavender-honey',
-    label: '薰衣草蜂蜜',
-    icon: '💐',
-    description: '梦幻薰衣草紫色，浪漫唯美',
-    previewClass: 'bg-purple-200'
-  },
-  {
-    value: 'blue-lagoon',
-    label: '蓝色泻湖',
-    icon: '🏊',
-    description: '清新蓝色泻湖，清爽宁静',
-    previewClass: 'bg-cyan-200'
-  },
-  {
-    value: 'aurora-green',
-    label: '极光绿',
-    icon: '✨',
-    description: '神秘极光绿色，梦幻清新',
-    previewClass: 'bg-emerald-200'
-  },
-  {
-    value: 'pearl-white',
-    label: '珍珠白',
-    icon: '⚪',
-    description: '优雅珍珠白色，纯洁高贵',
-    previewClass: 'bg-gray-100'
-  },
-  {
-    value: 'blush-pink',
-    label: '腮红粉',
-    icon: '😊',
-    description: '温柔腮红粉色，甜美可爱',
-    previewClass: 'bg-rose-200'
-  },
-  {
-    value: 'ocean-mist',
-    label: '海雾',
-    icon: '🌫️',
-    description: '轻柔海雾蓝色，朦胧唯美',
-    previewClass: 'bg-sky-200'
-  },
-  {
-    value: 'lily-white',
-    label: '百合白',
-    icon: '百合',
-    description: '纯净百合白色，优雅清新',
-    previewClass: 'bg-gray-50'
-  },
-  {
-    value: 'sun-kissed',
-    label: '阳光亲吻',
-    icon: '☀️',
-    description: '温暖阳光亲吻色，活力四射',
-    previewClass: 'bg-yellow-200'
-  },
-  {
-    value: 'berry-smoothie',
-    label: '莓果奶昔',
+    value: 'strawberry-sweet',
+    label: '草莓甜心',
     icon: '🍓',
-    description: '甜美莓果奶昔色，浓郁浪漫',
-    previewClass: 'bg-fuchsia-200'
-  },
-  {
-    value: 'winter-sky',
-    label: '冬日天空',
-    icon: '❄️',
-    description: '清冷冬日天空色，宁静高远',
-    previewClass: 'bg-sky-100'
-  },
-  {
-    value: 'ivory-cream',
-    label: '象牙奶油',
-    icon: '🧈',
-    description: '温柔象牙奶油色，柔软细腻',
-    previewClass: 'bg-yellow-50'
-  },
-  {
-    value: 'floral-pink',
-    label: '花漾粉',
-    icon: '🌺',
-    description: '灿烂花漾粉色，热情浪漫',
-    previewClass: 'bg-fuchsia-200'
-  },
-  {
-    value: 'mint-chocolate',
-    label: '薄荷巧克力',
-    icon: '🍫',
-    description: '清凉薄荷巧克力色，独特风味',
-    previewClass: 'bg-teal-200'
-  },
-  {
-    value: 'autumn-leaves',
-    label: '秋日落叶',
-    icon: '🍂',
-    description: '温暖秋日落叶色，浓郁醇厚',
-    previewClass: 'bg-orange-200'
-  },
-  {
-    value: 'rainbow-sorbet',
-    label: '彩虹冰糕',
-    icon: '🌈',
-    description: '绚丽彩虹冰糕色，多彩活力',
-    previewClass: 'bg-yellow-200'
-  },
-  {
-    value: 'cherry-blush',
-    label: 'Cherry腮红',
-    icon: '🍒',
-    description: '甜美Cherry腮红色，活泼可爱',
+    description: '甜美草莓红色，少女心十足',
     previewClass: 'bg-red-200'
   },
   {
-    value: 'sea-glass',
-    label: '海玻璃',
-    icon: '🫧',
-    description: '透亮海玻璃色，清澈透明',
-    previewClass: 'bg-teal-100'
+    value: 'lemon-yellow',
+    label: '柠檬黄调',
+    icon: '🍋',
+    description: '明亮柠檬黄色，清新活力',
+    previewClass: 'bg-yellow-200'
   },
   {
-    value: 'cotton-candy',
-    label: '棉花糖',
-    icon: '🍬',
-    description: '蓬松棉花糖色，梦幻甜蜜',
+    value: 'lavender-gray',
+    label: '薰衣草灰',
+    icon: '💜',
+    description: '低调薰衣草灰色，优雅气质',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'rose-gold',
+    label: '玫瑰金',
+    icon: '🌹',
+    description: '优雅玫瑰金色，温柔女人味',
     previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'sky-blue',
+    label: '天空蓝',
+    icon: '☁️',
+    description: '清新天空蓝色，心旷神怡',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'candy-pink',
+    label: '糖果粉',
+    icon: '🍭',
+    description: '甜美糖果粉色，少女心爆棚',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'mint-green',
+    label: '薄荷绿',
+    icon: '🌿',
+    description: '清新薄荷绿色，治愈系风格',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'strawberry-red',
+    label: '草莓红',
+    icon: '🍓',
+    description: '甜美草莓红色，少女心十足',
+    previewClass: 'bg-red-100'
+  },
+  {
+    value: 'ocean-blue',
+    label: '海洋蓝',
+    icon: '🌊',
+    description: '深邃海洋蓝色，宁静优雅',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'forest-green',
+    label: '森林绿',
+    icon: '🌲',
+    description: '自然森林绿色，充满生机',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'sunset-orange',
+    label: '日落橙',
+    icon: '🌅',
+    description: '温暖日落橙色，活力满满',
+    previewClass: 'bg-orange-100'
   }
 ]
 

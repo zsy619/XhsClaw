@@ -1,14 +1,14 @@
 /* ============================================
-   Candy Pink - 糖果粉
+   Mint Breeze - 薄荷绿风
    适配小红书卡片渲染
    ============================================ */
 
 .card-inner {
-  background-color: #fef2f2;
+  background-color: #f0fdf4;
 }
 
 .card-content {
-  color: #be185d;
+  color: #266f42;
   font-size: 42px;
   line-height: 1.7;
 }
@@ -16,7 +16,7 @@
 .card-content h1 {
   font-size: 72px;
   font-weight: 700;
-  color: #9d174d;
+  color: #15803d;
   margin-bottom: 40px;
   line-height: 1.3;
 }
@@ -24,7 +24,7 @@
 .card-content h2 {
   font-size: 56px;
   font-weight: 600;
-  color: #be185d;
+  color: #16a34a;
   margin: 50px 0 25px 0;
   line-height: 1.4;
 }
@@ -32,7 +32,7 @@
 .card-content h3 {
   font-size: 48px;
   font-weight: 600;
-  color: #ec4899;
+  color: #16a34a;
   margin: 40px 0 20px 0;
 }
 
@@ -43,19 +43,19 @@
 .card-content strong,
 .card-content b {
   font-weight: 700;
-  color: #9d174d;
+  color: #15803d;
 }
 
 .card-content em,
 .card-content i {
   font-style: italic;
-  color: #f472b6;
+  color: #22c55e;
 }
 
 .card-content a {
-  color: #f472b6;
+  color: #22c55e;
   text-decoration: none;
-  border-bottom: 2px solid #f472b6;
+  border-bottom: 2px solid #22c55e;
 }
 
 .card-content ul,
@@ -70,18 +70,18 @@
 }
 
 .card-content li::marker {
-  color: #f472b6;
+  color: #22c55e;
 }
 
 .card-content blockquote {
-  border-left: 8px solid #f472b6;
+  border-left: 8px solid #22c55e;
   padding-left: 40px;
-  background: #fee2e2;
+  background: #dcfce7;
   padding-top: 25px;
   padding-bottom: 25px;
   padding-right: 30px;
   margin: 35px 0;
-  color: #9d174d;
+  color: #166534;
   font-style: italic;
   border-radius: 0 12px 12px 0;
 }
@@ -91,17 +91,17 @@
 }
 
 .card-content code {
-  background: #fee2e2;
+  background: #dcfce7;
   padding: 6px 16px;
   border-radius: 8px;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 38px;
-  color: #f472b6;
+  color: #22c55e;
 }
 
 .card-content pre {
-  background: #9d174d;
-  color: #fee2e2;
+  background: #166534;
+  color: #dcfce7;
   padding: 40px;
   border-radius: 16px;
   margin: 35px 0;
@@ -127,25 +127,25 @@
   border-radius: 16px;
   margin: 35px auto;
   display: block;
-  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.2);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
 }
 
 .card-content hr {
   border: none;
   height: 2px;
-  background: #fecaca;
+  background: #bbf7d0;
   margin: 50px 0;
 }
 
 .tags-container {
   margin-top: 50px;
   padding-top: 30px;
-  border-top: 2px solid #fecaca;
+  border-top: 2px solid #bbf7d0;
 }
 
 .tag {
   display: inline-block;
-  background: linear-gradient(135deg, #f472b6 0%, #f9a8d4 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
   color: white;
   padding: 12px 28px;
   border-radius: 30px;

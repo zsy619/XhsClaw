@@ -1,5 +1,5 @@
 /* ============================================
-   Candy Pink - 糖果粉
+   Strawberry Sweet - 草莓甜心
    适配小红书卡片渲染
    ============================================ */
 
@@ -8,7 +8,7 @@
 }
 
 .card-content {
-  color: #be185d;
+  color: #b91c1c;
   font-size: 42px;
   line-height: 1.7;
 }
@@ -16,7 +16,7 @@
 .card-content h1 {
   font-size: 72px;
   font-weight: 700;
-  color: #9d174d;
+  color: #7f1d1d;
   margin-bottom: 40px;
   line-height: 1.3;
 }
@@ -24,7 +24,7 @@
 .card-content h2 {
   font-size: 56px;
   font-weight: 600;
-  color: #be185d;
+  color: #b91c1c;
   margin: 50px 0 25px 0;
   line-height: 1.4;
 }
@@ -32,7 +32,7 @@
 .card-content h3 {
   font-size: 48px;
   font-weight: 600;
-  color: #ec4899;
+  color: #dc2626;
   margin: 40px 0 20px 0;
 }
 
@@ -43,19 +43,19 @@
 .card-content strong,
 .card-content b {
   font-weight: 700;
-  color: #9d174d;
+  color: #7f1d1d;
 }
 
 .card-content em,
 .card-content i {
   font-style: italic;
-  color: #f472b6;
+  color: #ef4444;
 }
 
 .card-content a {
-  color: #f472b6;
+  color: #ef4444;
   text-decoration: none;
-  border-bottom: 2px solid #f472b6;
+  border-bottom: 2px solid #ef4444;
 }
 
 .card-content ul,
@@ -70,18 +70,18 @@
 }
 
 .card-content li::marker {
-  color: #f472b6;
+  color: #ef4444;
 }
 
 .card-content blockquote {
-  border-left: 8px solid #f472b6;
+  border-left: 8px solid #ef4444;
   padding-left: 40px;
   background: #fee2e2;
   padding-top: 25px;
   padding-bottom: 25px;
   padding-right: 30px;
   margin: 35px 0;
-  color: #9d174d;
+  color: #7f1d1d;
   font-style: italic;
   border-radius: 0 12px 12px 0;
 }
@@ -96,11 +96,11 @@
   border-radius: 8px;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   font-size: 38px;
-  color: #f472b6;
+  color: #ef4444;
 }
 
 .card-content pre {
-  background: #9d174d;
+  background: #7f1d1d;
   color: #fee2e2;
   padding: 40px;
   border-radius: 16px;
@@ -127,7 +127,7 @@
   border-radius: 16px;
   margin: 35px auto;
   display: block;
-  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.2);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
 }
 
 .card-content hr {
@@ -145,7 +145,7 @@
 
 .tag {
   display: inline-block;
-  background: linear-gradient(135deg, #f472b6 0%, #f9a8d4 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
   color: white;
   padding: 12px 28px;
   border-radius: 30px;
