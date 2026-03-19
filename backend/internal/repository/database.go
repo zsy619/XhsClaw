@@ -121,22 +121,22 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 			return
 		}
 
-		// 确保 token_usage 表有 input_tokens 和 output_tokens 列（兼容旧数据库）
-		if cfg.Type == "postgres" {
-			DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS input_tokens INTEGER DEFAULT 0")
-			DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS output_tokens INTEGER DEFAULT 0")
-		} else if cfg.Type == "sqlite" {
-			// SQLite 需要使用单独的 ALTER TABLE 语句
-			var colCount int64
-			DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'input_tokens'").Scan(&colCount)
-			if colCount == 0 {
-				DB.Exec("ALTER TABLE token_usage ADD COLUMN input_tokens INTEGER DEFAULT 0")
-			}
-			DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'output_tokens'").Scan(&colCount)
-			if colCount == 0 {
-				DB.Exec("ALTER TABLE token_usage ADD COLUMN output_tokens INTEGER DEFAULT 0")
-			}
-		}
+		// // 确保 token_usage 表有 input_tokens 和 output_tokens 列（兼容旧数据库）
+		// if cfg.Type == "postgres" {
+		// 	DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS input_tokens INTEGER DEFAULT 0")
+		// 	DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS output_tokens INTEGER DEFAULT 0")
+		// } else if cfg.Type == "sqlite" {
+		// 	// SQLite 需要使用单独的 ALTER TABLE 语句
+		// 	var colCount int64
+		// 	DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'input_tokens'").Scan(&colCount)
+		// 	if colCount == 0 {
+		// 		DB.Exec("ALTER TABLE token_usage ADD COLUMN input_tokens INTEGER DEFAULT 0")
+		// 	}
+		// 	DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'output_tokens'").Scan(&colCount)
+		// 	if colCount == 0 {
+		// 		DB.Exec("ALTER TABLE token_usage ADD COLUMN output_tokens INTEGER DEFAULT 0")
+		// 	}
+		// }
 
 		// 修复旧用户数据的 role_id（设置为默认的普通用户角色ID=3）
 		var count int64

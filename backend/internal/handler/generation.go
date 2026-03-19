@@ -3,14 +3,38 @@ package handler
 
 import (
 	"context"
+	"strings"
+
+	"github.com/cloudwego/hertz/pkg/app"
+
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
-
-	"github.com/cloudwego/hertz/pkg/app"
 )
+
+// getClientIP 获取客户端真实 IP 地址
+func getClientIP(ctx *app.RequestContext) string {
+	// 优先从 X-Forwarded-For 获取
+	xff := string(ctx.GetHeader("X-Forwarded-For"))
+	if xff != "" {
+		// X-Forwarded-For 可能包含多个 IP，取第一个
+		if idx := strings.Index(xff, ","); idx != -1 {
+			return strings.TrimSpace(xff[:idx])
+		}
+		return strings.TrimSpace(xff)
+	}
+
+	// 其次从 X-Real-IP 获取
+	xri := string(ctx.GetHeader("X-Real-IP"))
+	if xri != "" {
+		return strings.TrimSpace(xri)
+	}
+
+	// 最后使用 RemoteAddr
+	return ctx.RemoteAddr().String()
+}
 
 // GenerationHandler 生成处理器
 type GenerationHandler struct {
@@ -32,13 +56,19 @@ func (h *GenerationHandler) GenerateContent(c context.Context, ctx *app.RequestC
 		return
 	}
 
+	// 获取真实 IP 地址
+	ipAddress := getClientIP(ctx)
+
+	// 获取 User-Agent
+	userAgent := string(ctx.GetHeader("User-Agent"))
+
 	var req model.GenerationRequest
 	if err := ctx.BindAndValidate(&req); err != nil {
 		response.ParamError(ctx, err.Error())
 		return
 	}
 
-	resp, err := h.generationService.GenerateContent(userID, &req)
+	resp, err := h.generationService.GenerateContent(userID, &req, ipAddress, userAgent)
 	if err != nil {
 		response.Error(ctx, errno.GenerateFailed)
 		return
@@ -55,13 +85,19 @@ func (h *GenerationHandler) RewriteContent(c context.Context, ctx *app.RequestCo
 		return
 	}
 
+	// 获取真实 IP 地址
+	ipAddress := getClientIP(ctx)
+
+	// 获取 User-Agent
+	userAgent := string(ctx.GetHeader("User-Agent"))
+
 	var req model.RewriteRequest
 	if err := ctx.BindAndValidate(&req); err != nil {
 		response.ParamError(ctx, err.Error())
 		return
 	}
 
-	resp, err := h.generationService.RewriteContent(userID, &req)
+	resp, err := h.generationService.RewriteContent(userID, &req, ipAddress, userAgent)
 	if err != nil {
 		response.Error(ctx, errno.GenerateFailed)
 		return

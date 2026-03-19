@@ -4,6 +4,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/model"
 )
@@ -25,7 +26,7 @@ func NewGenerationService() *GenerationService {
 }
 
 // GenerateContent 生成内容
-func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRequest) (*model.GenerationResponse, error) {
+func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRequest, ipAddress, userAgent string) (*model.GenerationResponse, error) {
 	// 获取用户配置，优先使用用户配置
 	apiKey, baseURL, modelName := s.userConfigService.GetLLMConfig(userID)
 
@@ -77,35 +78,35 @@ func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRe
 
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
-		// 记录失败的请求
-		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", err.Error())
+		// 记录失败的请求（使用默认值）
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
 		return s.generateMockContent(req)
 	}
 
 	if len(response.Choices) == 0 {
 		// 记录空响应
-		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "empty response")
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.generateMockContent(req)
 	}
 
 	content := response.Choices[0].Message.Content
 
 	// 记录成功的请求
-	go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "success", "")
+	go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
 		// 记录解析失败
-		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "json unmarshal failed")
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.generateMockContent(req)
 	}
 
 	return &result, nil
 }
 
-// recordTokenUsage 记录Token使用情况
-func (s *GenerationService) recordTokenUsage(userID uint, model, requestType, requestContent, responseStatus, errorMessage string) {
+// recordTokenUsage 记录Token使用情况（支持token参数）
+func (s *GenerationService) recordTokenUsage(userID uint, model, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string, promptTokens, completionTokens int) {
 	s.tokenUsageSvc.RecordTokenUsage(
 		userID,
 		model,
@@ -114,15 +115,15 @@ func (s *GenerationService) recordTokenUsage(userID uint, model, requestType, re
 		requestContent,
 		responseStatus,
 		errorMessage,
-		"",
-		"",
-		0,
-		0,
+		ipAddress,
+		userAgent,
+		promptTokens,
+		completionTokens,
 	)
 }
 
 // RewriteContent 改写内容
-func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteRequest) (*model.GenerationResponse, error) {
+func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteRequest, ipAddress, userAgent string) (*model.GenerationResponse, error) {
 	// 获取用户配置，优先使用用户配置
 	apiKey, baseURL, modelName := s.userConfigService.GetLLMConfig(userID)
 
@@ -180,27 +181,27 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
-		// 记录失败的请求
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", err.Error())
+		// 记录失败的请求（使用默认值）
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
 		return s.rewriteMockContent(req)
 	}
 
 	if len(response.Choices) == 0 {
 		// 记录空响应
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "empty response")
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.rewriteMockContent(req)
 	}
 
 	content := response.Choices[0].Message.Content
 
 	// 记录成功的请求
-	go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "success", "")
+	go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
 		// 记录解析失败
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "json unmarshal failed")
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.rewriteMockContent(req)
 	}
 
@@ -260,8 +261,8 @@ func (s *GenerationService) rewriteMockContent(req *model.RewriteRequest) (*mode
 %s
 
 ✨ 改写版本来啦！`, req.Content),
-		GeneratedTitle:   "改写后的标题",
-		GeneratedTags:    []string{"系统提示", "配置", "大模型", "改写", "文案"},
+		GeneratedTitle: "改写后的标题",
+		GeneratedTags:  []string{"系统提示", "配置", "大模型", "改写", "文案"},
 	}, nil
 }
 
