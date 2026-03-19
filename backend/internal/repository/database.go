@@ -6,14 +6,15 @@ import (
 	"log"
 	"sync"
 	"time"
-	"xiaohongshu/internal/config"
-	"xiaohongshu/internal/model"
-	"xiaohongshu/internal/utils"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"xiaohongshu/internal/config"
+	"xiaohongshu/internal/model"
+	"xiaohongshu/internal/utils"
 )
 
 var (
@@ -26,16 +27,16 @@ var (
 // InitDatabase 初始化数据库连接
 func InitDatabase(cfg *config.DatabaseConfig) error {
 	var initErr error
-	
+
 	once.Do(func() {
 		var err error
-		
+
 		// 根据运行模式配置日志级别
 		logLevel := logger.Info
 		if config.AppConfig.Server.Mode == "production" {
 			logLevel = logger.Error
 		}
-		
+
 		// 配置GORM日志
 		gormConfig := &gorm.Config{
 			Logger: logger.Default.LogMode(logLevel),
@@ -120,6 +121,23 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 			return
 		}
 
+		// 确保 token_usage 表有 input_tokens 和 output_tokens 列（兼容旧数据库）
+		if cfg.Type == "postgres" {
+			DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS input_tokens INTEGER DEFAULT 0")
+			DB.Exec("ALTER TABLE token_usage ADD COLUMN IF NOT EXISTS output_tokens INTEGER DEFAULT 0")
+		} else if cfg.Type == "sqlite" {
+			// SQLite 需要使用单独的 ALTER TABLE 语句
+			var colCount int64
+			DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'input_tokens'").Scan(&colCount)
+			if colCount == 0 {
+				DB.Exec("ALTER TABLE token_usage ADD COLUMN input_tokens INTEGER DEFAULT 0")
+			}
+			DB.Raw("SELECT COUNT(*) FROM pragma_table_info('token_usage') WHERE name = 'output_tokens'").Scan(&colCount)
+			if colCount == 0 {
+				DB.Exec("ALTER TABLE token_usage ADD COLUMN output_tokens INTEGER DEFAULT 0")
+			}
+		}
+
 		// 修复旧用户数据的 role_id（设置为默认的普通用户角色ID=3）
 		var count int64
 		DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Count(&count)
@@ -129,13 +147,13 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 		}
 
 		log.Println("Database initialized successfully")
-		
+
 		// 初始化admin用户
 		if err := initAdminUser(); err != nil {
 			log.Printf("Failed to init admin user: %v", err)
 		}
 	})
-	
+
 	return initErr
 }
 
@@ -150,17 +168,17 @@ func InitData() error {
 	if err := initPermissions(); err != nil {
 		return err
 	}
-	
+
 	// 初始化角色
 	if err := initRoles(); err != nil {
 		return err
 	}
-	
+
 	// 初始化admin用户
 	if err := initAdminUser(); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -169,49 +187,49 @@ func initPermissions() error {
 	permissions := []model.Permission{
 		// 数据概览模块
 		{Name: "查看数据概览", Code: "dashboard:view", Module: "dashboard", Description: "查看系统数据统计和概览"},
-		
+
 		// 创作中心模块
 		{Name: "内容生成", Code: "creation:generate", Module: "creation", Description: "使用AI生成内容"},
 		{Name: "内容编辑", Code: "creation:edit", Module: "creation", Description: "编辑生成的内容"},
 		{Name: "内容保存", Code: "creation:save", Module: "creation", Description: "保存内容"},
-		
+
 		// 内容管理模块
 		{Name: "查看我的笔记", Code: "content:view", Module: "content", Description: "查看自己的内容列表"},
 		{Name: "编辑内容", Code: "content:edit", Module: "content", Description: "编辑内容"},
 		{Name: "删除内容", Code: "content:delete", Module: "content", Description: "删除内容"},
 		{Name: "查看历史记录", Code: "content:history", Module: "content", Description: "查看内容历史版本"},
 		{Name: "恢复历史版本", Code: "content:restore", Module: "content", Description: "恢复内容历史版本"},
-		
+
 		// 发布管理模块
 		{Name: "发布测试", Code: "publish:test", Module: "publish", Description: "测试发布功能"},
 		{Name: "立即发布", Code: "publish:now", Module: "publish", Description: "立即发布内容"},
 		{Name: "定时发布", Code: "publish:schedule", Module: "publish", Description: "定时发布内容"},
 		{Name: "查看发布历史", Code: "publish:history", Module: "publish", Description: "查看发布记录"},
 		{Name: "取消发布", Code: "publish:cancel", Module: "publish", Description: "取消定时发布"},
-		
+
 		// 用户管理模块
 		{Name: "查看用户列表", Code: "user:view", Module: "user", Description: "查看所有用户"},
 		{Name: "编辑用户", Code: "user:edit", Module: "user", Description: "编辑用户信息"},
 		{Name: "删除用户", Code: "user:delete", Module: "user", Description: "删除用户"},
 		{Name: "设置用户角色", Code: "user:role", Module: "user", Description: "设置用户角色"},
 		{Name: "启用/禁用用户", Code: "user:status", Module: "user", Description: "启用或禁用用户"},
-		
+
 		// 权限设置模块
 		{Name: "查看角色列表", Code: "role:view", Module: "role", Description: "查看所有角色"},
 		{Name: "创建角色", Code: "role:create", Module: "role", Description: "创建新角色"},
 		{Name: "编辑角色", Code: "role:edit", Module: "role", Description: "编辑角色信息"},
 		{Name: "删除角色", Code: "role:delete", Module: "role", Description: "删除角色"},
 		{Name: "配置角色权限", Code: "role:permission", Module: "role", Description: "配置角色权限"},
-		
+
 		// 系统设置模块
 		{Name: "查看系统设置", Code: "settings:view", Module: "settings", Description: "查看系统配置"},
 		{Name: "修改系统设置", Code: "settings:edit", Module: "settings", Description: "修改系统配置"},
-		
+
 		// Token使用统计模块
 		{Name: "查看Token使用统计", Code: "token:view", Module: "token", Description: "查看Token使用统计"},
 		{Name: "查看全局Token统计", Code: "token:view_global", Module: "token", Description: "查看全局Token使用统计（管理员）"},
 	}
-	
+
 	for _, p := range permissions {
 		var count int64
 		DB.Model(&model.Permission{}).Where("code = ?", p.Code).Count(&count)
@@ -221,7 +239,7 @@ func initPermissions() error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -232,13 +250,13 @@ func initRoles() error {
 	if err := DB.Find(&allPermissions).Error; err != nil {
 		return err
 	}
-	
+
 	allPermissionCodes := make([]string, len(allPermissions))
 	for i, p := range allPermissions {
 		allPermissionCodes[i] = p.Code
 	}
 	allPermissionsJSON, _ := json.Marshal(allPermissionCodes)
-	
+
 	// 普通用户权限
 	userPermissions := []string{
 		"dashboard:view",
@@ -253,7 +271,7 @@ func initRoles() error {
 		"token:view",
 	}
 	userPermissionsJSON, _ := json.Marshal(userPermissions)
-	
+
 	// 内容管理员权限
 	contentManagerPermissions := append(userPermissions,
 		"publish:test",
@@ -264,7 +282,7 @@ func initRoles() error {
 		"token:view",
 	)
 	contentManagerPermissionsJSON, _ := json.Marshal(contentManagerPermissions)
-	
+
 	roles := []model.Role{
 		{
 			Name:        "超级管理员",
@@ -288,7 +306,7 @@ func initRoles() error {
 			IsSystem:    true,
 		},
 	}
-	
+
 	for _, r := range roles {
 		var count int64
 		DB.Model(&model.Role{}).Where("code = ?", r.Code).Count(&count)
@@ -298,7 +316,7 @@ func initRoles() error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -306,36 +324,36 @@ func initRoles() error {
 func initAdminUser() error {
 	var count int64
 	DB.Model(&model.User{}).Where("username = ?", "admin").Count(&count)
-	
+
 	if count == 0 {
 		// 获取超级管理员角色
 		var adminRole model.Role
 		if err := DB.Where("code = ?", "super_admin").First(&adminRole).Error; err != nil {
 			return err
 		}
-		
+
 		// 加密密码
 		hashedPassword, err := utils.HashPassword("admin123")
 		if err != nil {
 			return err
 		}
-		
+
 		// 创建admin用户
 		adminUser := &model.User{
 			Username: "admin",
-			Email:    "admin@example.com",
+			Email:    "admin@yy24365.com",
 			Password: hashedPassword,
 			Nickname: "超级管理员",
 			RoleID:   adminRole.ID,
 			Status:   1,
 		}
-		
+
 		if err := DB.Create(adminUser).Error; err != nil {
 			return err
 		}
-		
+
 		log.Println("Admin user created successfully")
 	}
-	
+
 	return nil
 }

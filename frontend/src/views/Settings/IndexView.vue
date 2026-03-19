@@ -19,8 +19,14 @@
               <span class="w-2 h-2 bg-xiaohongshu-red rounded-full"></span>
               大模型配置
             </h3>
+            <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <p class="text-sm text-blue-700 flex items-center gap-2">
+                <el-icon><InfoFilled /></el-icon>
+                大模型配置是生成文案和渲染图片的必要参数，请确保填写正确
+              </p>
+            </div>
             <el-form :model="llmConfig" label-width="160px" class="max-w-2xl">
-              <el-form-item label="API Key">
+              <el-form-item label="API Key" required>
                 <el-input
                   v-model="llmConfig.llm_api_key"
                   type="password"
@@ -28,20 +34,29 @@
                   size="large"
                   placeholder="请输入您的大模型API Key"
                 />
+                <div class="mt-1 text-xs text-gray-500">
+                  例如：sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                </div>
               </el-form-item>
-              <el-form-item label="Base URL">
+              <el-form-item label="Base URL" required>
                 <el-input
                   v-model="llmConfig.llm_base_url"
                   size="large"
                   placeholder="请输入大模型API地址，例如：https://api.deepseek.com"
                 />
+                <div class="mt-1 text-xs text-gray-500">
+                  请确保包含完整的协议和域名
+                </div>
               </el-form-item>
-              <el-form-item label="模型名称">
+              <el-form-item label="模型名称" required>
                 <el-input
                   v-model="llmConfig.llm_model"
                   size="large"
                   placeholder="请输入模型名称，例如：deepseek-chat"
                 />
+                <div class="mt-1 text-xs text-gray-500">
+                  请根据您使用的大模型服务提供商的要求填写
+                </div>
               </el-form-item>
               <el-form-item class="pt-4">
                 <el-button
@@ -295,10 +310,29 @@ const loadUserConfig = async () => {
 
 // 保存大模型配置
 const handleSaveLLMConfig = async () => {
+  // 验证配置
+  if (!llmConfig.llm_api_key) {
+    ElMessage.warning('请输入 API Key')
+    return
+  }
+  if (!llmConfig.llm_base_url) {
+    ElMessage.warning('请输入 Base URL')
+    return
+  }
+  if (!llmConfig.llm_model) {
+    ElMessage.warning('请输入模型名称')
+    return
+  }
+
   savingLLM.value = true
   try {
     await updateUserConfig(llmConfig)
-    ElMessage.success('大模型配置已保存')
+    ElMessage.success({
+      message: '大模型配置已保存',
+      type: 'success',
+      duration: 3000,
+      showClose: true
+    })
   } catch (error) {
     console.error('保存大模型配置失败:', error)
     ElMessage.error('保存失败，请稍后重试')
@@ -309,13 +343,24 @@ const handleSaveLLMConfig = async () => {
 
 // 保存小红书配置
 const handleSaveXiaohongshuConfig = async () => {
+  // 验证配置
+  if (!xiaohongshuConfig.xiaohongshu_cookie) {
+    ElMessage.warning('请输入小红书 Cookie')
+    return
+  }
+
   savingXiaohongshu.value = true
   try {
     if (defaultPublishTime.value) {
       xiaohongshuConfig.default_publish_time = defaultPublishTime.value
     }
     await updateUserConfig(xiaohongshuConfig)
-    ElMessage.success('小红书配置已保存')
+    ElMessage.success({
+      message: '小红书配置已保存',
+      type: 'success',
+      duration: 3000,
+      showClose: true
+    })
   } catch (error) {
     console.error('保存小红书配置失败:', error)
     ElMessage.error('保存失败，请稍后重试')

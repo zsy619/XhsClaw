@@ -2,6 +2,7 @@
 package service
 
 import (
+	"regexp"
 	"strings"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/repository"
@@ -17,6 +18,16 @@ func NewTokenUsageService() *TokenUsageService {
 	return &TokenUsageService{
 		repo: repository.NewTokenUsageRepository(),
 	}
+}
+
+// cleanString 清理字符串，移除无效的UTF-8字符和控制字符
+func cleanString(s string) string {
+	// 先使用 ToValidUTF8 移除无效的UTF-8序列
+	s = strings.ToValidUTF8(s, "")
+	// 移除控制字符（0x00-0x1F 和 0x7F），但保留换行和制表符
+	controlChars := regexp.MustCompile(`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`)
+	s = controlChars.ReplaceAllString(s, "")
+	return s
 }
 
 // TokenPricePerMillion 每百万tokens的价格（美元）
@@ -47,18 +58,22 @@ func (s *TokenUsageService) RecordTokenUsage(
 ) error {
 	// 计算费用
 	cost := s.calculateCost(provider, promptTokens, completionTokens)
-	
+
+	// 清理无效的UTF-8字符
+	requestContent = strings.ToValidUTF8(requestContent, "")
+	errorMessage = strings.ToValidUTF8(errorMessage, "")
+
 	// 截断请求内容（保留前500字符）
 	if len(requestContent) > 500 {
 		requestContent = requestContent[:500]
 	}
-	
+
 	usage := &model.TokenUsage{
 		UserID:           userID,
 		Model:            modelName,
 		Provider:         provider,
-		PromptTokens:     promptTokens,
-		CompletionTokens: completionTokens,
+		InputTokens:      promptTokens,
+		OutputTokens:     completionTokens,
 		TotalTokens:      promptTokens + completionTokens,
 		Cost:             cost,
 		RequestType:      requestType,
@@ -68,7 +83,7 @@ func (s *TokenUsageService) RecordTokenUsage(
 		IPAddress:        ipAddress,
 		UserAgent:        userAgent,
 	}
-	
+
 	return s.repo.Create(usage)
 }
 

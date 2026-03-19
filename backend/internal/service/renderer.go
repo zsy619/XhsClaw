@@ -1,13 +1,15 @@
 // Package service 提供业务逻辑层 - 小红书图片渲染服务
-// 使用 Chromium (chromedp) 渲染 HTML 生成图片
+// 使用 Playwright 渲染 HTML 生成图片
 package service
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"image"
+	_ "image/png"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,7 +17,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/chromedp/chromedp"
+	"github.com/playwright-community/playwright-go"
 )
 
 // 默认尺寸配置 (3:4 比例)
@@ -61,6 +63,11 @@ type RendererService struct {
 
 // NewRendererService 创建渲染服务实例
 func NewRendererService() (*RendererService, error) {
+	// 初始化Playwright渲染器
+	if err := InitPlaywright(); err != nil {
+		return nil, fmt.Errorf("初始化Playwright失败: %v", err)
+	}
+
 	// 获取项目根目录
 	projectRoot := getProjectRoot()
 	assetsDir := filepath.Join(projectRoot, "assets")
@@ -721,13 +728,13 @@ func (s *RendererService) renderTemplate(templateName string, data interface{}) 
 	if err := s.validateTemplateData(data); err != nil {
 		return "", err
 	}
-	
+
 	// 获取模板（带缓存检查）
 	tmpl, err := s.getTemplate(templateName)
 	if err != nil {
 		return "", err
 	}
-	
+
 	var htmlBuf bytes.Buffer
 	if err := tmpl.Execute(&htmlBuf, data); err != nil {
 		return "", fmt.Errorf("渲染%s模板失败: %v", templateName, err)
@@ -802,15 +809,15 @@ type CoverData struct {
 
 // CardData 卡片模板数据
 type CardData struct {
-	Width       int
-	Height      int
-	Background  string
-	Content     string
-	ThemeCSS    string
-	PageNumber  string
-	FontSize    int
-	LineHeight  float64
-	Padding     int
+	Width        int
+	Height       int
+	Background   string
+	Content      string
+	ThemeCSS     string
+	PageNumber   string
+	FontSize     int
+	LineHeight   float64
+	Padding      int
 	BorderRadius int
 }
 
@@ -911,15 +918,15 @@ func (s *RendererService) RenderMarkdownToImage(markdown, styleKey, outputPrefix
 
 		// 准备模板数据
 		data := CardData{
-			Width:      width,
-			Height:     height,
-			Background: theme.CardBg,
-			Content:    htmlContent,
-			ThemeCSS:   s.loadThemeCSS(styleKey),
-			PageNumber: pageNumber,
-			FontSize:   42,
-			LineHeight: 1.7,
-			Padding:    60,
+			Width:        width,
+			Height:       height,
+			Background:   theme.CardBg,
+			Content:      htmlContent,
+			ThemeCSS:     s.loadThemeCSS(styleKey),
+			PageNumber:   pageNumber,
+			FontSize:     42,
+			LineHeight:   1.7,
+			Padding:      60,
 			BorderRadius: 20,
 		}
 
@@ -958,10 +965,100 @@ func (s *RendererService) parseMarkdownContent(markdown string, mode PaginationM
 			return []string{markdown}
 		}
 		return result
-	default:
-		// 默认返回整个内容
+
+	case PaginationAutoSplit:
+		// 按内容长度自动分割（每段约2000字符）
+		return s.autoSplitContent(markdown, 2000)
+
+	case PaginationAutoFit:
+		// auto-fit模式：内容不分割，在渲染时通过scale适应
 		return []string{strings.TrimSpace(markdown)}
+
+	case PaginationDynamic:
+		// dynamic模式：内容不分割，高度动态调整
+		return []string{strings.TrimSpace(markdown)}
+
+	default:
+		// 默认按分隔符分割
+		return s.parseMarkdownContent(markdown, PaginationSeparator)
 	}
+}
+
+// autoSplitContent 自动按字符数分割内容
+func (s *RendererService) autoSplitContent(markdown string, maxChars int) []string {
+	markdown = strings.TrimSpace(markdown)
+	if markdown == "" {
+		return []string{markdown}
+	}
+
+	// 如果内容小于最大字符数，直接返回
+	if len(markdown) <= maxChars {
+		return []string{markdown}
+	}
+
+	// 按段落分割
+	paragraphs := regexp.MustCompile(`\n\n+`).Split(markdown, -1)
+	var result []string
+	var currentPart strings.Builder
+
+	for _, para := range paragraphs {
+		para = strings.TrimSpace(para)
+		if para == "" {
+			continue
+		}
+
+		// 如果当前段落加上现有内容会超过限制
+		if currentPart.Len()+len(para)+2 > maxChars {
+			// 保存当前部分
+			if currentPart.Len() > 0 {
+				result = append(result, strings.TrimSpace(currentPart.String()))
+				currentPart.Reset()
+			}
+
+			// 如果单个段落就超过限制，按行分割
+			if len(para) > maxChars {
+				lines := strings.Split(para, "\n")
+				for _, line := range lines {
+					line = strings.TrimSpace(line)
+					if line == "" {
+						continue
+					}
+
+					if currentPart.Len()+len(line)+1 > maxChars {
+						if currentPart.Len() > 0 {
+							result = append(result, strings.TrimSpace(currentPart.String()))
+							currentPart.Reset()
+						}
+						currentPart.WriteString(line)
+					} else {
+						if currentPart.Len() > 0 {
+							currentPart.WriteString("\n")
+						}
+						currentPart.WriteString(line)
+					}
+				}
+			} else {
+				currentPart.WriteString(para)
+			}
+		} else {
+			if currentPart.Len() > 0 {
+				currentPart.WriteString("\n\n")
+			}
+			currentPart.WriteString(para)
+		}
+	}
+
+	// 添加最后一部分
+	if currentPart.Len() > 0 {
+		result = append(result, strings.TrimSpace(currentPart.String()))
+	}
+
+	// 如果没有结果，返回原始内容
+	if len(result) == 0 {
+		return []string{markdown}
+	}
+
+	return result
 }
 
 // markdownToHTML 将Markdown转换为HTML
@@ -1110,36 +1207,83 @@ func (s *RendererService) escapeHTML(text string) string {
 
 // renderHTMLToImage 使用Chromium渲染HTML为图片
 func (s *RendererService) renderHTMLToImage(htmlContent, outputPrefix, suffix string, width, height int) (string, error) {
-	// 指定 Chrome 浏览器路径（macOS）
-	chromePath := "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-	
-	// 检查 Chrome 是否存在
-	if _, err := os.Stat(chromePath); os.IsNotExist(err) {
-		// 尝试其他可能的路径
-		chromePath = "/Applications/Chromium.app/Contents/MacOS/Chromium"
+	// 渲染重试机制
+	maxRetries := 3
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		result, err := s.doRenderHTMLToImage(htmlContent, outputPrefix, suffix, width, height)
+		if err == nil {
+			return result, nil
+		}
+		lastErr = err
+		log.Printf("渲染尝试 %d/%d 失败: %v", attempt, maxRetries, err)
+
+		if attempt < maxRetries {
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
-	
-	// 创建 chromedp 执行分配器，指定 Chrome 路径
-	allocCtx, cancelAlloc := chromedp.NewExecAllocator(context.Background(),
-		append(chromedp.DefaultExecAllocatorOptions[:],
-			chromedp.ExecPath(chromePath),
-			chromedp.Headless,
-			chromedp.NoSandbox,
-			chromedp.DisableGPU,
-			chromedp.WindowSize(width, height),
-		)...,
-	)
-	defer cancelAlloc()
 
-	// 创建 chromedp 上下文
-	ctx, cancel := chromedp.NewContext(allocCtx)
-	defer cancel()
+	return "", fmt.Errorf("Chromium渲染失败（已重试%d次）: %v", maxRetries, lastErr)
+}
 
-	// 设置超时
-	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
+// doRenderHTMLToImage 执行实际的HTML渲染（使用Playwright）
+func (s *RendererService) doRenderHTMLToImage(htmlContent, outputPrefix, suffix string, width, height int) (string, error) {
+	// 渲染重试机制 - 最多重试3次
+	maxRetries := 3
+	var lastErr error
 
-	var buf []byte
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		result, err := s.doRenderWithClip(htmlContent, outputPrefix, suffix, width, height)
+		if err == nil {
+			// 验证生成的图片尺寸是否正确
+			if err := s.validateImageSize(result, width, height); err != nil {
+				log.Printf("图片尺寸校验失败: %v", err)
+				lastErr = err
+				if attempt < maxRetries {
+					time.Sleep(500 * time.Millisecond)
+					continue
+				}
+			} else {
+				log.Printf("Playwright渲染成功，尺寸校验通过: %s", result)
+				return result, nil
+			}
+		} else {
+			lastErr = err
+			log.Printf("Playwright渲染尝试 %d/%d 失败: %v", attempt, maxRetries, err)
+			if attempt < maxRetries {
+				time.Sleep(500 * time.Millisecond)
+			}
+		}
+	}
+
+	return "", fmt.Errorf("Playwright渲染失败（已重试%d次）: %v", maxRetries, lastErr)
+}
+
+// doRenderWithClip 使用clip裁剪渲染图片
+func (s *RendererService) doRenderWithClip(htmlContent, outputPrefix, suffix string, width, height int) (string, error) {
+	pwRenderer := GetPlaywrightRenderer()
+	if pwRenderer == nil {
+		return "", fmt.Errorf("Playwright渲染器未初始化")
+	}
+
+	// DPR (Device Pixel Ratio) - 与Auto-Redbook-Skills保持一致，使用1倍视口
+	// clip参数会精确裁剪到指定尺寸
+	viewportWidth := width
+	viewportHeight := height
+
+	// 创建新页面
+	page, err := pwRenderer.browser.NewPage()
+	if err != nil {
+		return "", fmt.Errorf("创建页面失败: %v", err)
+	}
+	defer page.Close()
+
+	// 设置视口大小 - 不使用DPR缩放，直接设置目标尺寸
+	err = page.SetViewportSize(viewportWidth, viewportHeight)
+	if err != nil {
+		return "", fmt.Errorf("设置视口大小失败: %v", err)
+	}
 
 	// 创建临时HTML文件
 	tempFile := filepath.Join(s.imagesDir, ".temp_render.html")
@@ -1148,27 +1292,85 @@ func (s *RendererService) renderHTMLToImage(htmlContent, outputPrefix, suffix st
 	}
 	defer os.Remove(tempFile)
 
-	// 执行渲染
-	err := chromedp.Run(ctx,
-		chromedp.EmulateViewport(int64(width), int64(height), chromedp.EmulateScale(2)),
-		chromedp.Navigate("file://"+tempFile),
-		chromedp.WaitReady("body"),
-		chromedp.Sleep(500*time.Millisecond), // 等待字体加载
-		chromedp.FullScreenshot(&buf, 100),
-	)
+	// 导航到HTML文件
+	_, err = page.Goto(fmt.Sprintf("file://%s", tempFile))
 	if err != nil {
-		return "", fmt.Errorf("Chromium渲染失败: %v", err)
+		return "", fmt.Errorf("导航到HTML文件失败: %v", err)
+	}
+
+	// 等待DOM内容加载完成
+	err = page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+		State: playwright.LoadStateDomcontentloaded,
+	})
+	if err != nil {
+		return "", fmt.Errorf("等待页面加载失败: %v", err)
+	}
+
+	// 额外等待确保字体和网络资源加载完成
+	time.Sleep(1 * time.Second)
+
+	// 使用clip参数裁剪到精确尺寸
+	screenshot, err := page.Screenshot(playwright.PageScreenshotOptions{
+		Type: playwright.ScreenshotTypePng,
+		Clip: &playwright.Rect{
+			X:      0,
+			Y:      0,
+			Width:  float64(width),
+			Height: float64(height),
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("截图失败: %v", err)
+	}
+
+	// 验证截图是否有效
+	if len(screenshot) < 1000 {
+		return "", fmt.Errorf("截图数据无效，大小: %d bytes", len(screenshot))
 	}
 
 	// 保存图片
 	filename := s.generateFilename(outputPrefix, suffix)
 	fullPath := filepath.Join(s.imagesDir, filename)
 
-	if err := os.WriteFile(fullPath, buf, 0644); err != nil {
+	if err := os.WriteFile(fullPath, screenshot, 0644); err != nil {
 		return "", fmt.Errorf("保存图片失败: %v", err)
 	}
 
+	// 验证文件是否成功保存
+	if info, err := os.Stat(fullPath); err != nil || info.Size() < 1000 {
+		return "", fmt.Errorf("图片文件保存失败或文件过小")
+	}
+
 	return "/xhsclaw/image/" + filename, nil
+}
+
+// validateImageSize 验证生成的图片尺寸是否正确
+func (s *RendererService) validateImageSize(imagePath string, expectedWidth, expectedHeight int) error {
+	// 解析图片路径获取完整路径
+	filename := filepath.Base(imagePath)
+	fullPath := filepath.Join(s.imagesDir, filename)
+
+	// 打开图片文件
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return fmt.Errorf("打开图片文件失败: %v", err)
+	}
+	defer file.Close()
+
+	// 解码图片获取尺寸
+	config, _, err := image.DecodeConfig(file)
+	if err != nil {
+		return fmt.Errorf("解码图片配置失败: %v", err)
+	}
+
+	// 验证尺寸
+	if config.Width != expectedWidth || config.Height != expectedHeight {
+		return fmt.Errorf("图片尺寸不匹配: 期望 %dx%d, 实际 %dx%d",
+			expectedWidth, expectedHeight, config.Width, config.Height)
+	}
+
+	log.Printf("图片尺寸校验通过: %dx%d", config.Width, config.Height)
+	return nil
 }
 
 // generateFilename 生成文件名

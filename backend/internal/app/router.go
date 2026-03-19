@@ -7,12 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"xiaohongshu/internal/handler"
-	"xiaohongshu/internal/middleware"
-	"xiaohongshu/internal/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+
+	"xiaohongshu/internal/handler"
+	"xiaohongshu/internal/middleware"
+	"xiaohongshu/internal/utils"
 )
 
 // getProjectRoot 获取项目根目录的绝对路径
@@ -110,6 +111,7 @@ func SetupRouter(h *server.Hertz) {
 	rendererHandler := handler.NewRendererHandler()
 	enhancedRendererHandler := handler.NewEnhancedRendererHandler()
 	roleHandler := handler.NewRoleHandler()
+	dashboardHandler := handler.NewDashboardHandler()
 
 	// 健康检查 - 不需要认证
 	h.GET("/health", handler.HealthCheck)
@@ -168,6 +170,12 @@ func SetupRouter(h *server.Hertz) {
 
 				v1Authorized.GET("/user/info", userHandler.GetUserInfo)
 				v1Authorized.GET("/users", userHandler.ListUsers)
+
+				// 仪表盘统计
+				v1Authorized.GET("/dashboard/stats", dashboardHandler.GetDashboardStats)
+				v1Authorized.GET("/dashboard/data", dashboardHandler.GetDashboardData)
+				v1Authorized.GET("/dashboard/activities", dashboardHandler.GetUserActivities)
+				v1Authorized.GET("/dashboard/trends", dashboardHandler.GetContentTrends)
 
 				// 角色和权限管理
 				v1Authorized.GET("/roles", roleHandler.ListRoles)

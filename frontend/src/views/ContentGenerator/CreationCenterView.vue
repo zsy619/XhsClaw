@@ -764,6 +764,7 @@
 <script setup lang="ts">
 import { http } from '@/api/request'
 import { getRenderedImage, renderMarkdown } from '@/api/xiaohongshuRenderer'
+import { getUserConfig } from '@/api/userConfig'
 import XiaohongshuEditor from '@/components/editor/XiaohongshuEditor.vue'
 import { useUserStore } from '@/stores/user'
 import {
@@ -1608,6 +1609,27 @@ const rules: FormRules = {
   ]
 }
 
+// 检查用户配置
+const checkUserConfig = async () => {
+  try {
+    const res = await getUserConfig()
+    const config = res.data
+    
+    // 检查大模型配置
+    if (!config.llm_api_key || !config.llm_base_url || !config.llm_model) {
+      ElMessage.warning({
+        message: '您还未配置大模型参数，请先前往系统设置页面进行配置',
+        type: 'warning',
+        duration: 5000,
+        showClose: true,
+        offset: 40
+      })
+    }
+  } catch (error) {
+    console.error('检查用户配置失败:', error)
+  }
+}
+
 // 检查登录状态
 onMounted(() => {
   if (!userStore.isLoggedIn) {
@@ -1615,6 +1637,9 @@ onMounted(() => {
     router.push('/login')
     return
   }
+  
+  // 检查用户配置
+  checkUserConfig()
   
   // 从本地缓存恢复
   loadFromLocalCache()
@@ -1669,12 +1694,33 @@ const fillExample = (example: string) => {
   form.wordCount = 300
 }
 
-// 生成文案
+// 检查配置并生成文案
 const handleGenerate = async () => {
   if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
     if (!valid) return
+
+    // 检查用户配置
+    try {
+      const res = await getUserConfig()
+      const config = res.data
+      
+      if (!config.llm_api_key || !config.llm_base_url || !config.llm_model) {
+        ElMessage.warning({
+          message: '您还未配置大模型参数，请先前往系统设置页面进行配置',
+          type: 'warning',
+          duration: 5000,
+          showClose: true,
+          offset: 40
+        })
+        return
+      }
+    } catch (error) {
+      console.error('检查用户配置失败:', error)
+      ElMessage.error('检查配置失败，请稍后重试')
+      return
+    }
 
     fullscreenLoading.value = true
 
@@ -1774,10 +1820,31 @@ const selectTitle = (index: number) => {
   ElMessage.info(`已选择标题：${titleOptions.value[index]}`)
 }
 
-// 渲染图片
+// 检查配置并渲染图片
 const handleRenderImages = async () => {
   if (!result.value?.content) {
     ElMessage.warning('请先生成文案')
+    return
+  }
+
+  // 检查用户配置
+  try {
+    const res = await getUserConfig()
+    const config = res.data
+    
+    if (!config.llm_api_key || !config.llm_base_url || !config.llm_model) {
+      ElMessage.warning({
+        message: '您还未配置大模型参数，请先前往系统设置页面进行配置',
+        type: 'warning',
+        duration: 5000,
+        showClose: true,
+        offset: 40
+      })
+      return
+    }
+  } catch (error) {
+    console.error('检查用户配置失败:', error)
+    ElMessage.error('检查配置失败，请稍后重试')
     return
   }
 
@@ -1880,15 +1947,34 @@ const handleRenderImages = async () => {
     imageRenderProgress.value = 75
     ElMessage.info('正在生成内容图片...')
     
-    const response = await renderMarkdown({
-      markdown_content: markdownContent,
-      style_key: imageConfig.styleKey,
-      output_prefix: `content_${Date.now()}`,
-      pagination_mode: imageConfig.paginationMode,
-      card_width: imageConfig.cardWidth,
-      card_height: imageConfig.cardHeight,
-      max_content_height: imageConfig.cardHeight * 3
-    })
+    let response
+    try {
+      response = await renderMarkdown({
+        markdown_content: markdownContent,
+        style_key: imageConfig.styleKey,
+        output_prefix: `content_${Date.now()}`,
+        pagination_mode: imageConfig.paginationMode,
+        card_width: imageConfig.cardWidth,
+        card_height: imageConfig.cardHeight,
+        max_content_height: imageConfig.cardHeight * 3
+      })
+    } catch (renderError: any) {
+      console.error('图片渲染失败:', renderError)
+      
+      // 提供更详细的错误信息
+      const errorMessage = renderError?.message || '渲染失败'
+      if (errorMessage.includes('网络连接失败') || errorMessage.includes('ECONNREFUSED')) {
+        ElMessage.error('无法连接到后端服务，请确保后端服务已启动（端口 8000）')
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('超时')) {
+        ElMessage.error('渲染超时，请稍后重试')
+      } else {
+        ElMessage.error(`图片渲染失败: ${errorMessage}`)
+      }
+      
+      imageRenderProgress.value = 0
+      renderingImages.value = false
+      return
+    }
 
     imageRenderProgress.value = 90
 
@@ -1912,10 +1998,21 @@ const handleRenderImages = async () => {
     } else {
       throw new Error(renderData?.message || response.message || '渲染失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('图片渲染失败:', error)
     imageRenderProgress.value = 0
-    ElMessage.error('图片渲染失败，请稍后重试')
+    
+    // 改进错误提示
+    const errorMsg = error?.message || '未知错误'
+    if (errorMsg.includes('网络连接失败') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('Connection refused')) {
+      ElMessage.error('无法连接到后端服务，请确保后端服务已启动（端口 8000）')
+    } else if (errorMsg.includes('timeout') || errorMsg.includes('超时')) {
+      ElMessage.error('渲染超时，请稍后重试')
+    } else if (errorMsg.includes('最大重试次数')) {
+      ElMessage.error('渲染失败次数过多，请检查网络连接或稍后重试')
+    } else {
+      ElMessage.error('图片渲染失败，请稍后重试')
+    }
   } finally {
     renderingImages.value = false
   }

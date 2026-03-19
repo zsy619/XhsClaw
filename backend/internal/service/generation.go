@@ -210,7 +210,19 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 // generateMockContent 生成模拟内容（当API不可用时）
 func (s *GenerationService) generateMockContent(req *model.GenerationRequest) (*model.GenerationResponse, error) {
 	return &model.GenerationResponse{
-		GeneratedContent: fmt.Sprintf(`✨ 超实用%s分享！
+		GeneratedContent: fmt.Sprintf(`⚠️ 系统提示：未配置大模型参数
+
+您还未配置大模型API参数，当前返回的是模拟内容。
+
+请前往系统设置页面配置以下参数：
+1. API Key
+2. Base URL
+3. 模型名称
+
+配置完成后，系统将使用真实的AI模型生成更优质的内容。
+
+✨ 模拟内容：
+超实用%s分享！
 
 今天给大家带来超棒的%s心得～
 
@@ -224,21 +236,32 @@ func (s *GenerationService) generateMockContent(req *model.GenerationRequest) (*
 - 建议2
 - 建议3
 
-希望对大家有帮助哦～
-有问题可以在评论区留言！
-
-喜欢记得点赞收藏关注三连～`, req.Keywords, req.Keywords),
+希望对大家有帮助哦～`, req.Keywords, req.Keywords),
 		GeneratedTitle: fmt.Sprintf("%s超全攻略！", req.Keywords),
-		GeneratedTags:  []string{req.Keywords, "干货分享", "生活小技巧", "必备", "推荐", "实用"},
+		GeneratedTags:  []string{req.Keywords, "系统提示", "配置", "大模型", "干货分享"},
 	}, nil
 }
 
 // rewriteMockContent 改写模拟内容
 func (s *GenerationService) rewriteMockContent(req *model.RewriteRequest) (*model.GenerationResponse, error) {
 	return &model.GenerationResponse{
-		GeneratedContent: req.Content + "\n\n✨ 改写版本来啦！",
+		GeneratedContent: fmt.Sprintf(`⚠️ 系统提示：未配置大模型参数
+
+您还未配置大模型API参数，当前返回的是模拟内容。
+
+请前往系统设置页面配置以下参数：
+1. API Key
+2. Base URL
+3. 模型名称
+
+配置完成后，系统将使用真实的AI模型生成更优质的内容。
+
+✨ 模拟改写内容：
+%s
+
+✨ 改写版本来啦！`, req.Content),
 		GeneratedTitle:   "改写后的标题",
-		GeneratedTags:    []string{"改写", "文案", "小红书"},
+		GeneratedTags:    []string{"系统提示", "配置", "大模型", "改写", "文案"},
 	}, nil
 }
 

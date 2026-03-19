@@ -65,3 +65,5 @@ frontend/UPGRADE_GUIDE.md
 .dropstone
 backend/cmd/server/logs
 backend/main
+start-services.sh
+STARTUP_GUIDE.md

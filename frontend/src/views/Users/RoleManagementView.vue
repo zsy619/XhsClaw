@@ -76,7 +76,7 @@
                       {{ module.label }}
                     </h4>
                     <el-checkbox-group v-model="currentRolePermissions">
-                      <div class="grid grid-cols-2 gap-3">
+                      <div class="permission-items">
                         <el-checkbox
                           v-for="perm in getPermissionsByModule(module.name)"
                           :key="perm.code"
@@ -330,6 +330,19 @@ onMounted(() => {
 
     .permission-config {
       padding: 20px 0;
+    }
+
+    .permission-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+      
+      :deep(.el-checkbox) {
+        margin-right: 0;
+        margin-bottom: 8px;
+        white-space: nowrap;
+      }
     }
   }
 }

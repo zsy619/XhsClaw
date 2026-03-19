@@ -12,8 +12,8 @@ type TokenUsage struct {
 	Username        string    `gorm:"-" json:"username"`                         // 用户名（不存储，用于展示）
 	Model           string    `gorm:"size:100" json:"model"`                    // 使用的模型
 	Provider        string    `gorm:"size:50" json:"provider"`                   // 提供商 (deepseek/openai/anthropic等)
-	PromptTokens    int       `json:"prompt_tokens"`                             // 输入tokens
-	CompletionTokens int      `json:"completion_tokens"`                        // 输出tokens
+	InputTokens     int       `gorm:"column:input_tokens" json:"input_tokens"`   // 输入tokens
+	OutputTokens    int       `gorm:"column:output_tokens" json:"output_tokens"`  // 输出tokens
 	TotalTokens     int       `json:"total_tokens"`                             // 总tokens
 	Cost            float64   `gorm:"type:decimal(10,6)" json:"cost"`           // 费用（美元）
 	RequestType     string    `gorm:"size:50" json:"request_type"`             // 请求类型 (generate_content/render_image等)

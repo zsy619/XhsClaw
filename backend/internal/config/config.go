@@ -230,8 +230,8 @@ func (c *DatabaseConfig) GetDSN() string {
 			c.DBName,
 		)
 	}
-	// 默认返回 PostgreSQL 格式
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+	// 默认返回 PostgreSQL 格式，添加UTF8编码支持
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s client_encoding=utf8",
 		c.Host,
 		c.Port,
 		c.User,
