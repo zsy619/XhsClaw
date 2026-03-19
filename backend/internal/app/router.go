@@ -136,11 +136,11 @@ func SetupRouter(h *server.Hertz) {
 		v1 := api.Group("/v1")
 		{
 			// v1 版本小红书渲染器 - 不需要认证
-			v1.GET("/xiaohongshu-renderer/styles", rendererHandler.GetRendererStyles)
-			v1.POST("/xiaohongshu-renderer/render", rendererHandler.RenderMarkdown)
-			v1.POST("/xiaohongshu-renderer/cover", rendererHandler.GenerateCover)
+			v1.GET("/xhsclaw/styles", rendererHandler.GetRendererStyles)
+			v1.POST("/xhsclaw/render", rendererHandler.RenderMarkdown)
+			// v1.POST("/xhsclaw/cover", rendererHandler.GenerateCover)
 			// 增强版渲染器 - 支持 AI 生成和智能分页
-			v1.POST("/xiaohongshu-renderer/render-with-ai", enhancedRendererHandler.RenderWithAI)
+			v1.POST("/xhsclaw/render-with-ai", enhancedRendererHandler.RenderWithAI)
 
 			// v1 用户认证
 			v1Auth := v1.Group("/auth")
@@ -151,7 +151,7 @@ func SetupRouter(h *server.Hertz) {
 
 			// Token使用记录路由
 			tokenUsageHandler := handler.NewTokenUsageHandler()
-			
+
 			// v1 需要认证的路由
 			v1Authorized := v1.Group("")
 			v1Authorized.Use(middleware.AuthMiddleware())
@@ -161,7 +161,7 @@ func SetupRouter(h *server.Hertz) {
 				v1Authorized.GET("/token-usage/stats", tokenUsageHandler.GetUserTokenStats)
 				v1Authorized.GET("/token-usage/daily", tokenUsageHandler.GetUserDailyStats)
 				v1Authorized.GET("/token-usage/by-model", tokenUsageHandler.GetUserStatsByModel)
-				
+
 				// 全局Token使用统计（仅管理员）
 				v1Authorized.GET("/admin/token-usage/global", tokenUsageHandler.GetGlobalTokenStats)
 				v1Authorized.GET("/admin/token-usage/global/daily", tokenUsageHandler.GetGlobalDailyStats)
@@ -214,12 +214,16 @@ func SetupRouter(h *server.Hertz) {
 				{
 					v1Generation.POST("/theme", generationHandler.GenerateContent)
 					v1Generation.POST("/rewrite", generationHandler.RewriteContent)
+					// 小红书渲染器
+					v1Generation.GET("/styles", rendererHandler.GetRendererStyles)
+					v1Generation.POST("/render", rendererHandler.RenderMarkdown)
+					v1Generation.POST("/cover", rendererHandler.GenerateCover)
 				}
 			}
 		}
 
 		// 图片路由 - 在 v1 组外单独注册，避免通配符路由问题
-		api.GET("/v1/xiaohongshu-renderer/image/*filepath", serveImage(imagesDir))
+		api.GET("/v1/xhsclaw/image/*filepath", serveImage(imagesDir))
 
 		// ======== 需要认证的路由 ========
 		authorized := api.Group("")
@@ -256,6 +260,10 @@ func SetupRouter(h *server.Hertz) {
 				generation.Use(middleware.GenerateRateLimitMiddleware())
 				generation.POST("/theme", generationHandler.GenerateContent)
 				generation.POST("/rewrite", generationHandler.RewriteContent)
+				// // 小红书渲染器 - /api/generation
+				// generation.GET("/styles", rendererHandler.GetRendererStyles)
+				// generation.POST("/render", rendererHandler.RenderMarkdown)
+				// generation.POST("/cover", rendererHandler.GenerateCover)
 			}
 
 			// 内容管理 - /api/content
@@ -281,14 +289,6 @@ func SetupRouter(h *server.Hertz) {
 				publish.GET("/:id", publishHandler.GetPublishRecord)
 				publish.POST("/:id/cancel", publishHandler.CancelPublish)
 				publish.POST("/:id/retry", publishHandler.RetryPublish)
-			}
-
-			// 小红书渲染器 - /api/xiaohongshu-renderer
-			renderer := authorized.Group("/xiaohongshu-renderer")
-			{
-				renderer.GET("/styles", rendererHandler.GetRendererStyles)
-				renderer.POST("/render", rendererHandler.RenderMarkdown)
-				renderer.POST("/cover", rendererHandler.GenerateCover)
 			}
 		}
 	}

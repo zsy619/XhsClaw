@@ -30,7 +30,7 @@ func NewContentService() *ContentService {
 
 // GenerateContent 生成内容
 func (s *ContentService) GenerateContent(userID uint, req *model.GenerateContentRequest) (*model.GenerateContentResponse, error) {
-	items, err := s.aiService.GenerateXiaohongshuContent(req.SkillContent, req.Count, req.Length, "", "", "")
+	items, err := s.aiService.GenerateXiaohongshuContent(userID, req.SkillContent, req.Count, req.Length, "", "", "")
 	if err != nil {
 		return nil, err
 	}

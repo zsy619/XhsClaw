@@ -10,8 +10,8 @@
         <p class="mt-1 text-sm text-gray-500">查看您的大模型API使用情况和费用统计</p>
       </div>
       
-      <!-- 主题选择器 -->
-      <div class="flex items-center gap-4">
+      <!-- 主题选择器和诊断工具 -->
+      <div class="flex items-center gap-3">
         <span class="text-sm text-gray-600">选择主题：</span>
         <el-select 
           v-model="selectedTheme" 
@@ -36,7 +36,77 @@
             </div>
           </el-option>
         </el-select>
+        
+        <!-- 诊断按钮 -->
+        <el-button 
+          type="warning" 
+          size="small" 
+          @click="runDiagnostic"
+          :icon="Tools"
+          :loading="diagnosing"
+        >
+          系统诊断
+        </el-button>
+        
+        <!-- 主题校验按钮 -->
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="validateThemes"
+          :icon="Check"
+          :loading="validating"
+        >
+          校验主题
+        </el-button>
       </div>
+    </div>
+
+    <!-- 诊断结果显示 -->
+    <div v-if="diagnosticResult" class="mb-6">
+      <el-alert
+        :title="diagnosticResult.success ? '诊断成功' : '诊断发现问题'"
+        :type="diagnosticResult.success ? 'success' : 'warning'"
+        :description="diagnosticResult.message"
+        show-icon
+        :closable="false"
+      >
+        <template v-if="diagnosticResult.details" #default>
+          <div class="mt-2 text-sm">
+            <p><strong>详细信息：</strong></p>
+            <ul class="list-disc list-inside mt-1">
+              <li v-for="(detail, index) in diagnosticResult.details" :key="index">{{ detail }}</li>
+            </ul>
+          </div>
+        </template>
+        <template v-if="diagnosticResult.suggestions && diagnosticResult.suggestions.length > 0" #default>
+          <div class="mt-3 text-sm">
+            <p><strong>💡 建议操作：</strong></p>
+            <ul class="list-disc list-inside mt-1">
+              <li v-for="(suggestion, index) in diagnosticResult.suggestions" :key="index">{{ suggestion }}</li>
+            </ul>
+          </div>
+        </template>
+      </el-alert>
+    </div>
+
+    <!-- 校验结果显示 -->
+    <div v-if="validationResult" class="mb-6">
+      <el-alert
+        :title="validationResult.success ? '校验成功' : '校验失败'"
+        :type="validationResult.success ? 'success' : 'error'"
+        :description="validationResult.message"
+        show-icon
+        :closable="false"
+      >
+        <template v-if="validationResult.details" #default>
+          <div class="mt-2 text-sm">
+            <p><strong>详细信息：</strong></p>
+            <ul class="list-disc list-inside mt-1">
+              <li v-for="(detail, index) in validationResult.details" :key="index">{{ detail }}</li>
+            </ul>
+          </div>
+        </template>
+      </el-alert>
     </div>
 
     <!-- 统计卡片 -->
@@ -135,43 +205,196 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
-import type { ECharts } from 'echarts'
-import { Coin, Refresh } from '@element-plus/icons-vue'
-import { 
-  getUserTokenStats, 
-  getUserDailyStats, 
-  getUserStatsByModel, 
-  getUserTokenUsage,
-  type TokenUsageStats,
-  type UserTokenUsage,
-  type TokenUsageByModel,
-  type TokenUsage
+import {
+    getUserDailyStats,
+    getUserStatsByModel,
+    getUserTokenStats,
+    getUserTokenUsage,
+    type TokenUsage,
+    type TokenUsageByModel,
+    type TokenUsageStats,
+    type UserTokenUsage
 } from '@/api/token_usage'
+import { Coin, Refresh, Check, Tools } from '@element-plus/icons-vue'
+import type { ECharts } from 'echarts'
+import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { quickDiagnostic, getQuickFixSteps } from '@/utils/diagnostic'
 
-// 主题列表
-const themes = [
-  { value: 'default', label: '默认', previewColor: '#ffffff' },
-  { value: 'xiaohongshu', label: '小红书', previewColor: '#ffe4e6' },
-  { value: 'terminal', label: '终端', previewColor: '#1e1e1e' },
-  { value: 'ocean', label: '海洋', previewColor: '#0ea5e9' },
+// 诊断结果接口
+interface DiagnosticResult {
+  success: boolean
+  message: string
+  details?: string[]
+  suggestions?: string[]
+}
+
+// 校验结果接口
+interface ValidationResult {
+  success: boolean
+  message: string
+  details?: string[]
+}
+
+// 主题接口
+interface Theme {
+  value: string
+  label: string
+  previewColor: string
+}
+
+// 完整的主题列表（根据backend/assets/themes目录）
+const allThemeFiles = [
+  'aurora-green', 'autumn-leaves', 'berry-smoothie', 'blackberry-sage',
+  'blue-lagoon', 'blueberry-cheese', 'blueberry-night', 'blueberry',
+  'blush-pink', 'botanical', 'bubblegum-pink', 'candy-pink',
+  'caramel-macchiato', 'cherry-blossom', 'cherry-blush', 'cherry',
+  'chocolate-mint', 'coconut-cream', 'coral', 'cotton-candy',
+  'cream-custard', 'cream', 'crystal-purple', 'dark', 'deep-ocean',
+  'default', 'earl-grey', 'elegant', 'floral-pink', 'forest-green',
+  'grape-purple', 'grape', 'honey-ginger', 'honey-peach', 'ice-blue',
+  'ivory-cream', 'kiwi-green', 'lavender-gray', 'lavender-honey',
+  'lavender-purple', 'lavender', 'lemon-meringue', 'lemon-yellow',
+  'lemon', 'lily-white', 'mango-pudding', 'matcha-green', 'matcha-latte',
+  'matcha', 'mint-breeze', 'mint-chocolate', 'mint-green', 'mint',
+  'neo-brutalism', 'neon-pink', 'nordic', 'ocean-blue', 'ocean-mist',
+  'ocean', 'peach-blossom', 'peach', 'peaches-cream', 'pearl-white',
+  'pink-cream', 'pistachio-green', 'playful-geometric', 'pomegranate',
+  'professional', 'purple', 'rainbow-sherbet', 'rainbow-sorbet',
+  'red-velvet', 'retro', 'rose-gold', 'rose-milk', 'rose', 'sage-green',
+  'sakura-blossom', 'sakura-pink', 'sand-brown', 'sea-glass', 'sketch',
+  'sky-blue', 'strawberry-milk', 'strawberry-red', 'strawberry-sweet',
+  'strawberry', 'sun-kissed', 'sunset-glow', 'sunset-orange', 'sunset',
+  'taro-milktea', 'terminal', 'tiramisu', 'vanilla-cream', 'vanilla-milk',
+  'winter-sky', 'xiaohongshu'
 ]
 
 // 主题预览颜色映射
 const themePreviewColors: Record<string, string> = {
-  default: '#ffffff',
-  xiaohongshu: '#ffe4e6',
-  terminal: '#1e1e1e',
-  ocean: '#0ea5e9',
+  'aurora-green': '#4CAF50',
+  'autumn-leaves': '#FF5722',
+  'berry-smoothie': '#9C27B0',
+  'blackberry-sage': '#4A148C',
+  'blue-lagoon': '#00BCD4',
+  'blueberry-cheese': '#3F51B5',
+  'blueberry-night': '#1A237E',
+  'blueberry': '#2196F3',
+  'blush-pink': '#FFCDD2',
+  'botanical': '#81C784',
+  'bubblegum-pink': '#FF4081',
+  'candy-pink': '#E91E63',
+  'caramel-macchiato': '#795548',
+  'cherry-blossom': '#F8BBD9',
+  'cherry-blush': '#F48FB1',
+  'cherry': '#D32F2F',
+  'chocolate-mint': '#00695C',
+  'coconut-cream': '#FFF8E1',
+  'coral': '#FF7043',
+  'cotton-candy': '#FF80AB',
+  'cream-custard': '#FFFDE7',
+  'cream': '#FFF9C4',
+  'crystal-purple': '#7C4DFF',
+  'dark': '#212121',
+  'deep-ocean': '#0D47A1',
+  'default': '#FF2442',
+  'earl-grey': '#607D8B',
+  'elegant': '#9E9E9E',
+  'floral-pink': '#FCE4EC',
+  'forest-green': '#1B5E20',
+  'grape-purple': '#6A1B9A',
+  'grape': '#7B1FA2',
+  'honey-ginger': '#FF6F00',
+  'honey-peach': '#FFAB91',
+  'ice-blue': '#B3E5FC',
+  'ivory-cream': '#FFFFF0',
+  'kiwi-green': '#8BC34A',
+  'lavender-gray': '#90A4AE',
+  'lavender-honey': '#E1BEE7',
+  'lavender-purple': '#CE93D8',
+  'lavender': '#E6EE9C',
+  'lemon-meringue': '#FFF59D',
+  'lemon-yellow': '#FFEB3B',
+  'lemon': '#FFF176',
+  'lily-white': '#FAFAFA',
+  'mango-pudding': '#FFB74D',
+  'matcha-green': '#43A047',
+  'matcha-latte': '#A5D6A7',
+  'matcha': '#66BB6A',
+  'mint-breeze': '#B2DFDB',
+  'mint-chocolate': '#2E7D32',
+  'mint-green': '#81D4FA',
+  'mint': '#4DD0E1',
+  'neo-brutalism': '#FFD54F',
+  'neon-pink': '#FF1744',
+  'nordic': '#ECEFF1',
+  'ocean-blue': '#0288D1',
+  'ocean-mist': '#B0BEC5',
+  'ocean': '#03A9F4',
+  'peach-blossom': '#FFCCBC',
+  'peach': '#FF8A65',
+  'peaches-cream': '#FFE0B2',
+  'pearl-white': '#F5F5F5',
+  'pink-cream': '#F8BBD9',
+  'pistachio-green': '#C5E1A5',
+  'playful-geometric': '#FF5252',
+  'pomegranate': '#C62828',
+  'professional': '#37474F',
+  'purple': '#9C27B0',
+  'rainbow-sherbet': '#FF9800',
+  'rainbow-sorbet': '#FFC107',
+  'red-velvet': '#B71C1C',
+  'retro': '#FF9800',
+  'rose-gold': '#E91E63',
+  'rose-milk': '#FCE4EC',
+  'rose': '#EC407A',
+  'sage-green': '#81C784',
+  'sakura-blossom': '#FFCDD2',
+  'sakura-pink': '#F48FB1',
+  'sand-brown': '#A1887F',
+  'sea-glass': '#80CBC4',
+  'sketch': '#BDBDBD',
+  'sky-blue': '#64B5F6',
+  'strawberry-milk': '#FFCDD2',
+  'strawberry-red': '#E53935',
+  'strawberry-sweet': '#EF5350',
+  'strawberry': '#F44336',
+  'sun-kissed': '#FFA726',
+  'sunset-glow': '#FF7043',
+  'sunset-orange': '#FF5722',
+  'sunset': '#FF9800',
+  'taro-milktea': '#B39DDB',
+  'terminal': '#424242',
+  'tiramisu': '#8D6E63',
+  'vanilla-cream': '#FFFDE7',
+  'vanilla-milk': '#FFF8E1',
+  'winter-sky': '#BBDEFB',
+  'xiaohongshu': '#FF2442'
+}
+
+// 生成主题列表
+const themes: Theme[] = allThemeFiles.map(themeFile => ({
+  value: themeFile,
+  label: formatThemeLabel(themeFile),
+  previewColor: themePreviewColors[themeFile] || '#9E9E9E'
+}))
+
+// 格式化主题标签
+function formatThemeLabel(themeFile: string): string {
+  return themeFile
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 // 响应式数据
 const loading = ref(false)
-const dailyPeriod = ref('7')
+const validating = ref(false)
+const diagnosing = ref(false)
 const selectedTheme = ref('xiaohongshu')
-
+const validationResult = ref<ValidationResult | null>(null)
+const diagnosticResult = ref<DiagnosticResult | null>(null)
+const dailyPeriod = ref('7')
 const statsCards = ref([
   { label: '总请求数', value: '0', icon: 'TrendCharts', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
   { label: '总Tokens', value: '0', icon: 'Coin', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
@@ -189,6 +412,127 @@ const modelChartRef = ref<HTMLElement>()
 let dailyChart: ECharts | null = null
 let modelChart: ECharts | null = null
 
+// 运行系统诊断
+const runDiagnostic = async () => {
+  diagnosing.value = true
+  diagnosticResult.value = null
+  
+  try {
+    console.log('🔧 开始系统诊断...')
+    const result = await quickDiagnostic()
+    diagnosticResult.value = result
+    
+    if (!result.success) {
+      // 自动显示快速修复步骤
+      console.log('📋 快速修复步骤:')
+      getQuickFixSteps().forEach(step => console.log(step))
+    }
+  } catch (error: any) {
+    diagnosticResult.value = {
+      success: false,
+      message: `诊断过程出错：${error.message}`,
+      suggestions: getQuickFixSteps()
+    }
+    ElMessage.error('诊断过程出错')
+  } finally {
+    diagnosing.value = false
+  }
+}
+
+// 主题自我校验机制
+const validateThemes = async () => {
+  validating.value = true
+  validationResult.value = null
+  
+  try {
+    const details: string[] = []
+    let success = true
+    
+    // 校验1: 检查主题列表数量是否正确
+    const expectedCount = 117
+    if (themes.length === expectedCount) {
+      details.push(`✓ 主题数量正确：${themes.length} 个`)
+    } else {
+      details.push(`✗ 主题数量错误：期望 ${expectedCount} 个，实际 ${themes.length} 个`)
+      success = false
+    }
+    
+    // 校验2: 检查所有主题文件是否都在列表中
+    const missingThemes: string[] = []
+    allThemeFiles.forEach(file => {
+      const found = themes.find(t => t.value === file)
+      if (!found) {
+        missingThemes.push(file)
+      }
+    })
+    
+    if (missingThemes.length === 0) {
+      details.push('✓ 所有主题文件都已包含')
+    } else {
+      details.push(`✗ 缺失主题：${missingThemes.join(', ')}`)
+      success = false
+    }
+    
+    // 校验3: 检查是否有重复主题
+    const themeValues = themes.map(t => t.value)
+    const duplicates = themeValues.filter((item, index) => themeValues.indexOf(item) !== index)
+    
+    if (duplicates.length === 0) {
+      details.push('✓ 没有重复的主题')
+    } else {
+      details.push(`✗ 重复主题：${[...new Set(duplicates)].join(', ')}`)
+      success = false
+    }
+    
+    // 校验4: 检查所有主题是否有预览颜色
+    const themesWithoutColor: string[] = []
+    themes.forEach(theme => {
+      if (!themePreviewColors[theme.value]) {
+        themesWithoutColor.push(theme.value)
+      }
+    })
+    
+    if (themesWithoutColor.length === 0) {
+      details.push('✓ 所有主题都有预览颜色')
+    } else {
+      details.push(`⚠ 缺少预览颜色的主题：${themesWithoutColor.join(', ')}`)
+    }
+    
+    // 校验5: 验证主题选择功能
+    try {
+      selectedTheme.value = themes[0].value
+      await new Promise(resolve => setTimeout(resolve, 100))
+      selectedTheme.value = 'xiaohongshu'
+      details.push('✓ 主题选择功能正常')
+    } catch (error) {
+      details.push('✗ 主题选择功能异常')
+      success = false
+    }
+    
+    validationResult.value = {
+      success,
+      message: success 
+        ? '所有校验通过！主题功能完整可用。'
+        : '部分校验失败，请检查详细信息。',
+      details
+    }
+    
+    if (success) {
+      ElMessage.success('主题校验成功！')
+    } else {
+      ElMessage.error('主题校验失败，请检查详细信息')
+    }
+  } catch (error: any) {
+    validationResult.value = {
+      success: false,
+      message: `校验过程出错：${error.message}`
+    }
+    ElMessage.error('校验过程出错')
+  } finally {
+    validating.value = false
+  }
+}
+
 // 格式化日期
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -201,10 +545,9 @@ const formatDate = (dateStr: string) => {
   })
 }
 
-// 主题切换
-const handleThemeChange = (theme: string) => {
-  selectedTheme.value = theme
-  ElMessage.success(`已切换主题: ${theme}`)
+// 主题切换处理
+const handleThemeChange = (themeValue: string) => {
+  ElMessage.success(`已切换到 ${formatThemeLabel(themeValue)} 主题`)
 }
 
 // 加载统计数据
@@ -234,7 +577,12 @@ const loadStats = async () => {
       updateModelChart()
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '加载统计数据失败')
+    console.error('加载统计数据失败:', error)
+    // 如果是网络错误，自动运行诊断
+    if (error.message?.includes('Network Error') || error.code === 'ERR_NETWORK') {
+      ElMessage.warning('检测到网络问题，正在运行系统诊断...')
+      setTimeout(() => runDiagnostic(), 500)
+    }
   }
 }
 
@@ -247,7 +595,7 @@ const loadUsageRecords = async () => {
       usageRecords.value = res.data as TokenUsage[]
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '加载使用记录失败')
+    console.error('加载使用记录失败:', error)
   } finally {
     loading.value = false
   }

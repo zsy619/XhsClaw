@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 
+	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
@@ -26,7 +27,7 @@ func NewTokenUsageHandler() *TokenUsageHandler {
 
 // GetUserTokenUsage 获取用户Token使用记录
 func (h *TokenUsageHandler) GetUserTokenUsage(c context.Context, ctx *app.RequestContext) {
-	userID := ctx.GetUint("userID")
+	userID := middleware.GetUserID(c)
 	if userID == 0 {
 		response.Error(ctx, errno.Unauthorized)
 		return
@@ -43,7 +44,7 @@ func (h *TokenUsageHandler) GetUserTokenUsage(c context.Context, ctx *app.Reques
 
 // GetUserTokenStats 获取用户Token使用统计
 func (h *TokenUsageHandler) GetUserTokenStats(c context.Context, ctx *app.RequestContext) {
-	userID := ctx.GetUint("userID")
+	userID := middleware.GetUserID(c)
 	if userID == 0 {
 		response.Error(ctx, errno.Unauthorized)
 		return
@@ -60,7 +61,7 @@ func (h *TokenUsageHandler) GetUserTokenStats(c context.Context, ctx *app.Reques
 
 // GetUserDailyStats 获取用户每日Token使用统计
 func (h *TokenUsageHandler) GetUserDailyStats(c context.Context, ctx *app.RequestContext) {
-	userID := ctx.GetUint("userID")
+	userID := middleware.GetUserID(c)
 	if userID == 0 {
 		response.Error(ctx, errno.Unauthorized)
 		return
@@ -83,7 +84,7 @@ func (h *TokenUsageHandler) GetUserDailyStats(c context.Context, ctx *app.Reques
 
 // GetUserStatsByModel 获取用户按模型统计的使用情况
 func (h *TokenUsageHandler) GetUserStatsByModel(c context.Context, ctx *app.RequestContext) {
-	userID := ctx.GetUint("userID")
+	userID := middleware.GetUserID(c)
 	if userID == 0 {
 		response.Error(ctx, errno.Unauthorized)
 		return

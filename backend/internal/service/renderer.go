@@ -1168,7 +1168,7 @@ func (s *RendererService) renderHTMLToImage(htmlContent, outputPrefix, suffix st
 		return "", fmt.Errorf("保存图片失败: %v", err)
 	}
 
-	return "/xiaohongshu-renderer/image/" + filename, nil
+	return "/xhsclaw/image/" + filename, nil
 }
 
 // generateFilename 生成文件名

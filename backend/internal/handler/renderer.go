@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/cloudwego/hertz/pkg/app"
-
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
+
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // RendererHandler 渲染处理器
@@ -38,17 +37,27 @@ type StyleInfo struct {
 
 // RenderRequest 渲染请求
 type RenderRequest struct {
-	MarkdownContent      string `json:"markdown_content" binding:"required"`
-	StyleKey             string `json:"style_key"`
-	OutputPrefix         string `json:"output_prefix"`
-	Mode                 string `json:"mode"`
-	Width                int    `json:"width"`
-	Height               int    `json:"height"`
-	MaxHeight            int    `json:"max_height"`
-	CardWidth            int    `json:"card_width"`
-	CardHeight           int    `json:"card_height"`
-	MaxContentHeight     int    `json:"max_content_height"`
+	MarkdownContent       string `json:"markdown_content" binding:"required"`
+	StyleKey              string `json:"style_key"`
+	OutputPrefix          string `json:"output_prefix"`
+	Mode                  string `json:"mode"`
+	Width                 int    `json:"width"`
+	Height                int    `json:"height"`
+	MaxHeight             int    `json:"max_height"`
+	CardWidth             int    `json:"card_width"`
+	CardHeight            int    `json:"card_height"`
+	MaxContentHeight      int    `json:"max_content_height"`
 	EnableSmartPagination bool   `json:"enable_smart_pagination"`
+	// 新增：4种分页模式
+	// separator: 按 --- 分隔手动分页
+	// auto-fit: 固定尺寸，自动整体缩放内容，避免溢出/大面积留白
+	// auto-split: 根据渲染后高度自动拆分为多张卡片
+	// dynamic: 根据内容动态调整图片高度
+	PaginationMode string `json:"pagination_mode"`
+	// 主题名称，用于封面与正文一体化
+	Theme string `json:"theme"`
+	// 封面参数
+	CoverTitle string `json:"cover_title"`
 }
 
 // CoverRequest 封面生成请求
@@ -59,6 +68,8 @@ type CoverRequest struct {
 	OutputPrefix string `json:"output_prefix"`
 	Width        int    `json:"width"`
 	Height       int    `json:"height"`
+	// 主题名称，用于封面与正文一体化
+	Theme string `json:"theme"`
 }
 
 // RenderResponse 渲染响应

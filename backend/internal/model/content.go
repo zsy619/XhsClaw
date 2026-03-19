@@ -16,31 +16,36 @@ type ContentAttributes struct {
 
 // RenderAttributes 渲染属性
 type RenderAttributes struct {
-	ImageStyleTheme     string `json:"image_style_theme"`
-	EnableSmartPagination bool `json:"enable_smart_pagination"`
-	CardWidth         int    `json:"card_width"`
-	CardHeight        int    `json:"card_height"`
+	ImageStyleTheme string `json:"image_style_theme"`
+	CardWidth       int    `json:"card_width"`
+	CardHeight      int    `json:"card_height"`
+	// 4种分页模式
+	// separator: 按 --- 分隔手动分页
+	// auto-fit: 固定尺寸，自动整体缩放内容，避免溢出/大面积留白
+	// auto-split: 根据渲染后高度自动拆分为多张卡片
+	// dynamic: 根据内容动态调整图片高度
+	PaginationMode string `json:"pagination_mode"`
 }
 
 // Content 内容模型（生成的小红书笔记）
 type Content struct {
-	ID                uint           `json:"id" gorm:"primaryKey"`
-	UserID            uint           `json:"user_id" gorm:"index;not null"`
-	Title             string         `json:"title" gorm:"size:50;not null"`
-	TitleOptions      string         `json:"title_options" gorm:"type:text"` // JSON格式存储备选标题数组
+	ID                 uint           `json:"id" gorm:"primaryKey"`
+	UserID             uint           `json:"user_id" gorm:"index;not null"`
+	Title              string         `json:"title" gorm:"size:50;not null"`
+	TitleOptions       string         `json:"title_options" gorm:"type:text"`        // JSON格式存储备选标题数组
 	SelectedTitleIndex int            `json:"selected_title_index" gorm:"default:0"` // 选中的备选标题索引
-	Description       string         `json:"description" gorm:"type:text;not null"`
-	Tags              string         `json:"tags" gorm:"type:text"` // JSON格式存储标签数组
-	Images            string         `json:"images" gorm:"type:text"` // JSON格式存储图片URL数组
-	ContentAttributes string         `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
-	RenderAttributes  string         `json:"render_attributes" gorm:"type:text"` // JSON格式存储渲染属性
-	Status            int            `json:"status" gorm:"default:0"` // 0:草稿, 1:待发布, 2:已发布, 3:发布失败
-	PublishTime       *time.Time     `json:"publish_time"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	DeletedAt         gorm.DeletedAt `json:"-" gorm:"index"`
-	
-	User              User           `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Description        string         `json:"description" gorm:"type:text;not null"`
+	Tags               string         `json:"tags" gorm:"type:text"`               // JSON格式存储标签数组
+	Images             string         `json:"images" gorm:"type:text"`             // JSON格式存储图片URL数组
+	ContentAttributes  string         `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
+	RenderAttributes   string         `json:"render_attributes" gorm:"type:text"`  // JSON格式存储渲染属性
+	Status             int            `json:"status" gorm:"default:0"`             // 0:草稿, 1:待发布, 2:已发布, 3:发布失败
+	PublishTime        *time.Time     `json:"publish_time"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	DeletedAt          gorm.DeletedAt `json:"-" gorm:"index"`
+
+	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 // TableName 指定表名
@@ -50,23 +55,23 @@ func (Content) TableName() string {
 
 // ContentHistory 内容历史记录模型
 type ContentHistory struct {
-	ID                uint           `json:"id" gorm:"primaryKey"`
-	ContentID         uint           `json:"content_id" gorm:"index;not null"`
-	UserID            uint           `json:"user_id" gorm:"index;not null"`
-	Type              string         `json:"type" gorm:"size:20;not null"` // 'create' | 'edit' | 'delete' | 'publish'
-	Title             string         `json:"title" gorm:"size:50;not null"`
-	TitleOptions      string         `json:"title_options" gorm:"type:text"` // JSON格式存储备选标题数组
-	SelectedTitleIndex int           `json:"selected_title_index" gorm:"default:0"`
-	Description       string         `json:"description" gorm:"type:text;not null"`
-	Tags              string         `json:"tags" gorm:"type:text"` // JSON格式存储标签数组
-	Images            string         `json:"images" gorm:"type:text"` // JSON格式存储图片URL数组
-	ContentAttributes string         `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
-	RenderAttributes  string         `json:"render_attributes" gorm:"type:text"` // JSON格式存储渲染属性
-	ChangeReason      string         `json:"change_reason" gorm:"size:255"`
-	CreatedAt         time.Time      `json:"created_at"`
+	ID                 uint      `json:"id" gorm:"primaryKey"`
+	ContentID          uint      `json:"content_id" gorm:"index;not null"`
+	UserID             uint      `json:"user_id" gorm:"index;not null"`
+	Type               string    `json:"type" gorm:"size:20;not null"` // 'create' | 'edit' | 'delete' | 'publish'
+	Title              string    `json:"title" gorm:"size:50;not null"`
+	TitleOptions       string    `json:"title_options" gorm:"type:text"` // JSON格式存储备选标题数组
+	SelectedTitleIndex int       `json:"selected_title_index" gorm:"default:0"`
+	Description        string    `json:"description" gorm:"type:text;not null"`
+	Tags               string    `json:"tags" gorm:"type:text"`               // JSON格式存储标签数组
+	Images             string    `json:"images" gorm:"type:text"`             // JSON格式存储图片URL数组
+	ContentAttributes  string    `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
+	RenderAttributes   string    `json:"render_attributes" gorm:"type:text"`  // JSON格式存储渲染属性
+	ChangeReason       string    `json:"change_reason" gorm:"size:255"`
+	CreatedAt          time.Time `json:"created_at"`
 
-	Content           Content        `json:"content,omitempty" gorm:"foreignKey:ContentID"`
-	User              User           `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Content Content `json:"content,omitempty" gorm:"foreignKey:ContentID"`
+	User    User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 // TableName 指定表名
@@ -78,7 +83,7 @@ func (ContentHistory) TableName() string {
 type GenerateContentRequest struct {
 	SkillContent string `json:"skill_content" binding:"required"`
 	Count        int    `json:"count" binding:"min=1,max=10"` // 生成数量
-	Length       string `json:"length"` // short, medium, long
+	Length       string `json:"length"`                       // short, medium, long
 }
 
 // GenerateContentResponse 生成内容响应
@@ -88,23 +93,23 @@ type GenerateContentResponse struct {
 
 // ContentItem 单个生成的内容项
 type ContentItem struct {
-	Title               string           `json:"title"`
-	Description         string           `json:"description"`
-	Tags                []string         `json:"tags"`
-	ContentAttributes   ContentAttributes `json:"content_attributes"`
-	RenderAttributes    RenderAttributes  `json:"render_attributes"`
+	Title             string            `json:"title"`
+	Description       string            `json:"description"`
+	Tags              []string          `json:"tags"`
+	ContentAttributes ContentAttributes `json:"content_attributes"`
+	RenderAttributes  RenderAttributes  `json:"render_attributes"`
 }
 
 // ContentSaveRequest 保存内容请求
 type ContentSaveRequest struct {
-	Title               string           `json:"title" binding:"required"`
-	TitleOptions        []string         `json:"title_options"` // 备选标题数组
-	SelectedTitleIndex  int              `json:"selected_title_index"` // 选中的备选标题索引
-	Description         string           `json:"description" binding:"required"`
-	Tags                []string         `json:"tags"`
-	Images              []string         `json:"images"` // 生成的图片路径数组
-	ContentAttributes   ContentAttributes `json:"content_attributes"`
-	RenderAttributes    RenderAttributes  `json:"render_attributes"`
+	Title              string            `json:"title" binding:"required"`
+	TitleOptions       []string          `json:"title_options"`        // 备选标题数组
+	SelectedTitleIndex int               `json:"selected_title_index"` // 选中的备选标题索引
+	Description        string            `json:"description" binding:"required"`
+	Tags               []string          `json:"tags"`
+	Images             []string          `json:"images"` // 生成的图片路径数组
+	ContentAttributes  ContentAttributes `json:"content_attributes"`
+	RenderAttributes   RenderAttributes  `json:"render_attributes"`
 }
 
 // UpdateContentRequest 更新内容请求

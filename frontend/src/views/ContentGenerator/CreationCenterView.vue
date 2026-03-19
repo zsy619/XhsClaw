@@ -474,23 +474,41 @@
         <!-- 分割线 -->
         <div class="my-6 border-t border-gray-100"></div>
 
-        <!-- 智能分页 -->
+        <!-- 分页模式配置 -->
         <div class="config-section">
-          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <el-icon class="text-blue-500"><MagicStick /></el-icon>
+          <div class="section-header mb-4">
+            <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <el-icon class="text-primary-500"><MagicStick /></el-icon>
+              分页模式
+            </h3>
+            <p class="text-xs text-gray-500">选择内容分页方式，支持4种模式</p>
+          </div>
+          
+          <!-- 分页模式选择 -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div
+              v-for="option in paginationModeOptions"
+              :key="option.value"
+              @click="imageConfig.paginationMode = option.value"
+              class="cursor-pointer p-3 rounded-xl border-2 transition-all duration-200"
+              :class="imageConfig.paginationMode === option.value 
+                ? 'border-primary-500 bg-primary-50' 
+                : 'border-gray-200 hover:border-gray-300'"
+            >
+              <div class="flex items-center gap-2 mb-1">
+                <div 
+                  class="w-4 h-4 rounded-full border-2 flex items-center justify-center"
+                  :class="imageConfig.paginationMode === option.value ? 'border-primary-500' : 'border-gray-300'"
+                >
+                  <div 
+                    v-if="imageConfig.paginationMode === option.value"
+                    class="w-2 h-2 rounded-full bg-primary-500"
+                  ></div>
+                </div>
+                <span class="font-medium text-gray-800">{{ option.label }}</span>
               </div>
-              <div>
-                <div class="font-medium text-gray-800">智能分页</div>
-                <div class="text-xs text-gray-500">自动拆分长内容到多张卡片</div>
-              </div>
+              <div class="text-xs text-gray-500 ml-6">{{ option.desc }}</div>
             </div>
-            <el-switch 
-              v-model="imageConfig.enableSmartPagination"
-              size="large"
-              active-color="#10b981"
-            />
           </div>
         </div>
 
@@ -1052,6 +1070,13 @@ const styleOptions = [
     previewClass: 'bg-yellow-100'
   },
   {
+    value: 'lemon-meringue',
+    label: '柠檬蛋白派',
+    icon: '🍋',
+    description: '柠檬蛋白派色调，清新酸甜',
+    previewClass: 'bg-yellow-100'
+  },
+  {
     value: 'strawberry-red',
     label: '草莓红',
     icon: '🍓',
@@ -1128,13 +1153,6 @@ const styleOptions = [
     description: '深邃静谧，优雅神秘',
     previewClass: 'bg-blue-100'
   },
-  {
-    value: 'lavender-gray',
-    label: '薰衣草灰',
-    icon: '💜',
-    description: '低调优雅，温柔气质',
-    previewClass: 'bg-gray-100'
-  },
   // ========== 新增 20 个小红书风格样式 ==========
   {
     value: 'lavender-purple',
@@ -1142,6 +1160,13 @@ const styleOptions = [
     icon: '💜',
     description: '梦幻薰衣草紫色，优雅浪漫',
     previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'lavender-honey',
+    label: '薰衣草蜂蜜',
+    icon: '💜',
+    description: '薰衣草与蜂蜜的甜蜜结合',
+    previewClass: 'bg-purple-100'
   },
   {
     value: 'mint-breeze',
@@ -1172,25 +1197,11 @@ const styleOptions = [
     previewClass: 'bg-orange-200'
   },
   {
-    value: 'peach-blossom',
-    label: '蜜桃粉桃',
-    icon: '🍑',
-    description: '甜美蜜桃粉色，温柔可爱',
-    previewClass: 'bg-orange-100'
-  },
-  {
     value: 'matcha-green',
     label: '抹茶绿调',
     icon: '🍵',
     description: '清新抹茶绿色，自然健康',
     previewClass: 'bg-green-200'
-  },
-  {
-    value: 'blueberry-night',
-    label: '蓝莓之夜',
-    icon: '🫐',
-    description: '深邃蓝莓紫色，神秘优雅',
-    previewClass: 'bg-indigo-200'
   },
   {
     value: 'cherry-blossom',
@@ -1206,75 +1217,308 @@ const styleOptions = [
     description: '甜美草莓红色，少女心十足',
     previewClass: 'bg-red-200'
   },
+
+  // ========== 补全后端样式 ==========
   {
-    value: 'lemon-yellow',
-    label: '柠檬黄调',
-    icon: '🍋',
-    description: '明亮柠檬黄色，清新活力',
-    previewClass: 'bg-yellow-200'
-  },
-  {
-    value: 'lavender-gray',
-    label: '薰衣草灰',
-    icon: '💜',
-    description: '低调薰衣草灰色，优雅气质',
-    previewClass: 'bg-gray-100'
-  },
-  {
-    value: 'rose-gold',
-    label: '玫瑰金',
-    icon: '🌹',
-    description: '优雅玫瑰金色，温柔女人味',
-    previewClass: 'bg-pink-100'
-  },
-  {
-    value: 'sky-blue',
-    label: '天空蓝',
-    icon: '☁️',
-    description: '清新天空蓝色，心旷神怡',
-    previewClass: 'bg-blue-100'
-  },
-  {
-    value: 'candy-pink',
-    label: '糖果粉',
-    icon: '🍭',
-    description: '甜美糖果粉色，少女心爆棚',
-    previewClass: 'bg-pink-100'
-  },
-  {
-    value: 'mint-green',
-    label: '薄荷绿',
-    icon: '🌿',
-    description: '清新薄荷绿色，治愈系风格',
+    value: 'aurora-green',
+    label: '极光绿',
+    icon: '🌅',
+    description: '极光绿色，神秘梦幻',
     previewClass: 'bg-green-100'
   },
   {
-    value: 'strawberry-red',
-    label: '草莓红',
+    value: 'autumn-leaves',
+    label: '秋叶橙',
+    icon: '🍂',
+    description: '秋日落叶，温暖浪漫',
+    previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'berry-smoothie',
+    label: '莓果奶昔',
     icon: '🍓',
-    description: '甜美草莓红色，少女心十足',
+    description: '莓果色调，甜美可爱',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'blackberry-sage',
+    label: '黑莓鼠尾草',
+    icon: '🫐',
+    description: '黑莓与鼠尾草的优雅结合',
+    previewClass: 'bg-purple-100'
+  },
+  {
+    value: 'blue-lagoon',
+    label: '蓝色泻湖',
+    icon: '🌊',
+    description: '清澈蓝色，宁静优雅',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'blueberry-cheese',
+    label: '蓝莓芝士',
+    icon: '🫐',
+    description: '蓝莓与芝士的甜美组合',
+    previewClass: 'bg-blue-100'
+  },
+  {
+    value: 'blush-pink',
+    label: '腮红粉',
+    icon: '💕',
+    description: '娇羞腮红粉色，温柔可人',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'bubblegum-pink',
+    label: '泡泡糖粉',
+    icon: '🍬',
+    description: '甜美泡泡糖粉色',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'caramel-macchiato',
+    label: '焦糖玛奇朵',
+    icon: '☕',
+    description: '焦糖咖啡色调，温暖舒适',
+    previewClass: 'bg-amber-100'
+  },
+  {
+    value: 'cherry-blush',
+    label: '樱桃腮红',
+    icon: '🍒',
+    description: '樱桃红色，娇艳动人',
     previewClass: 'bg-red-100'
   },
   {
-    value: 'ocean-blue',
-    label: '海洋蓝',
-    icon: '🌊',
-    description: '深邃海洋蓝色，宁静优雅',
-    previewClass: 'bg-blue-100'
-  },
-  {
-    value: 'forest-green',
-    label: '森林绿',
-    icon: '🌲',
-    description: '自然森林绿色，充满生机',
+    value: 'chocolate-mint',
+    label: '巧克力薄荷',
+    icon: '🍫',
+    description: '巧克力与薄荷的清新组合',
     previewClass: 'bg-green-100'
   },
   {
-    value: 'sunset-orange',
-    label: '日落橙',
-    icon: '🌅',
-    description: '温暖日落橙色，活力满满',
+    value: 'coconut-cream',
+    label: '椰子奶油',
+    icon: '🥥',
+    description: '椰子奶油色调，清爽自然',
+    previewClass: 'bg-yellow-50'
+  },
+  {
+    value: 'cotton-candy',
+    label: '棉花糖',
+    icon: '🍭',
+    description: '棉花糖粉色，梦幻甜美',
+    previewClass: 'bg-pink-50'
+  },
+  {
+    value: 'cream-custard',
+    label: '奶油布丁',
+    icon: '🍮',
+    description: '奶油布丁色调，温柔可爱',
+    previewClass: 'bg-yellow-100'
+  },
+  {
+    value: 'earl-grey',
+    label: '伯爵茶',
+    icon: '🍵',
+    description: '伯爵茶色调，优雅知性',
+    previewClass: 'bg-gray-100'
+  },
+  {
+    value: 'floral-pink',
+    label: '花漾粉',
+    icon: '🌸',
+    description: '花朵粉色，浪漫温柔',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'grape-purple',
+    label: '葡萄紫',
+    icon: '🍇',
+    description: '深紫葡萄色调，高贵神秘',
+    previewClass: 'bg-purple-200'
+  },
+  {
+    value: 'honey-ginger',
+    label: '蜂蜜姜茶',
+    icon: '🍯',
+    description: '蜂蜜姜茶色调，温暖舒适',
+    previewClass: 'bg-amber-100'
+  },
+  {
+    value: 'honey-peach',
+    label: '蜜桃蜂蜜',
+    icon: '🍑',
+    description: '蜜桃蜂蜜色调，甜美可人',
     previewClass: 'bg-orange-100'
+  },
+  {
+    value: 'ivory-cream',
+    label: '象牙奶油',
+    icon: '🐘',
+    description: '象牙奶油色调，优雅大方',
+    previewClass: 'bg-yellow-50'
+  },
+  {
+    value: 'lily-white',
+    label: '百合白',
+    icon: '🌼',
+    description: '百合白色调，纯洁优雅',
+    previewClass: 'bg-white'
+  },
+  {
+    value: 'mango-pudding',
+    label: '芒果布丁',
+    icon: '🥭',
+    description: '芒果布丁色调，活力四射',
+    previewClass: 'bg-yellow-100'
+  },
+  {
+    value: 'matcha-latte',
+    label: '抹茶拿铁',
+    icon: '☕',
+    description: '抹茶拿铁色调，清新自然',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'mint-chocolate',
+    label: '薄荷巧克力',
+    icon: '🍫',
+    description: '薄荷巧克力色调，清新甜蜜',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'ocean-mist',
+    label: '海雾蓝',
+    icon: '🌫️',
+    description: '海雾蓝色调，朦胧梦幻',
+    previewClass: 'bg-blue-50'
+  },
+  {
+    value: 'peaches-cream',
+    label: '蜜桃奶油',
+    icon: '🍑',
+    description: '蜜桃奶油色调，甜美温柔',
+    previewClass: 'bg-orange-50'
+  },
+  {
+    value: 'pearl-white',
+    label: '珍珠白',
+    icon: '💎',
+    description: '珍珠白色调，高贵典雅',
+    previewClass: 'bg-white'
+  },
+  {
+    value: 'pistachio-green',
+    label: '开心果绿',
+    icon: '🌰',
+    description: '开心果绿色调，清新自然',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'pomegranate',
+    label: '石榴红',
+    icon: '石榴',
+    description: '石榴红色调，热情活力',
+    previewClass: 'bg-red-100'
+  },
+  {
+    value: 'rainbow-sherbet',
+    label: '彩虹冰沙',
+    icon: '🌈',
+    description: '彩虹冰沙色调，活力四射',
+    previewClass: 'bg-gradient-to-r from-red-100 via-yellow-100 to-pink-100'
+  },
+  {
+    value: 'rainbow-sorbet',
+    label: '彩虹雪芭',
+    icon: '🌈',
+    description: '彩虹雪芭色调，梦幻多彩',
+    previewClass: 'bg-gradient-to-r from-blue-100 via-green-100 to-purple-100'
+  },
+  {
+    value: 'red-velvet',
+    label: '红丝绒',
+    icon: '🎂',
+    description: '红丝绒色调，高贵典雅',
+    previewClass: 'bg-red-100'
+  },
+  {
+    value: 'rose-milk',
+    label: '玫瑰牛奶',
+    icon: '🥛',
+    description: '玫瑰牛奶色调，温柔浪漫',
+    previewClass: 'bg-pink-50'
+  },
+  {
+    value: 'sage-green',
+    label: '鼠尾草绿',
+    icon: '🌿',
+    description: '鼠尾草绿色调，自然清新',
+    previewClass: 'bg-green-100'
+  },
+  {
+    value: 'sakura-pink',
+    label: '樱花粉',
+    icon: '🌸',
+    description: '樱花粉色调，浪漫梦幻',
+    previewClass: 'bg-pink-100'
+  },
+  {
+    value: 'sea-glass',
+    label: '海玻璃',
+    icon: '🔍',
+    description: '海玻璃色调，清澈透明',
+    previewClass: 'bg-blue-50'
+  },
+  {
+    value: 'strawberry-milk',
+    label: '草莓牛奶',
+    icon: '🥛',
+    description: '草莓牛奶色调，甜美可爱',
+    previewClass: 'bg-pink-50'
+  },
+  {
+    value: 'sun-kissed',
+    label: '阳光亲吻',
+    icon: '☀️',
+    description: '阳光亲吻色调，温暖明亮',
+    previewClass: 'bg-yellow-100'
+  },
+  {
+    value: 'taro-milktea',
+    label: '芋头奶茶',
+    icon: '🥤',
+    description: '芋头奶茶色调，温柔淡雅',
+    previewClass: 'bg-purple-50'
+  },
+  {
+    value: 'tiramisu',
+    label: '提拉米苏',
+    icon: '🍰',
+    description: '提拉米苏色调，优雅甜蜜',
+    previewClass: 'bg-amber-100'
+  },
+  {
+    value: 'vanilla-cream',
+    label: '香草奶油',
+    icon: '🍦',
+    description: '香草奶油色调，温柔清新',
+    previewClass: 'bg-yellow-50'
+  },
+  {
+    value: 'vanilla-milk',
+    label: '香草牛奶',
+    icon: '🥛',
+    description: '香草牛奶色调，纯净自然',
+    previewClass: 'bg-yellow-50'
+  },
+  {
+    value: 'winter-sky',
+    label: '冬日天空',
+    icon: '❄️',
+    description: '冬日天空色调，清冷优雅',
+    previewClass: 'bg-blue-50'
   }
 ]
 
@@ -1315,10 +1559,19 @@ const form = reactive({
 // 图片配置
 const imageConfig = reactive({
   styleKey: 'default',
-  enableSmartPagination: true,
+  // 分页模式: separator(按---分隔), auto-fit(自动缩放), auto-split(自动拆分), dynamic(动态高度)
+  paginationMode: 'auto-split',
   cardWidth: 1080,
   cardHeight: 1440
 })
+
+// 分页模式选项
+const paginationModeOptions = [
+  { value: 'separator', label: '手动分页', desc: '按 --- 分隔符分页' },
+  { value: 'auto-fit', label: '自动缩放', desc: '固定尺寸，自动整体缩放内容，避免溢出' },
+  { value: 'auto-split', label: '自动拆分', desc: '根据渲染后高度自动拆分为多张卡片' },
+  { value: 'dynamic', label: '动态高度', desc: '根据内容动态调整图片高度' }
+]
 
 // 下拉菜单状态
 const showStyleDropdown = ref(false)
@@ -1542,14 +1795,16 @@ const handleRenderImages = async () => {
       : (result.value.title || form.content)
     
     // 构建标签字符串
-    const tagsText = result.value.tags ? result.value.tags.join(',') : ''
+    const tagsText = result.value.tags ? result.value.tags.join(',') : '';
+    // alert(tagsText);
     
     // 步骤 2: 根据是否启用智能分页来决定是否调用 DeepSeek 重新生成内容
-    let finalContent = result.value.content
-    let finalTitle = selectedTitle
-    let finalTags = result.value.tags || []
+    let finalContent = result.value.content;
+    let finalTitle = selectedTitle;
+    let finalTags = result.value.tags || [];
     
-    if (imageConfig.enableSmartPagination) {
+    // 使用分页模式参数
+    if (imageConfig.paginationMode && imageConfig.paginationMode !== 'none') {
       imageRenderProgress.value = 40
       ElMessage.info('正在使用 AI 优化内容以适应分页...')
       
@@ -1563,8 +1818,7 @@ const handleRenderImages = async () => {
           style_preference: styleText,
           target_audience: audiencesText,
           length: form.wordCount,
-          enable_pagination: true,  // 启用分页模式
-          pagination_format: 'markdown'  // 使用 Markdown 格式便于分页
+          pagination_mode: imageConfig.paginationMode
         }, { timeout: 120000 })
         
         if (aiResponse.data?.generated_content) {
@@ -1592,7 +1846,7 @@ const handleRenderImages = async () => {
     ElMessage.info('正在生成封面...')
     
     try {
-      const coverResponse = await http.post('/xiaohongshu-renderer/cover', {
+      const coverResponse = await http.post('/generation/cover', {
         title: finalTitle,
         subtitle: finalTags.length > 0 ? finalTags.slice(0, 3).join(' ') : '',
         style_key: imageConfig.styleKey,
@@ -1630,10 +1884,10 @@ const handleRenderImages = async () => {
       markdown_content: markdownContent,
       style_key: imageConfig.styleKey,
       output_prefix: `content_${Date.now()}`,
-      enable_smart_pagination: imageConfig.enableSmartPagination,
+      pagination_mode: imageConfig.paginationMode,
       card_width: imageConfig.cardWidth,
       card_height: imageConfig.cardHeight,
-      max_content_height: imageConfig.cardHeight * 3  // 允许最大高度为 3 倍卡片高度
+      max_content_height: imageConfig.cardHeight * 3
     })
 
     imageRenderProgress.value = 90
@@ -1848,9 +2102,9 @@ const handleSave = async () => {
     // 获取生成的图片路径列表
     const images = generatedImages.value.map((url: string) => {
       // 从完整URL中提取后端返回的图片路径
-      // URL格式: http://localhost:8000/api/v1/xiaohongshu-renderer/image/xxx.png
-      // 需要提取: /xiaohongshu-renderer/image/xxx.png
-      const match = url.match(/(\/xiaohongshu-renderer\/image\/.*\.png)/)
+      // URL格式: http://localhost:8000/api/v1/xhsclaw/image/xxx.png
+      // 需要提取: /xhsclaw/image/xxx.png
+      const match = url.match(/(\/xhsclaw\/image\/.*\.png)/)
       return match ? match[1] : ''
     }).filter((path: string) => path !== '')
 
@@ -1868,7 +2122,7 @@ const handleSave = async () => {
       },
       render_attributes: {
         image_style_theme: imageConfig.styleKey,
-        enable_smart_pagination: imageConfig.enableSmartPagination,
+        pagination_mode: imageConfig.paginationMode,
         card_width: imageConfig.cardWidth,
         card_height: imageConfig.cardHeight
       }

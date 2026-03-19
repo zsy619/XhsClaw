@@ -86,7 +86,7 @@ func NewAIService() *AIService {
 }
 
 // GenerateXiaohongshuContent 生成小红书内容
-func (s *AIService) GenerateXiaohongshuContent(skillContent string, count int, length string, userAPIKey, userBaseURL, userModel string) ([]ContentItem, error) {
+func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string, count int, length string, userAPIKey, userBaseURL, userModel string) ([]ContentItem, error) {
 	apiKey := s.defaultCfg.APIKey
 	baseURL := s.defaultCfg.BaseURL
 	model := s.defaultCfg.Model
@@ -154,20 +154,20 @@ func (s *AIService) GenerateXiaohongshuContent(skillContent string, count int, l
 	
 	if err != nil {
 		// 记录失败的请求
-		go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
+		go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
 		return nil, err
 	}
 
 	// 解析响应
 	if len(response.Choices) == 0 {
-		go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "failed", "empty response", "", "", promptTokens, completionTokens)
+		go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "failed", "empty response", "", "", promptTokens, completionTokens)
 		return nil, errno.GenerateFailed
 	}
 
 	content := response.Choices[0].Message.Content
 	
 	// 记录成功的请求
-	go s.RecordUsage(0, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
+	go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
 	
 	// 解析JSON
 	var items []ContentItem

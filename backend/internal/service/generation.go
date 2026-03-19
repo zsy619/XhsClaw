@@ -4,7 +4,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/model"
 )
@@ -13,6 +12,7 @@ import (
 type GenerationService struct {
 	aiService         *AIService
 	userConfigService *UserConfigService
+	tokenUsageSvc     *TokenUsageService
 }
 
 // NewGenerationService 创建生成服务实例
@@ -20,6 +20,7 @@ func NewGenerationService() *GenerationService {
 	return &GenerationService{
 		aiService:         NewAIService(),
 		userConfigService: NewUserConfigService(),
+		tokenUsageSvc:     NewTokenUsageService(),
 	}
 }
 
@@ -27,7 +28,7 @@ func NewGenerationService() *GenerationService {
 func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRequest) (*model.GenerationResponse, error) {
 	// 获取用户配置，优先使用用户配置
 	apiKey, baseURL, modelName := s.userConfigService.GetLLMConfig(userID)
-	
+
 	// 如果用户没有配置，使用系统默认配置
 	if apiKey == "" && config.AppConfig != nil {
 		apiKey = config.AppConfig.DeepSeek.APIKey
@@ -38,7 +39,7 @@ func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRe
 	if modelName == "" && config.AppConfig != nil {
 		modelName = config.AppConfig.DeepSeek.Model
 	}
-	
+
 	if apiKey == "" {
 		return s.generateMockContent(req)
 	}
@@ -76,28 +77,55 @@ func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRe
 
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
+		// 记录失败的请求
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", err.Error())
 		return s.generateMockContent(req)
 	}
 
 	if len(response.Choices) == 0 {
+		// 记录空响应
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "empty response")
 		return s.generateMockContent(req)
 	}
 
 	content := response.Choices[0].Message.Content
+
+	// 记录成功的请求
+	go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "success", "")
+
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
+		// 记录解析失败
+		go s.recordTokenUsage(userID, modelName, "generate_content", prompt, "failed", "json unmarshal failed")
 		return s.generateMockContent(req)
 	}
 
 	return &result, nil
 }
 
+// recordTokenUsage 记录Token使用情况
+func (s *GenerationService) recordTokenUsage(userID uint, model, requestType, requestContent, responseStatus, errorMessage string) {
+	s.tokenUsageSvc.RecordTokenUsage(
+		userID,
+		model,
+		"deepseek",
+		requestType,
+		requestContent,
+		responseStatus,
+		errorMessage,
+		"",
+		"",
+		0,
+		0,
+	)
+}
+
 // RewriteContent 改写内容
 func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteRequest) (*model.GenerationResponse, error) {
 	// 获取用户配置，优先使用用户配置
 	apiKey, baseURL, modelName := s.userConfigService.GetLLMConfig(userID)
-	
+
 	// 如果用户没有配置，使用系统默认配置
 	if apiKey == "" && config.AppConfig != nil {
 		apiKey = config.AppConfig.DeepSeek.APIKey
@@ -108,7 +136,7 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 	if modelName == "" && config.AppConfig != nil {
 		modelName = config.AppConfig.DeepSeek.Model
 	}
-	
+
 	if apiKey == "" {
 		return s.rewriteMockContent(req)
 	}
@@ -152,17 +180,27 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
+		// 记录失败的请求
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", err.Error())
 		return s.rewriteMockContent(req)
 	}
 
 	if len(response.Choices) == 0 {
+		// 记录空响应
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "empty response")
 		return s.rewriteMockContent(req)
 	}
 
 	content := response.Choices[0].Message.Content
+
+	// 记录成功的请求
+	go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "success", "")
+
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
+		// 记录解析失败
+		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "json unmarshal failed")
 		return s.rewriteMockContent(req)
 	}
 

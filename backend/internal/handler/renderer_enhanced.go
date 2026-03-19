@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
@@ -41,15 +42,17 @@ type EnhancedRenderRequest struct {
 	Content       string `json:"content" binding:"required"` // 原始内容
 	Tags          string `json:"tags"`                       // 标签（逗号分隔）
 
+	// 用户ID（用于Token记录）
+	UserID uint `json:"user_id"`
+
 	// AI 生成参数
-	UseAI           bool   `json:"use_ai"`           // 是否使用 AI 生成内容
+	UseAI           bool   `json:"use_ai"`            // 是否使用 AI 生成内容
 	DeepSeekAPIKey  string `json:"deepseek_api_key"` // DeepSeek API Key（可选，覆盖配置）
-	ContentLength   string `json:"content_length"`   // 内容长度：short, medium, long
+	ContentLength   string `json:"content_length"`    // 内容长度：short, medium, long
 	StylePreference string `json:"style_preference"` // 风格偏好
 
-	// 分页参数
-	EnableSmartPagination bool   `json:"enable_smart_pagination"` // 是否启用智能分页
-	PaginationMode        string `json:"pagination_mode"`         // 分页模式：separator, auto-split, auto-fit, dynamic
+	// 分页模式: separator(按---分隔), auto-fit(自动缩放), auto-split(自动拆分), dynamic(动态高度)
+	PaginationMode string `json:"pagination_mode"`
 
 	// 样式参数
 	StyleKey     string `json:"style_key"`     // 样式主题
@@ -60,8 +63,8 @@ type EnhancedRenderRequest struct {
 	Height    int `json:"height"`     // 卡片高度
 	MaxHeight int `json:"max_height"` // 最大高度
 
-	// Emoji（用于封面）
-	Emoji string `json:"emoji"` // 封面 emoji
+	// 封面 emoji
+	Emoji string `json:"emoji"`
 }
 
 // EnhancedRenderResponse 增强版渲染响应
@@ -80,6 +83,9 @@ func (h *EnhancedRendererHandler) RenderWithAI(c context.Context, ctx *app.Reque
 		response.ParamError(ctx, err.Error())
 		return
 	}
+
+	// 获取用户ID（用于Token记录）
+	req.UserID = middleware.GetUserID(c)
 
 	// 1. 准备内容
 	var finalContent string
@@ -127,15 +133,10 @@ func (h *EnhancedRendererHandler) RenderWithAI(c context.Context, ctx *app.Reque
 	markdownContent := h.buildMarkdownContent(finalTitle, finalSubtitle, finalContent, finalTags, req.Emoji)
 
 	// 4. 确定分页模式
+	// 默认使用 auto-split 模式
 	paginationMode := service.PaginationMode(req.PaginationMode)
 	if paginationMode == "" {
-		if req.EnableSmartPagination {
-			// 智能分页：根据内容自动分割
-			paginationMode = service.PaginationAutoSplit
-		} else {
-			// 不分页：所有内容在一张图片中
-			paginationMode = service.PaginationAutoFit
-		}
+		paginationMode = service.PaginationAutoSplit
 	}
 
 	// 5. 设置尺寸参数
@@ -216,6 +217,7 @@ func (h *EnhancedRendererHandler) generateContentWithAI(req EnhancedRenderReques
 
 	// 调用 DeepSeek API 生成内容
 	items, err := h.aiService.GenerateXiaohongshuContent(
+		req.UserID,
 		skillContent,
 		1, // 生成 1 个内容
 		req.ContentLength,
