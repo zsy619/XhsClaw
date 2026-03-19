@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
 	"xiaohongshu/internal/config"
 	"xiaohongshu/pkg/errno"
 )
@@ -26,15 +27,15 @@ type DeepSeekMessage struct {
 
 // DeepSeekRequest DeepSeek请求结构
 type DeepSeekRequest struct {
-	Model    string           `json:"model"`
+	Model    string            `json:"model"`
 	Messages []DeepSeekMessage `json:"messages"`
 }
 
 // DeepSeekChoice DeepSeek选择结构
 type DeepSeekChoice struct {
-	Index        int            `json:"index"`
+	Index        int             `json:"index"`
 	Message      DeepSeekMessage `json:"message"`
-	FinishReason string         `json:"finish_reason"`
+	FinishReason string          `json:"finish_reason"`
 }
 
 // DeepSeekUsage DeepSeek使用量结构
@@ -46,12 +47,12 @@ type DeepSeekUsage struct {
 
 // DeepSeekResponse DeepSeek响应结构
 type DeepSeekResponse struct {
-	ID      string          `json:"id"`
-	Object  string          `json:"object"`
-	Created int64           `json:"created"`
-	Model   string          `json:"model"`
+	ID      string           `json:"id"`
+	Object  string           `json:"object"`
+	Created int64            `json:"created"`
+	Model   string           `json:"model"`
 	Choices []DeepSeekChoice `json:"choices"`
-	Usage   DeepSeekUsage   `json:"usage"`
+	Usage   DeepSeekUsage    `json:"usage"`
 }
 
 // GeneratedContent 生成的内容结构
@@ -63,8 +64,8 @@ type GeneratedContent struct {
 
 // AIService AI服务
 type AIService struct {
-	defaultCfg     *config.DeepSeekConfig
-	tokenUsageSvc  *TokenUsageService
+	defaultCfg    *config.DeepSeekConfig
+	tokenUsageSvc *TokenUsageService
 }
 
 // NewAIService 创建AI服务实例
@@ -90,7 +91,7 @@ func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string,
 	apiKey := s.defaultCfg.APIKey
 	baseURL := s.defaultCfg.BaseURL
 	model := s.defaultCfg.Model
-	
+
 	if userAPIKey != "" {
 		apiKey = userAPIKey
 	}
@@ -100,7 +101,7 @@ func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string,
 	if userModel != "" {
 		model = userModel
 	}
-	
+
 	if apiKey == "" {
 		return nil, errno.ServiceUnavailable.WithMessage("DeepSeek API Key未配置")
 	}
@@ -144,14 +145,14 @@ func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string,
 	}
 
 	response, err := s.callDeepSeekAPI(messages, apiKey, baseURL, model)
-	
+
 	// 记录Token使用情况
 	var promptTokens, completionTokens int
 	if err == nil && response != nil {
 		promptTokens = response.Usage.PromptTokens
 		completionTokens = response.Usage.CompletionTokens
 	}
-	
+
 	if err != nil {
 		// 记录失败的请求
 		go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
@@ -165,10 +166,10 @@ func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string,
 	}
 
 	content := response.Choices[0].Message.Content
-	
+
 	// 记录成功的请求
 	go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
-	
+
 	// 解析JSON
 	var items []ContentItem
 	err = json.Unmarshal([]byte(content), &items)

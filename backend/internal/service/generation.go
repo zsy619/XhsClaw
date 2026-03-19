@@ -4,7 +4,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-
+	"strings"
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/model"
 )
@@ -48,23 +48,62 @@ func (s *GenerationService) GenerateContent(userID uint, req *model.GenerationRe
 	lengthDesc := s.getLengthDescription(req.Length)
 	styleDesc := s.getStyleDescription(req.StylePreference)
 
-	prompt := fmt.Sprintf(`你是一个专业的小红书文案写手。请根据以下信息生成小红书风格的文案。
+	prompt := fmt.Sprintf(`你是一个专业的小红书文案写手。请根据以下信息，按照指定顺序生成小红书风格的文案。
 
 主题内容：%s
 内容风格：%s
 目标受众：%s
 内容长度：%s
 
-要求：
-1. 生成吸引人的标题（不超过20个字符）
-2. 生成正文内容，使用emoji，分段清晰，语气亲切
-3. 生成相关的标签（不超过20个，每个标签不超过10个字符）
+生成顺序要求：
+1. 第一步：生成封面建议
+	目标：提供直观、有吸引力的封面设计方案，在海量笔记中脱颖而出。
+	要求：
+	- 提供 1-2个具体的封面方向（如：真人出镜对比图、产品大图+醒目文字、高颜值场景摆拍、干货信息汇总图）。
+	- 如果涉及文字，请提供 3-5个封面文案关键词或短句。文案需突出痛点、卖点或引发好奇心，字体要大而醒目。
+	示例：
+	- 方向：真人出镜，展示使用前后的惊人对比。
+	- 文案关键词：“塌鼻星人有救了！”、“3分钟！get立体侧颜”、“手残党必备”
+2. 第二步：生成标题
+	目标：创作一个在20个字符内，能瞬间抓住用户眼球、激发点击欲望的爆款标题，巧用emoji表情。
+	要求：
+	- 字符数：严格控制在 20个字符以内（包括标点符号），确保在首页推荐流中完整显示。
+	- 吸引力法则：灵活运用悬念、痛点、数据、干货、情绪、反常识、人群标签等技巧。
+	- 关键词植入：巧妙融入核心关键词，便于系统推荐和用户搜索。
+	示例：
+	- 数据型：3天瘦腿2cm，我只做了这件事！
+	- 悬念型：千万别买这双鞋，因为实在太显腿长了！
+	- 痛点型：毛孔粗大星人，这瓶“磨皮水”给我锁死！
+3. 第三步：生成正文内容
+	目标：用亲切、真诚、有价值的语言留住用户，引发互动（点赞、收藏、评论）。
+	要求：
+	- 语气亲切： 像朋友间分享一样自然，多用“你”、“姐妹”、“真的绝了”、“谁懂啊”等口语化表达，拉近距离。
+	- 巧用Emoji： 在段落开头、重点内容、产品/步骤前合理使用Emoji进行点缀，增加可读性和生动性。切勿滥用，保持排版清爽。
+	- 结构清晰：
+	- 开头（钩子）： 用1-2句话承接标题，简单引入主题，或再次强化痛点/吸引力。
+	- 中间（干货/分享）：
+	分点阐述，逻辑清晰。可以使用数字序号或Emoji小标题（如：🍱今日饮食 | 🏃‍♀️运动打卡 | 💡小贴士）。
+	- 如果是教程，步骤要详细、可操作。
+	- 如果是测评，结论要客观、优缺点分明。
+	- 如果是Vlog，故事要有趣或有共鸣点。
+	- 结尾（互动/引导）： 总结感受，并引导用户互动。例如：“姐妹们快冲！”、“你们还有什么私藏好物？评论区分享给我吧～”、“如果对你有用，别忘了点个❤️哦！”
+	内容价值： 确保笔记有核心价值，无论是情绪价值（让人开心、感动）、实用价值（学到东西）还是审美价值（看着舒服）。
+4. 第四步：生成标签
+	目标：通过精准的标签，让笔记被更多目标用户看到，进入流量池。
+	要求：
+	- 数量：建议 5-8个，最多不超过10个。
+	- 结构（金字塔型）：
+		- 1-2个核心标签： 与笔记内容最相关的、热度较高的大类标签（如：#护肤、#穿搭、#美食教程）。
+		- 3-5个细分标签： 更具体的长尾标签，精准定位人群（如：#干皮护肤、#小个子穿搭、#空气炸锅食谱）。
+		- 1-2个氛围/场景标签： 拓展曝光渠道（如：#好物分享、#我的日常、#独居生活图鉴、#氛围感）。
+	- 格式：每个标签以“#”开头，标签内容中不加空格，控制在 15个字符以内，简洁明了。
 
 请以JSON格式返回，格式如下：
 {
   "generated_title": "标题",
   "generated_content": "正文内容",
-  "generated_tags": ["标签1", "标签2"]
+  "generated_tags": ["标签1", "标签2"],
+  "cover_suggestion": "封面文案"
 }
 
 只返回JSON，不要有其他文字说明。`, req.Keywords, styleDesc, req.TargetAudience, lengthDesc)
@@ -145,31 +184,70 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 	lengthDesc := s.getLengthDescription(req.Length)
 	styleDesc := s.getStyleDescription(req.StylePreference)
 
-	prompt := fmt.Sprintf(`请帮我改写以下小红书文案。
+	prompt := fmt.Sprintf(`请帮我改写以下小红书文案，按照指定顺序生成。
 
 原文案：
 %s
 
-要求：
-1. 保持原文案风格：%s
-2. 内容长度：%s
-3. %s
-4. 生成吸引人的标题（不超过20个字符）
-5. 生成正文内容，使用emoji，分段清晰，语气亲切
-6. 生成相关的标签（不超过20个，每个标签不超过10个字符）
+生成顺序要求：
+1. 第一步：生成封面建议
+	目标：提供直观、有吸引力的封面设计方案，在海量笔记中脱颖而出。
+	要求：
+	- 提供 1-2个具体的封面方向（如：真人出镜对比图、产品大图+醒目文字、高颜值场景摆拍、干货信息汇总图）。
+	- 如果涉及文字，请提供 3-5个封面文案关键词或短句。文案需突出痛点、卖点或引发好奇心，字体要大而醒目。
+	示例：
+	- 方向：真人出镜，展示使用前后的惊人对比。
+	- 文案关键词：“塌鼻星人有救了！”、“3分钟！get立体侧颜”、“手残党必备”
+2. 第二步：生成标题
+	目标：创作一个在20个字符内，能瞬间抓住用户眼球、激发点击欲望的爆款标题，巧用emoji表情。
+	要求：
+	- 字符数：严格控制在 20个字符以内（包括标点符号），确保在首页推荐流中完整显示。
+	- 吸引力法则：灵活运用悬念、痛点、数据、干货、情绪、反常识、人群标签等技巧。
+	- 关键词植入：巧妙融入核心关键词，便于系统推荐和用户搜索。
+	示例：
+	- 数据型：3天瘦腿2cm，我只做了这件事！
+	- 悬念型：千万别买这双鞋，因为实在太显腿长了！
+	- 痛点型：毛孔粗大星人，这瓶“磨皮水”给我锁死！
+3. 第三步：生成正文内容
+	目标：用亲切、真诚、有价值的语言留住用户，引发互动（点赞、收藏、评论）。
+	要求：
+	- 语气亲切： 像朋友间分享一样自然，多用“你”、“姐妹”、“真的绝了”、“谁懂啊”等口语化表达，拉近距离。
+	- 巧用Emoji： 在段落开头、重点内容、产品/步骤前合理使用Emoji进行点缀，增加可读性和生动性。切勿滥用，保持排版清爽。
+	- 结构清晰：
+	- 开头（钩子）： 用1-2句话承接标题，简单引入主题，或再次强化痛点/吸引力。
+	- 中间（干货/分享）：
+	分点阐述，逻辑清晰。可以使用数字序号或Emoji小标题（如：🍱今日饮食 | 🏃‍♀️运动打卡 | 💡小贴士）。
+	- 如果是教程，步骤要详细、可操作。
+	- 如果是测评，结论要客观、优缺点分明。
+	- 如果是Vlog，故事要有趣或有共鸣点。
+	- 结尾（互动/引导）： 总结感受，并引导用户互动。例如：“姐妹们快冲！”、“你们还有什么私藏好物？评论区分享给我吧～”、“如果对你有用，别忘了点个❤️哦！”
+	内容价值： 确保笔记有核心价值，无论是情绪价值（让人开心、感动）、实用价值（学到东西）还是审美价值（看着舒服）。
+4. 第四步：生成标签
+	目标：通过精准的标签，让笔记被更多目标用户看到，进入流量池。
+	要求：
+	- 数量：建议 5-8个，最多不超过10个。
+	- 结构（金字塔型）：
+		- 1-2个核心标签： 与笔记内容最相关的、热度较高的大类标签（如：#护肤、#穿搭、#美食教程）。
+		- 3-5个细分标签： 更具体的长尾标签，精准定位人群（如：#干皮护肤、#小个子穿搭、#空气炸锅食谱）。
+		- 1-2个氛围/场景标签： 拓展曝光渠道（如：#好物分享、#我的日常、#独居生活图鉴、#氛围感）。
+	- 格式：每个标签以“#”开头，标签内容中不加空格，控制在 15个字符以内，简洁明了。
+
+内容长度：%s
+%s
 
 请以JSON格式返回，格式如下：
 {
   "generated_title": "标题",
   "generated_content": "正文内容",
-  "generated_tags": ["标签1", "标签2"]
+  "generated_tags": ["标签1", "标签2"],
+  "cover_suggestion": "封面文案"
 }
 
 只返回JSON，不要有其他文字说明。`, req.Content, styleDesc, lengthDesc, func() string {
 		if req.PreserveKeyInfo {
 			return "请保留原文案的关键信息"
 		}
-		return "可以自由发挥"
+		return "可以自由发挥，但保持核心主题"
 	}())
 
 	messages := []DeepSeekMessage{
@@ -183,7 +261,7 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 	if err != nil {
 		// 记录失败的请求（使用默认值）
 		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
-		return s.rewriteMockContent(req)
+		return s.rewriteMockContent(req, err)
 	}
 
 	if len(response.Choices) == 0 {
@@ -210,6 +288,8 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 
 // generateMockContent 生成模拟内容（当API不可用时）
 func (s *GenerationService) generateMockContent(req *model.GenerationRequest) (*model.GenerationResponse, error) {
+	generatedTags := []string{req.Keywords, "实用技巧", "干货分享", "建议收藏", "关注不亏"}
+
 	return &model.GenerationResponse{
 		GeneratedContent: fmt.Sprintf(`⚠️ 系统提示：未配置大模型参数
 
@@ -223,6 +303,15 @@ func (s *GenerationService) generateMockContent(req *model.GenerationRequest) (*
 配置完成后，系统将使用真实的AI模型生成更优质的内容。
 
 ✨ 模拟内容：
+
+## Title
+%s超全攻略！建议收藏💯
+
+## Tags
+%s
+
+---
+
 超实用%s分享！
 
 今天给大家带来超棒的%s心得～
@@ -237,14 +326,26 @@ func (s *GenerationService) generateMockContent(req *model.GenerationRequest) (*
 - 建议2
 - 建议3
 
-希望对大家有帮助哦～`, req.Keywords, req.Keywords),
-		GeneratedTitle: fmt.Sprintf("%s超全攻略！", req.Keywords),
-		GeneratedTags:  []string{req.Keywords, "系统提示", "配置", "大模型", "干货分享"},
+希望对大家有帮助哦～`, req.Keywords, strings.Join(generatedTags, " | "), req.Keywords, req.Keywords),
+		GeneratedTitle:  fmt.Sprintf("%s超全攻略！", req.Keywords),
+		GeneratedTags:   generatedTags,
+		CoverSuggestion: fmt.Sprintf("%s | 实用分享", req.Keywords),
 	}, nil
 }
 
 // rewriteMockContent 改写模拟内容
-func (s *GenerationService) rewriteMockContent(req *model.RewriteRequest) (*model.GenerationResponse, error) {
+func (s *GenerationService) rewriteMockContent(req *model.RewriteRequest, err ...error) (*model.GenerationResponse, error) {
+	generatedTags := []string{"改写文案", "内容优化", "小红书技巧", "文案创作", "干货分享"}
+
+	if len(err) > 0 {
+		return &model.GenerationResponse{
+			GeneratedContent: err[0].Error(),
+			GeneratedTitle:   "改写后的标题",
+			GeneratedTags:    generatedTags,
+			CoverSuggestion:  "内容改写 | 精彩呈现",
+		}, nil
+	}
+
 	return &model.GenerationResponse{
 		GeneratedContent: fmt.Sprintf(`⚠️ 系统提示：未配置大模型参数
 
@@ -258,11 +359,23 @@ func (s *GenerationService) rewriteMockContent(req *model.RewriteRequest) (*mode
 配置完成后，系统将使用真实的AI模型生成更优质的内容。
 
 ✨ 模拟改写内容：
+
+## Title
+改写后的精彩标题✨
+
+## Tags
 %s
 
-✨ 改写版本来啦！`, req.Content),
-		GeneratedTitle: "改写后的标题",
-		GeneratedTags:  []string{"系统提示", "配置", "大模型", "改写", "文案"},
+---
+
+✨ 改写版本来啦！
+
+%s
+
+希望这个改写版本对您有帮助～`, strings.Join(generatedTags, " | "), req.Content),
+		GeneratedTitle:  "改写后的标题",
+		GeneratedTags:   generatedTags,
+		CoverSuggestion: "内容改写 | 精彩呈现",
 	}, nil
 }
 

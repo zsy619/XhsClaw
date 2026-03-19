@@ -294,71 +294,136 @@
 
           </div>
 
-          <!-- 内容预览区 -->
-          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <!-- 图片预览 -->
-            <div class="rounded-xl bg-xiaohongshu-bg p-4">
-              <h3 class="mb-3 text-sm font-semibold text-gray-600 flex items-center">
-                <el-icon class="mr-1"><Picture /></el-icon>
-                图片预览
-                <span v-if="generatedImages.length > 0" class="ml-2 text-xs text-gray-400">
-                  ({{ currentImageIndex + 1 }}/{{ generatedImages.length }})
-                </span>
-              </h3>
-              
-              <!-- 图片切换按钮 -->
-              <div v-if="generatedImages.length > 1" class="mb-3 flex items-center justify-center gap-2">
-                <el-button
-                  size="small"
-                  :disabled="currentImageIndex === 0"
-                  @click="currentImageIndex--"
-                >
-                  上一张
-                </el-button>
-                <el-button
-                  size="small"
-                  :disabled="currentImageIndex === generatedImages.length - 1"
-                  @click="currentImageIndex++"
-                >
-                  下一张
-                </el-button>
-              </div>
-              
-              <div class="flex items-center justify-center rounded-lg bg-white p-8 min-h-[200px]">
-                <img
-                  v-if="generatedImages.length > 0"
-                  :src="generatedImages[currentImageIndex]"
-                  :alt="`生成的图片 ${currentImageIndex + 1}`"
-                  class="max-h-64 max-w-full object-contain rounded-lg shadow-md cursor-pointer hover:opacity-80 transition-opacity"
-                  @click="openImageViewer(currentImageIndex)"
+          <!-- 内容预览区 - Tab切换 -->
+          <div class="preview-tabs mb-4">
+            <el-tabs v-model="activePreviewTab" class="preview-tabs-inner">
+              <el-tab-pane label="文案预览" name="0">
+                <template #label>
+                  <span class="flex items-center gap-1">
+                    <el-icon><Document /></el-icon>
+                    文案预览
+                  </span>
+                </template>
+              </el-tab-pane>
+              <el-tab-pane label="封面预览" name="1">
+                <template #label>
+                  <span class="flex items-center gap-1">
+                    <el-icon><Picture /></el-icon>
+                    封面预览
+                  </span>
+                </template>
+              </el-tab-pane>
+              <el-tab-pane label="图片预览" name="2">
+                <template #label>
+                  <span class="flex items-center gap-1">
+                    <el-icon><PictureFilled /></el-icon>
+                    图片预览
+                    <span v-if="generatedImages.length > 0" class="ml-1 text-xs">({{ generatedImages.length }})</span>
+                  </span>
+                </template>
+              </el-tab-pane>
+            </el-tabs>
+          </div>
+
+          <!-- Tab内容区 -->
+          <div class="preview-content-area">
+            <!-- 文案预览 -->
+            <div v-show="activePreviewTab === '0'" class="tab-content-wrapper">
+              <div class="rounded-xl bg-primary-50/50 p-4">
+                <h3 class="mb-3 text-sm font-semibold text-primary-600 flex items-center">
+                  <el-icon class="mr-1"><Document /></el-icon>
+                  文案预览
+                </h3>
+                <XiaohongshuEditor
+                  v-model="result.content"
+                  :preview="false"
+                  class="result-editor"
+                  @selection-change="handleSelectionChange"
                 />
-                <div v-else class="flex flex-col items-center text-gray-400">
-                  <el-icon :size="40"><Picture /></el-icon>
-                  <span class="mt-2">点击"渲染图片"生成</span>
-                </div>
-              </div>
-              
-              <!-- 下载单张按钮 -->
-              <div v-if="generatedImages.length > 0" class="mt-3 flex justify-center">
-                <el-button size="small" type="primary" @click="handleDownloadImage(currentImageIndex)">
-                  <el-icon><Download /></el-icon>
-                  下载这张
-                </el-button>
               </div>
             </div>
 
-            <!-- 文案预览 -->
-            <div class="rounded-xl bg-primary-50/50 p-4">
-              <h3 class="mb-3 text-sm font-semibold text-primary-600 flex items-center">
-                <el-icon class="mr-1"><Document /></el-icon>
-                文案预览
-              </h3>
-              <XiaohongshuEditor
-                v-model="result.content"
-                :preview="false"
-                class="result-editor"
-                @selection-change="handleSelectionChange"
-              />
+            <!-- 封面预览 -->
+            <div v-show="activePreviewTab === '1'" class="tab-content-wrapper">
+              <div class="rounded-xl bg-xiaohongshu-bg p-4">
+                <h3 class="mb-3 text-sm font-semibold text-gray-600 flex items-center">
+                  <el-icon class="mr-1"><Picture /></el-icon>
+                  封面预览
+                </h3>
+                <div class="flex items-center justify-center rounded-lg bg-white p-8 min-h-[300px]">
+                  <div v-if="result?.coverSuggestion" class="text-center">
+                    <div class="cover-suggestion-display p-6 bg-gradient-to-br from-primary-50 to-pink-50 rounded-xl border-2 border-primary-200 shadow-lg max-w-md mx-auto">
+                      <div class="text-6xl mb-4">📌</div>
+                      <div class="text-lg font-bold text-gray-800 mb-2">封面建议文案</div>
+                      <div class="text-base text-gray-700 leading-relaxed">{{ result.coverSuggestion }}</div>
+                      <div class="mt-4 pt-4 border-t border-primary-200">
+                        <div class="text-sm text-gray-500">建议用于封面副标题或关键词标签</div>
+                      </div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400">
+                      💡 提示：封面将在渲染图片时自动生成
+                    </div>
+                  </div>
+                  <div v-else class="flex flex-col items-center text-gray-400">
+                    <el-icon :size="40"><Picture /></el-icon>
+                    <span class="mt-2">暂无封面建议</span>
+                    <span class="mt-1 text-xs">生成文案后会自动获取封面建议</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 图片预览 -->
+            <div v-show="activePreviewTab === '2'" class="tab-content-wrapper">
+              <div class="rounded-xl bg-xiaohongshu-bg p-4">
+                <h3 class="mb-3 text-sm font-semibold text-gray-600 flex items-center">
+                  <el-icon class="mr-1"><PictureFilled /></el-icon>
+                  图片预览
+                  <span v-if="generatedImages.length > 0" class="ml-2 text-xs text-gray-400">
+                    ({{ currentImageIndex + 1 }}/{{ generatedImages.length }})
+                  </span>
+                </h3>
+                
+                <!-- 图片切换按钮 -->
+                <div v-if="generatedImages.length > 1" class="mb-3 flex items-center justify-center gap-2">
+                  <el-button
+                    size="small"
+                    :disabled="currentImageIndex === 0"
+                    @click="currentImageIndex--"
+                  >
+                    上一张
+                  </el-button>
+                  <el-button
+                    size="small"
+                    :disabled="currentImageIndex === generatedImages.length - 1"
+                    @click="currentImageIndex++"
+                  >
+                    下一张
+                  </el-button>
+                </div>
+                
+                <div class="flex items-center justify-center rounded-lg bg-white p-8 min-h-[200px]">
+                  <img
+                    v-if="generatedImages.length > 0"
+                    :src="generatedImages[currentImageIndex]"
+                    :alt="`生成的图片 ${currentImageIndex + 1}`"
+                    class="max-h-64 max-w-full object-contain rounded-lg shadow-md cursor-pointer hover:opacity-80 transition-opacity"
+                    @click="openImageViewer(currentImageIndex)"
+                  />
+                  <div v-else class="flex flex-col items-center text-gray-400">
+                    <el-icon :size="40"><Picture /></el-icon>
+                    <span class="mt-2">点击"渲染图片"生成</span>
+                  </div>
+                </div>
+                
+                <!-- 下载单张按钮 -->
+                <div v-if="generatedImages.length > 0" class="mt-3 flex justify-center">
+                  <el-button size="small" type="primary" @click="handleDownloadImage(currentImageIndex)">
+                    <el-icon><Download /></el-icon>
+                    下载这张
+                  </el-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -763,8 +828,8 @@
 
 <script setup lang="ts">
 import { http } from '@/api/request'
-import { getRenderedImage, renderMarkdown } from '@/api/xiaohongshuRenderer'
 import { getUserConfig } from '@/api/userConfig'
+import { getRenderedImage, renderMarkdown } from '@/api/xiaohongshuRenderer'
 import XiaohongshuEditor from '@/components/editor/XiaohongshuEditor.vue'
 import { useUserStore } from '@/stores/user'
 import {
@@ -781,6 +846,7 @@ import {
     MagicStick,
     Minus,
     Picture,
+    PictureFilled,
     Plus,
     RefreshLeft,
     Star,
@@ -808,6 +874,9 @@ const currentImageIndex = ref(0)
 const imageRenderProgress = ref(0)
 const showImageViewer = ref(false)
 const imageViewerIndex = ref(0)
+
+// 预览Tab状态：0-文案预览，1-封面预览，2-图片预览
+const activePreviewTab = ref('0')
 
 // 标题相关
 const titleOptions = ref<string[]>([])
@@ -1738,6 +1807,7 @@ const handleGenerate = async () => {
       const content = res.data?.generated_content || ''
       const title = res.data?.generated_title || ''
       const tags = res.data?.generated_tags || []
+      const coverSuggestion = res.data?.cover_suggestion || ''
       
       // 生成标题备选方案
       titleOptions.value = [
@@ -1746,10 +1816,13 @@ const handleGenerate = async () => {
         `必看！${form.content}干货整理`
       ]
       
-      result.value = { content, title, tags }
+      result.value = { content, title, tags, coverSuggestion }
       
       // 保存到历史记录
       addToHistory('generate', content)
+      
+      // 生成成功后默认显示文案预览
+      activePreviewTab.value = '0'
       
       ElMessage.success('生成成功')
     } catch (error) {
@@ -1783,11 +1856,12 @@ const handleRewrite = async () => {
     const newContent = res.data?.generated_content || result.value.content
     const title = res.data?.generated_title || ''
     const tags = res.data?.generated_tags || []
+    const coverSuggestion = res.data?.cover_suggestion || result.value.coverSuggestion || ''
     
     // 保存原文案用于撤销
     const oldContent = result.value.content
     
-    result.value = { content: newContent, title, tags }
+    result.value = { content: newContent, title, tags, coverSuggestion }
     addToHistory('rewrite', newContent, oldContent)
     
     ElMessage.success('改写成功')
@@ -1990,6 +2064,9 @@ const handleRenderImages = async () => {
       currentImageIndex.value = 0
       imageRenderProgress.value = 100
       
+      // 图片生成成功后自动切换到图片预览Tab
+      activePreviewTab.value = '2'
+      
       setTimeout(() => {
         showImageRenderDialog.value = false
         imageRenderProgress.value = 0
@@ -2124,6 +2201,9 @@ const addToHistory = (type: string, content: string, oldContent?: string) => {
   const historyItem = {
     type,
     content,
+    title: result.value?.title,
+    tags: result.value?.tags,
+    coverSuggestion: result.value?.coverSuggestion,
     oldContent,
     preview: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
     timestamp: new Date().toLocaleString('zh-CN')
@@ -2153,7 +2233,12 @@ const getHistoryItemLabel = (type: string) => {
 
 // 恢复历史记录
 const restoreHistory = (item: any) => {
-  result.value = { content: item.content }
+  result.value = { 
+    content: item.content,
+    title: item.title,
+    tags: item.tags,
+    coverSuggestion: item.coverSuggestion
+  }
   showHistoryDialog.value = false
   ElMessage.success('已恢复')
 }
@@ -2236,6 +2321,67 @@ const handleSave = async () => {
 .creation-center-container {
   .result-editor {
     min-height: 400px;
+  }
+}
+
+// 预览Tab样式
+.preview-tabs {
+  :deep(.el-tabs__header) {
+    margin-bottom: 16px;
+  }
+  
+  :deep(.el-tabs__nav-wrap) {
+    &::after {
+      height: 1px;
+    }
+  }
+  
+  :deep(.el-tabs__item) {
+    font-size: 14px;
+    padding: 0 20px;
+    height: 40px;
+    line-height: 40px;
+    
+    &:hover {
+      color: var(--el-color-primary);
+    }
+    
+    &.is-active {
+      color: var(--el-color-primary);
+      font-weight: 600;
+    }
+  }
+  
+  :deep(.el-tabs__active-bar) {
+    height: 3px;
+    border-radius: 3px;
+  }
+}
+
+.preview-content-area {
+  .tab-content-wrapper {
+    animation: fadeIn 0.2s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 封面建议展示样式
+.cover-suggestion-display {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   }
 }
 

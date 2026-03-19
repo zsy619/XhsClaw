@@ -31,9 +31,10 @@ type GenerationRequest struct {
 
 // GenerationResponse 主题生成响应
 type GenerationResponse struct {
-	GeneratedContent string   `json:"generated_content"`
-	GeneratedTitle   string   `json:"generated_title"`
-	GeneratedTags    []string `json:"generated_tags"`
+	GeneratedContent  string   `json:"generated_content"`
+	GeneratedTitle     string   `json:"generated_title"`
+	GeneratedTags      []string `json:"generated_tags"`
+	CoverSuggestion    string   `json:"cover_suggestion"` // 封面建议文案
 }
 
 // RewriteRequest 改写请求

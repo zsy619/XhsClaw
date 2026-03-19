@@ -14,11 +14,11 @@ tmp_dir = "tmp"
   # 入口点（推荐使用）
   bin = "tmp/main"
   # 是否包含完整的包名
-  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_ext = ["go", "tpl", "tmpl"]
   # 排除的目录
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   # 排除的文件
-  exclude_file = []
+  exclude_file = ["html"]
   # 排除的扩展名
   exclude_regex = ["_test.go"]
   # 排除未跟踪的文件
