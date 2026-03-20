@@ -28,13 +28,13 @@
             label-position="top"
             class="space-y-4"
           >
-            <!-- 主题/内容输入框 -->
-            <el-form-item label="主题/内容" prop="content">
+            <!-- 主题输入框 -->
+            <el-form-item label="主题" prop="content">
               <el-input
                 v-model="form.content"
                 type="textarea"
                 :rows="5"
-                placeholder="请输入主题或要改写的内容..."
+                placeholder="请输入主题..."
                 maxlength="2000"
                 show-word-limit
                 class="w-full"
@@ -81,13 +81,37 @@
               </el-select>
             </el-form-item>
 
-            <!-- 自定义风格输入 -->
-            <el-form-item label="自定义风格（可选）">
-              <el-input
+            <!-- 自定义风格选择 -->
+            <el-form-item label="自定义风格">
+              <el-select
                 v-model="form.customStyle"
-                placeholder="输入您想要的风格描述..."
-                maxlength="100"
-              />
+                multiple
+                filterable
+                allow-create
+                placeholder="选择或输入风格..."
+                class="w-full"
+              >
+                <el-option label="可爱治愈系" value="可爱治愈系" />
+                <el-option label="高级感" value="高级感" />
+                <el-option label="简约清新" value="简约清新" />
+                <el-option label="复古文艺" value="复古文艺" />
+                <el-option label="潮流时尚" value="潮流时尚" />
+                <el-option label="商务专业" value="商务专业" />
+                <el-option label="温暖生活" value="温暖生活" />
+                <el-option label="少女心" value="少女心" />
+                <el-option label="干练职场" value="干练职场" />
+                <el-option label="文艺小资" value="文艺小资" />
+                <el-option label="轻松幽默" value="轻松幽默" />
+                <el-option label="情感共鸣" value="情感共鸣" />
+                <el-option label="知识干货" value="知识干货" />
+                <el-option label="种草推荐" value="种草推荐" />
+                <el-option label="生活方式" value="生活方式" />
+                <el-option label="美食探店" value="美食探店" />
+                <el-option label="旅行分享" value="旅行分享" />
+                <el-option label="健身运动" value="健身运动" />
+                <el-option label="美妆护肤" value="美妆护肤" />
+                <el-option label="职场成长" value="职场成长" />
+              </el-select>
             </el-form-item>
 
             <!-- 目标受众选择 -->
@@ -103,13 +127,23 @@
                 <el-option label="18-25岁" value="18-25岁" />
                 <el-option label="26-35岁" value="26-35岁" />
                 <el-option label="36-45岁" value="36-45岁" />
+                <el-option label="45岁以上" value="45岁以上" />
                 <el-option label="学生党" value="学生党" />
                 <el-option label="职场新人" value="职场新人" />
-                <el-option label="宝妈" value="宝妈" />
+                <el-option label="职场精英" value="职场精英" />
+                <el-option label="创业者" value="创业者" />
+                <el-option label="全职宝妈" value="全职宝妈" />
+                <el-option label="新手宝妈" value="新手宝妈" />
+                <el-option label="宝爸" value="宝爸" />
                 <el-option label="健身爱好者" value="健身爱好者" />
                 <el-option label="美食爱好者" value="美食爱好者" />
                 <el-option label="旅游达人" value="旅游达人" />
                 <el-option label="美妆博主" value="美妆博主" />
+                <el-option label="数码发烧友" value="数码发烧友" />
+                <el-option label="爱宠人士" value="爱宠人士" />
+                <el-option label="新手爸妈" value="新手爸妈" />
+                <el-option label="时尚潮流" value="时尚潮流" />
+                <el-option label="理财小白" value="理财小白" />
               </el-select>
             </el-form-item>
 
@@ -350,21 +384,16 @@
                   <el-icon class="mr-1"><Picture /></el-icon>
                   封面预览
                 </h3>
-                <div class="flex items-center justify-center rounded-lg bg-white p-8 min-h-[300px]">
-                  <div v-if="result?.coverSuggestion" class="text-center">
-                    <div class="cover-suggestion-display p-6 bg-gradient-to-br from-primary-50 to-pink-50 rounded-xl border-2 border-primary-200 shadow-lg max-w-md mx-auto">
-                      <div class="text-6xl mb-4">📌</div>
-                      <div class="text-lg font-bold text-gray-800 mb-2">封面建议文案</div>
-                      <div class="text-base text-gray-700 leading-relaxed">{{ result.coverSuggestion }}</div>
-                      <div class="mt-4 pt-4 border-t border-primary-200">
-                        <div class="text-sm text-gray-500">建议用于封面副标题或关键词标签</div>
-                      </div>
-                    </div>
-                    <div class="mt-4 text-xs text-gray-400">
-                      💡 提示：封面将在渲染图片时自动生成
-                    </div>
+                <div class="flex items-center justify-center rounded-lg bg-white p-4">
+                  <div v-if="result" class="w-full max-w-4xl">
+                    <CoverPreviewEditor
+                      v-model="coverSuggestion"
+                      height="400px"
+                      @change="handleCoverSuggestionChange"
+                      @save="handleCoverSuggestionSave"
+                    />
                   </div>
-                  <div v-else class="flex flex-col items-center text-gray-400">
+                  <div v-else class="flex flex-col items-center text-gray-400 py-12">
                     <el-icon :size="40"><Picture /></el-icon>
                     <span class="mt-2">暂无封面建议</span>
                     <span class="mt-1 text-xs">生成文案后会自动获取封面建议</span>
@@ -830,6 +859,7 @@
 import { http } from '@/api/request'
 import { getUserConfig } from '@/api/userConfig'
 import { getRenderedImage, renderMarkdown } from '@/api/xiaohongshuRenderer'
+import CoverPreviewEditor from '@/components/editor/CoverPreviewEditor.vue'
 import XiaohongshuEditor from '@/components/editor/XiaohongshuEditor.vue'
 import { useUserStore } from '@/stores/user'
 import {
@@ -852,7 +882,7 @@ import {
     Star,
     Timer
 } from '@element-plus/icons-vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -877,6 +907,38 @@ const imageViewerIndex = ref(0)
 
 // 预览Tab状态：0-文案预览，1-封面预览，2-图片预览
 const activePreviewTab = ref('0')
+
+// 封面建议文案
+const coverSuggestion = ref('')
+
+// 监听result变化，更新封面建议
+watch(
+  () => result.value,
+  (newResult) => {
+    if (newResult?.coverSuggestion) {
+      coverSuggestion.value = newResult.coverSuggestion
+    } else {
+      coverSuggestion.value = ''
+    }
+  },
+  { immediate: true, deep: true }
+)
+
+// 封面建议变化处理
+const handleCoverSuggestionChange = (value: string) => {
+  if (result.value) {
+    result.value.coverSuggestion = value
+  }
+}
+
+// 封面建议保存处理
+const handleCoverSuggestionSave = (value: string) => {
+  if (result.value) {
+    result.value.coverSuggestion = value
+    saveToLocalCache()
+    ElMessage.success('封面文案已保存')
+  }
+}
 
 // 标题相关
 const titleOptions = ref<string[]>([])
@@ -1621,7 +1683,7 @@ const getCurrentStyle = computed(() => {
 const form = reactive({
   content: '',
   style: 'cute',
-  customStyle: '',
+  customStyle: [] as string[],
   audiences: [] as string[],
   wordCount: 300
 })
@@ -1670,7 +1732,7 @@ onMounted(() => {
 // 验证规则
 const rules: FormRules = {
   content: [
-    { required: true, message: '请输入主题或内容', trigger: 'blur' },
+    { required: true, message: '请输入主题', trigger: 'blur' },
     { min: 2, max: 2000, message: '内容长度在 2 到 2000 个字符', trigger: 'blur' }
   ],
   style: [
@@ -1795,8 +1857,8 @@ const handleGenerate = async () => {
 
     try {
       const audiencesText = form.audiences.length > 0 ? form.audiences.join(', ') : ''
-      const styleText = form.customStyle || form.style
-      
+      const styleText = form.customStyle.length > 0 ? form.customStyle.join(', ') : form.style
+
       const res = await http.post('/generation/theme', {
         keywords: form.content,
         style_preference: styleText,
@@ -1804,6 +1866,7 @@ const handleGenerate = async () => {
         length: form.wordCount
       }, { timeout: 120000 })  // DeepSeek 生成可能较慢，延长超时到 120 秒
 
+      const emoji = res.data?.generated_emoji || ''
       const content = res.data?.generated_content || ''
       const title = res.data?.generated_title || ''
       const tags = res.data?.generated_tags || []
@@ -1816,10 +1879,10 @@ const handleGenerate = async () => {
         `必看！${form.content}干货整理`
       ]
       
-      result.value = { content, title, tags, coverSuggestion }
+      result.value = { emoji, content, title, tags, coverSuggestion }
       
       // 保存到历史记录
-      addToHistory('generate', content)
+      addToHistory('generate',  content, content)
       
       // 生成成功后默认显示文案预览
       activePreviewTab.value = '0'
@@ -1844,8 +1907,8 @@ const handleRewrite = async () => {
   fullscreenLoading.value = true
 
   try {
-    const styleText = form.customStyle || form.style
-    
+    const styleText = form.customStyle.length > 0 ? form.customStyle.join(', ') : form.style
+
     const res = await http.post('/generation/rewrite', {
       content: result.value.content,
       style_preference: styleText,
@@ -1942,45 +2005,76 @@ const handleRenderImages = async () => {
     // 步骤 2: 根据是否启用智能分页来决定是否调用 DeepSeek 重新生成内容
     let finalContent = result.value.content;
     let finalTitle = selectedTitle;
+    let finalSubtitle = result.value.title;
+    if(titleOptions.value.length==0){
+      finalSubtitle = "";
+    }
     let finalTags = result.value.tags || [];
+    let emoji = result.value.emoji || '';
     
     // 使用分页模式参数
     if (imageConfig.paginationMode && imageConfig.paginationMode !== 'none') {
       imageRenderProgress.value = 40
-      ElMessage.info('正在使用 AI 优化内容以适应分页...')
-      
-      try {
-        // 调用 DeepSeek API 重新生成符合分页要求的内容
-        const audiencesText = form.audiences.length > 0 ? form.audiences.join(', ') : ''
-        const styleText = form.customStyle || form.style
-        
-        const aiResponse = await http.post('/generation/theme', {
-          keywords: form.content,
-          style_preference: styleText,
-          target_audience: audiencesText,
-          length: form.wordCount,
-          pagination_mode: imageConfig.paginationMode
-        }, { timeout: 120000 })
-        
-        if (aiResponse.data?.generated_content) {
-          finalContent = aiResponse.data.generated_content
-          if (aiResponse.data.generated_title) {
-            finalTitle = aiResponse.data.generated_title
+
+      // separator 模式：检查内容是否包含 --- 分隔符
+      if (imageConfig.paginationMode === 'separator' && !finalContent.includes('---')) {
+        try {
+          const confirmed = await ElMessageBox.confirm(
+            '您的内容中未包含 "---" 分隔符，separator 模式无法正确分页。\n\n是否继续提交（将生成单张图片）？',
+            '未检测到分隔符',
+            {
+              confirmButtonText: '继续提交',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          )
+          if (!confirmed) {
+            imageRenderProgress.value = 0
+            return
           }
-          if (aiResponse.data.generated_tags && aiResponse.data.generated_tags.length > 0) {
-            finalTags = aiResponse.data.generated_tags
-          }
+        } catch {
+          // 用户取消
+          imageRenderProgress.value = 0
+          return
         }
-      } catch (aiError) {
-        console.warn('AI 内容生成失败，使用原始内容:', aiError)
-        ElMessage.warning('AI 优化失败，将使用原始内容')
       }
+
+    //   // auto-fit 和 auto-split 模式：使用 AI 优化内容
+    //   if (imageConfig.paginationMode === 'auto-fit' || imageConfig.paginationMode === 'auto-split') {
+    //     ElMessage.info('正在使用 AI 优化内容以适应分页...')
+    //     try {
+    //       const audiencesText = form.audiences.length > 0 ? form.audiences.join(', ') : ''
+    //       const styleText = form.customStyle || form.style
+    //       const contentToOptimize = result.value.content || form.content
+    //       console.log('优化文案内容:', contentToOptimize)
+    //       const aiResponse = await http.post('/generation/image', {
+    //         keywords: contentToOptimize,
+    //         style_preference: styleText,
+    //         target_audience: audiencesText,
+    //         length: form.wordCount,
+    //         pagination_mode: imageConfig.paginationMode
+    //       }, { timeout: 120000 })
+
+    //       if (aiResponse.data?.generated_content) {
+    //         finalContent = aiResponse.data.generated_content
+    //         if (aiResponse.data.generated_title) {
+    //           finalTitle = aiResponse.data.generated_title
+    //         }
+    //         if (aiResponse.data.generated_tags && aiResponse.data.generated_tags.length > 0) {
+    //           finalTags = aiResponse.data.generated_tags
+    //         }
+    //       }
+    //     } catch (aiError) {
+    //       console.warn('AI 内容优化失败，使用原始内容:', aiError)
+    //       ElMessage.warning('AI 优化失败，将使用原始内容')
+    //     }
+    //   }
     }
     
     imageRenderProgress.value = 50
     
     // 步骤 3: 构建完整的 Markdown 内容（包含 YAML 头部）
-    const markdownContent = buildMarkdownContent(finalTitle, finalContent, finalTags)
+    const markdownContent = buildMarkdownContent(emoji, finalTitle, finalSubtitle, finalContent, finalTags)
     
     // 步骤 4: 生成封面图片
     imageRenderProgress.value = 60
@@ -1989,7 +2083,7 @@ const handleRenderImages = async () => {
     try {
       const coverResponse = await http.post('/generation/cover', {
         title: finalTitle,
-        subtitle: finalTags.length > 0 ? finalTags.slice(0, 3).join(' ') : '',
+        subtitle: finalSubtitle,
         style_key: imageConfig.styleKey,
         output_prefix: `cover_${Date.now()}`,
         width: imageConfig.cardWidth,
@@ -2096,9 +2190,15 @@ const handleRenderImages = async () => {
 }
 
 // 构建 Markdown 内容（包含 YAML 头部）
-const buildMarkdownContent = (title: string, content: string, tags: string[]) => {
+const buildMarkdownContent = (emoji:string, title: string, subtitle: string, content: string, tags: string[],) => {
   let markdown = '---\n'
+  if (emoji && emoji.trim() !== '') {
+    markdown += `emoji: ${emoji}\n`
+  }
   markdown += `title: ${title}\n`
+  if (subtitle && subtitle.trim() !== '') {
+    markdown += `subtitle: ${subtitle}\n`
+  }
   if (tags && tags.length > 0) {
     markdown += `tags: [${tags.join(', ')}]\n`
   }
@@ -2200,7 +2300,8 @@ const handleViewerKeydown = (e: KeyboardEvent) => {
 const addToHistory = (type: string, content: string, oldContent?: string) => {
   const historyItem = {
     type,
-    content,
+    emoji: result.value?.emoji || '',
+    content: content,
     title: result.value?.title,
     tags: result.value?.tags,
     coverSuggestion: result.value?.coverSuggestion,
@@ -2247,7 +2348,7 @@ const restoreHistory = (item: any) => {
 const handleReset = () => {
   form.content = ''
   form.style = 'cute'
-  form.customStyle = ''
+  form.customStyle = []
   form.audiences = []
   form.wordCount = 300
   result.value = null
@@ -2277,9 +2378,15 @@ const handleSave = async () => {
   if (!result.value?.content) return
 
   try {
+    
+    // 保存emoji表情
+    const emoji = result.value.emoji || ''
+    localStorage.setItem('emoji', emoji)
+    
     const title = result.value.title || form.content || '未命名内容'
     const description = result.value.content
     const tags = result.value.tags || []
+    const coverSuggestion = result.value.coverSuggestion || ''
 
     // 获取生成的图片路径列表
     const images = generatedImages.value.map((url: string) => {
@@ -2291,11 +2398,13 @@ const handleSave = async () => {
     }).filter((path: string) => path !== '')
 
     await http.post('/content/save', {
+      emoji: emoji,
       title: title,
       title_options: titleOptions.value,
       selected_title_index: selectedTitleIndex.value,
       description: description,
       tags: tags,
+      cover_suggestion: coverSuggestion,
       images: images,
       content_attributes: {
         content_style: form.style,

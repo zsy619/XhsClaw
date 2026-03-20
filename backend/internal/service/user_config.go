@@ -2,6 +2,7 @@
 package service
 
 import (
+	"fmt"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/repository"
 	"xiaohongshu/pkg/errno"
@@ -66,7 +67,7 @@ func (s *UserConfigService) UpdateUserConfig(userID uint, req *model.UserConfigR
 	if req.DefaultPublishTime != "" {
 		config.DefaultPublishTime = req.DefaultPublishTime
 	}
-	
+
 	config.AutoPublishEnabled = req.AutoPublishEnabled
 
 	if err := s.userConfigRepo.Update(config); err != nil {
@@ -92,6 +93,8 @@ func (s *UserConfigService) GetLLMConfig(userID uint) (apiKey, baseURL, model st
 		if config.LLMModel != "" {
 			model = config.LLMModel
 		}
+	} else {
+		fmt.Println("查询用户配置失败:", err)
 	}
 	return apiKey, baseURL, model
 }

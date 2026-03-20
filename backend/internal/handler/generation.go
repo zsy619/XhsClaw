@@ -4,14 +4,13 @@ package handler
 import (
 	"context"
 	"strings"
-
-	"github.com/cloudwego/hertz/pkg/app"
-
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
+
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // getClientIP 获取客户端真实 IP 地址

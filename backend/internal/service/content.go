@@ -55,30 +55,32 @@ func (s *ContentService) SaveContent(userID uint, req *model.ContentSaveRequest)
 	imagesJSON, _ := json.Marshal(req.Images)
 	contentAttrsJSON, _ := json.Marshal(req.ContentAttributes)
 	renderAttrsJSON, _ := json.Marshal(req.RenderAttributes)
-	
+
 	// 处理备选标题
 	titleOptionsJSON := []byte("[]")
 	if len(req.TitleOptions) > 0 {
 		titleOptionsJSON, _ = json.Marshal(req.TitleOptions)
 	}
-	
+
 	// 使用选中的标题作为主标题
 	title := req.Title
 	if len(req.TitleOptions) > 0 && req.SelectedTitleIndex >= 0 && req.SelectedTitleIndex < len(req.TitleOptions) {
 		title = req.TitleOptions[req.SelectedTitleIndex]
 	}
-	
+
 	content := &model.Content{
-		UserID:            userID,
-		Title:             title,
-		TitleOptions:      string(titleOptionsJSON),
+		UserID:             userID,
+		Emoji:              req.Emoji,
+		Title:              title,
+		TitleOptions:       string(titleOptionsJSON),
 		SelectedTitleIndex: req.SelectedTitleIndex,
-		Description:       req.Description,
-		Tags:              string(tagsJSON),
-		Images:            string(imagesJSON),
-		ContentAttributes: string(contentAttrsJSON),
-		RenderAttributes:  string(renderAttrsJSON),
-		Status:            0,
+		Description:        req.Description,
+		Tags:               string(tagsJSON),
+		Images:             string(imagesJSON),
+		CoverSuggestion:    req.CoverSuggestion,
+		ContentAttributes:  string(contentAttrsJSON),
+		RenderAttributes:   string(renderAttrsJSON),
+		Status:             0,
 	}
 
 	if err := s.contentRepo.Create(content); err != nil {
@@ -194,12 +196,12 @@ func (s *ContentService) GetContentHistory(userID, id uint) (*model.ContentHisto
 		}
 		return nil, errno.InternalError
 	}
-	
+
 	// 验证权限
 	if history.UserID != userID {
 		return nil, errno.ContentNotFound
 	}
-	
+
 	return history, nil
 }
 
@@ -209,44 +211,44 @@ func (s *ContentService) RestoreContentHistory(userID, historyID uint) (*model.C
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 查找内容
 	content, err := s.contentRepo.FindByUserIDAndID(userID, history.ContentID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 如果内容已被删除，重新创建
 			content = &model.Content{
-				UserID:            history.UserID,
-				Title:             history.Title,
-				TitleOptions:      history.TitleOptions,
+				UserID:             history.UserID,
+				Title:              history.Title,
+				TitleOptions:       history.TitleOptions,
 				SelectedTitleIndex: history.SelectedTitleIndex,
-				Description:       history.Description,
-				Tags:              history.Tags,
-				Images:            history.Images,
-				ContentAttributes: history.ContentAttributes,
-				RenderAttributes:  history.RenderAttributes,
-				Status:            0,
+				Description:        history.Description,
+				Tags:               history.Tags,
+				Images:             history.Images,
+				ContentAttributes:  history.ContentAttributes,
+				RenderAttributes:   history.RenderAttributes,
+				Status:             0,
 			}
-			
+
 			if err := s.contentRepo.Create(content); err != nil {
 				return nil, errno.InternalError
 			}
-			
+
 			// 创建历史记录
 			if err := s.contentHistoryRepo.CreateFromContent(content, "create", "从历史记录恢复"); err != nil {
 				// 历史记录创建失败不影响主流程
 			}
-			
+
 			return content, nil
 		}
 		return nil, errno.InternalError
 	}
-	
+
 	// 更新前保存历史记录
 	if err := s.contentHistoryRepo.CreateFromContent(content, "edit", "恢复到历史版本"); err != nil {
 		// 历史记录创建失败不影响主流程
 	}
-	
+
 	// 更新内容
 	content.Title = history.Title
 	content.TitleOptions = history.TitleOptions
@@ -256,10 +258,10 @@ func (s *ContentService) RestoreContentHistory(userID, historyID uint) (*model.C
 	content.Images = history.Images
 	content.ContentAttributes = history.ContentAttributes
 	content.RenderAttributes = history.RenderAttributes
-	
+
 	if err := s.contentRepo.Update(content); err != nil {
 		return nil, errno.InternalError
 	}
-	
+
 	return content, nil
 }

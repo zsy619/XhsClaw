@@ -2,6 +2,7 @@
 package repository
 
 import (
+	"fmt"
 	"xiaohongshu/internal/model"
 
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ func (r *UserConfigRepository) FindByUserID(userID uint) (*model.UserConfig, err
 	var config model.UserConfig
 	err := r.db.Where("user_id = ?", userID).First(&config).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("查询用户配置失败：%w", err)
 	}
 	return &config, nil
 }
@@ -49,7 +50,7 @@ func (r *UserConfigRepository) Upsert(config *model.UserConfig) error {
 		}
 		return err
 	}
-	
+
 	config.ID = existing.ID
 	config.CreatedAt = existing.CreatedAt
 	return r.db.Save(config).Error

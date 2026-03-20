@@ -17,30 +17,31 @@ const (
 
 // GenerationRequest 主题生成请求
 type GenerationRequest struct {
-	Keywords        string        `json:"keywords" binding:"required"`
-	StylePreference string        `json:"style_preference"`
-	TargetAudience  string        `json:"target_audience"`
-	Length          int           `json:"length"`
+	Keywords        string `json:"keywords" binding:"required"`
+	StylePreference string `json:"style_preference"`
+	TargetAudience  string `json:"target_audience"`
+	Length          int    `json:"length"`
 	// 分页相关参数
 	EnablePagination bool           `json:"enable_pagination"` // 是否启用分页
-	PaginationMode   PaginationMode `json:"pagination_mode"`  // 分页模式：separator, auto-fit, auto-split, dynamic
-	CardWidth       int            `json:"card_width"`      // 卡片宽度（像素）
-	CardHeight      int            `json:"card_height"`    // 卡片高度（像素）
-	Theme           string         `json:"theme"`          // 主题名称
+	PaginationMode   PaginationMode `json:"pagination_mode"`   // 分页模式：separator, auto-fit, auto-split, dynamic
+	CardWidth        int            `json:"card_width"`        // 卡片宽度（像素）
+	CardHeight       int            `json:"card_height"`       // 卡片高度（像素）
+	Theme            string         `json:"theme"`             // 主题名称
 }
 
 // GenerationResponse 主题生成响应
 type GenerationResponse struct {
-	GeneratedContent  string   `json:"generated_content"`
-	GeneratedTitle     string   `json:"generated_title"`
-	GeneratedTags      []string `json:"generated_tags"`
-	CoverSuggestion    string   `json:"cover_suggestion"` // 封面建议文案
+	GeneratedEmoji   string   `json:"generated_emoji"`
+	GeneratedContent string   `json:"generated_content"`
+	GeneratedTitle   string   `json:"generated_title"`
+	GeneratedTags    []string `json:"generated_tags"`
+	CoverSuggestion  string   `json:"cover_suggestion"` // 封面建议文案
 }
 
 // RewriteRequest 改写请求
 type RewriteRequest struct {
-	Content          string `json:"content" binding:"required"`
-	StylePreference  string `json:"style_preference"`
-	PreserveKeyInfo  bool   `json:"preserve_key_info"`
-	Length           int    `json:"length"`
+	Content         string `json:"content" binding:"required"`
+	StylePreference string `json:"style_preference"`
+	PreserveKeyInfo bool   `json:"preserve_key_info"`
+	Length          int    `json:"length"`
 }

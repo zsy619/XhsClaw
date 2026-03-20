@@ -31,12 +31,14 @@ type RenderAttributes struct {
 type Content struct {
 	ID                 uint           `json:"id" gorm:"primaryKey"`
 	UserID             uint           `json:"user_id" gorm:"index;not null"`
-	Title              string         `json:"title" gorm:"size:50;not null"`
+	Emoji              string         `json:"emoji" gorm:"size:64"`
+	Title              string         `json:"title" gorm:"size:64;not null"`
 	TitleOptions       string         `json:"title_options" gorm:"type:text"`        // JSON格式存储备选标题数组
 	SelectedTitleIndex int            `json:"selected_title_index" gorm:"default:0"` // 选中的备选标题索引
 	Description        string         `json:"description" gorm:"type:text;not null"`
 	Tags               string         `json:"tags" gorm:"type:text"`               // JSON格式存储标签数组
 	Images             string         `json:"images" gorm:"type:text"`             // JSON格式存储图片URL数组
+	CoverSuggestion    string         `json:"cover_suggestion" gorm:"type:text"`   // 封面建议文案
 	ContentAttributes  string         `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
 	RenderAttributes   string         `json:"render_attributes" gorm:"type:text"`  // JSON格式存储渲染属性
 	Status             int            `json:"status" gorm:"default:0"`             // 0:草稿, 1:待发布, 2:已发布, 3:发布失败
@@ -65,6 +67,7 @@ type ContentHistory struct {
 	Description        string    `json:"description" gorm:"type:text;not null"`
 	Tags               string    `json:"tags" gorm:"type:text"`               // JSON格式存储标签数组
 	Images             string    `json:"images" gorm:"type:text"`             // JSON格式存储图片URL数组
+	CoverSuggestion    string    `json:"cover_suggestion" gorm:"type:text"`   // 封面建议文案
 	ContentAttributes  string    `json:"content_attributes" gorm:"type:text"` // JSON格式存储内容属性
 	RenderAttributes   string    `json:"render_attributes" gorm:"type:text"`  // JSON格式存储渲染属性
 	ChangeReason       string    `json:"change_reason" gorm:"size:255"`
@@ -102,12 +105,14 @@ type ContentItem struct {
 
 // ContentSaveRequest 保存内容请求
 type ContentSaveRequest struct {
+	Emoji              string            `json:"emoji"`
 	Title              string            `json:"title" binding:"required"`
 	TitleOptions       []string          `json:"title_options"`        // 备选标题数组
 	SelectedTitleIndex int               `json:"selected_title_index"` // 选中的备选标题索引
 	Description        string            `json:"description" binding:"required"`
 	Tags               []string          `json:"tags"`
-	Images             []string          `json:"images"` // 生成的图片路径数组
+	Images             []string          `json:"images"`           // 生成的图片路径数组
+	CoverSuggestion    string            `json:"cover_suggestion"` // 封面建议文案
 	ContentAttributes  ContentAttributes `json:"content_attributes"`
 	RenderAttributes   RenderAttributes  `json:"render_attributes"`
 }

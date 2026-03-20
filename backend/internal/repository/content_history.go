@@ -62,17 +62,18 @@ func (r *ContentHistoryRepository) ListByUserID(userID uint, offset, pageSize in
 // CreateFromContent 从内容创建历史记录
 func (r *ContentHistoryRepository) CreateFromContent(content *model.Content, historyType, changeReason string) error {
 	history := &model.ContentHistory{
-		ContentID:         content.ID,
-		UserID:            content.UserID,
-		Type:              historyType,
-		Title:             content.Title,
-		TitleOptions:      content.TitleOptions,
+		ContentID:          content.ID,
+		UserID:             content.UserID,
+		Type:               historyType,
+		Title:              content.Title,
+		TitleOptions:       content.TitleOptions,
 		SelectedTitleIndex: content.SelectedTitleIndex,
 		Description:       content.Description,
-		Tags:              content.Tags,
-		Images:            content.Images,
-		ContentAttributes: content.ContentAttributes,
-		RenderAttributes:  content.RenderAttributes,
+		Tags:               content.Tags,
+		Images:             content.Images,
+		CoverSuggestion:    content.CoverSuggestion,
+		ContentAttributes:  content.ContentAttributes,
+		RenderAttributes:   content.RenderAttributes,
 		ChangeReason:      changeReason,
 	}
 	return r.Create(history)

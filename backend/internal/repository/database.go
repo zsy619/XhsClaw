@@ -3,6 +3,7 @@ package repository
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -144,6 +145,11 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 		if count > 0 {
 			log.Printf("Fixing %d users with invalid role_id...", count)
 			DB.Model(&model.User{}).Where("role_id IS NULL OR role_id = 0").Update("role_id", 3)
+		}
+
+		// 自动添加表和字段注释
+		if err := addTableComments(cfg.Type); err != nil {
+			log.Printf("Warning: Failed to add table comments: %v", err)
 		}
 
 		log.Println("Database initialized successfully")
@@ -352,8 +358,183 @@ func initAdminUser() error {
 			return err
 		}
 
-		log.Println("Admin user created successfully")
+		log.Println("Admin user created created successfully")
 	}
 
 	return nil
+}
+
+// addTableComments 自动为所有表和字段添加注释
+func addTableComments(dbType string) error {
+	log.Println("Adding table and column comments...")
+
+	// 字段注释映射 (表名 -> 字段名 -> 注释)
+	fieldComments := map[string]map[string]string{
+		"users": {
+			"id":       "用户ID",
+			"username": "用户名",
+			"email":    "邮箱",
+			"password": "密码",
+			"nickname": "昵称",
+			"avatar":   "头像URL",
+			"role_id":  "角色ID",
+			"status":   "状态 1:正常 0:禁用",
+		},
+		"token_blacklists": {
+			"id":         "记录ID",
+			"token":      "Token值",
+			"user_id":    "用户ID",
+			"expires_at": "过期时间",
+		},
+		"roles": {
+			"id":          "角色ID",
+			"name":        "角色名称",
+			"code":        "角色代码",
+			"description": "角色描述",
+			"permissions": "权限列表JSON",
+			"is_system":   "是否系统角色",
+		},
+		"permissions": {
+			"id":          "权限ID",
+			"name":        "权限名称",
+			"code":        "权限代码",
+			"module":      "所属模块",
+			"description": "权限描述",
+		},
+		"contents": {
+			"id":                  "内容ID",
+			"user_id":             "用户ID",
+			"title":               "标题",
+			"title_options":       "备选标题JSON",
+			"selected_title_index": "选中标题索引",
+			"description":          "正文内容",
+			"tags":                "标签JSON数组",
+			"images":              "图片URL数组JSON",
+			"cover_suggestion":     "封面建议文案",
+			"content_attributes":   "内容属性JSON",
+			"render_attributes":    "渲染属性JSON",
+			"status":               "状态 0:草稿 1:待发布 2:已发布 3:失败",
+		},
+		"content_histories": {
+			"id":                  "历史记录ID",
+			"content_id":          "内容ID",
+			"user_id":             "用户ID",
+			"type":                "操作类型 create/edit/delete/publish",
+			"title":               "标题",
+			"title_options":       "备选标题JSON",
+			"selected_title_index": "选中标题索引",
+			"description":          "正文内容",
+			"tags":                "标签JSON数组",
+			"images":              "图片URL数组JSON",
+			"cover_suggestion":     "封面建议文案",
+			"content_attributes":   "内容属性JSON",
+			"render_attributes":    "渲染属性JSON",
+			"change_reason":        "变更原因",
+		},
+		"user_configs": {
+			"id":                    "配置ID",
+			"user_id":               "用户ID",
+			"llm_api_key":           "大模型API密钥",
+			"llm_base_url":          "大模型API地址",
+			"llm_model":             "大模型名称",
+			"xiaohongshu_cookie":    "小红书Cookie",
+			"xiaohongshu_user_id":  "小红书用户ID",
+			"xiaohongshu_token":     "小红书Token",
+			"default_publish_time":  "默认发布时间 HH:mm",
+			"auto_publish_enabled":  "是否启用自动发布",
+		},
+		"publish_records": {
+			"id":           "发布记录ID",
+			"user_id":      "用户ID",
+			"content_id":   "内容ID",
+			"status":       "状态 0:待发布 1:发布中 2:成功 3:失败",
+			"error_msg":    "错误信息",
+			"scheduled_at": "计划发布时间",
+			"published_at": "实际发布时间",
+		},
+		"token_usage": {
+			"id":             "记录ID",
+			"user_id":        "用户ID",
+			"model":          "使用的模型",
+			"provider":       "提供商",
+			"input_tokens":   "输入tokens",
+			"output_tokens":  "输出tokens",
+			"total_tokens":   "总tokens",
+			"cost":           "费用(美元)",
+			"request_type":   "请求类型",
+			"request_content": "请求内容摘要",
+			"response_status": "响应状态",
+			"error_message":  "错误信息",
+			"ip_address":     "IP地址",
+			"user_agent":     "用户代理",
+		},
+	}
+
+	// 根据数据库类型执行不同的SQL
+	if dbType == "mysql" {
+		return addMySQLComments(fieldComments)
+	} else {
+		return addPostgreSQLComments(fieldComments)
+	}
+}
+
+// addMySQLComments 为MySQL添加表和字段注释
+func addMySQLComments(fieldComments map[string]map[string]string) error {
+	for tableName, fields := range fieldComments {
+		// 添加表注释
+		if err := DB.Exec(fmt.Sprintf("ALTER TABLE `%s` COMMENT = ?", tableName), getTableComment(tableName)).Error; err != nil {
+			log.Printf("Failed to add comment for table %s: %v", tableName, err)
+			continue
+		}
+
+		// 添加字段注释
+		for fieldName, fieldComment := range fields {
+			sql := fmt.Sprintf("ALTER TABLE `%s` MODIFY COLUMN `%s` VARCHAR(255) COMMENT ?", tableName, fieldName)
+			if err := DB.Exec(sql, fieldComment).Error; err != nil {
+				log.Printf("Failed to add comment for column %s.%s: %v", tableName, fieldName, err)
+			}
+		}
+		log.Printf("Added comments for table: %s", tableName)
+	}
+	return nil
+}
+
+// addPostgreSQLComments 为PostgreSQL添加表和字段注释
+func addPostgreSQLComments(fieldComments map[string]map[string]string) error {
+	for tableName, fields := range fieldComments {
+		// 添加表注释
+		if err := DB.Exec(fmt.Sprintf("COMMENT ON TABLE %s IS ?", tableName), getTableComment(tableName)).Error; err != nil {
+			log.Printf("Failed to add comment for table %s: %v", tableName, err)
+			continue
+		}
+
+		// 添加字段注释
+		for fieldName, fieldComment := range fields {
+			sql := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS ?", tableName, fieldName)
+			if err := DB.Exec(sql, fieldComment).Error; err != nil {
+				log.Printf("Failed to add comment for column %s.%s: %v", tableName, fieldName, err)
+			}
+		}
+		log.Printf("Added comments for table: %s", tableName)
+	}
+	return nil
+}
+
+// getTableComment 根据表名获取表注释
+func getTableComment(tableName string) string {
+	tableComments := map[string]string{
+		"users":             "用户表",
+		"token_blacklists":  "Token黑名单表",
+		"roles":             "角色表",
+		"permissions":       "权限表",
+		"contents":          "小红书内容表",
+		"content_histories": "内容历史记录表",
+		"user_configs":      "用户配置表",
+		"publish_records":   "发布记录表",
+		"token_usage":       "Token使用记录表",
+	}
+	if comment, ok := tableComments[tableName]; ok {
+		return comment
+	}
+	return tableName
 }
