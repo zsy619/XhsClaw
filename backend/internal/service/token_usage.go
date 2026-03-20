@@ -2,8 +2,11 @@
 package service
 
 import (
+	"context"
+	"log"
 	"regexp"
 	"strings"
+
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/repository"
 )
@@ -33,25 +36,26 @@ func cleanString(s string) string {
 // TokenPricePerMillion 每百万tokens的价格（美元）
 var TokenPricePerMillion = map[string]map[string]float64{
 	"deepseek": {
-		"prompt":      0.27,      // 输入: $0.27/百万tokens
-		"completion":  1.10,     // 输出: $1.10/百万tokens
+		"prompt":     0.27, // 输入: $0.27/百万tokens
+		"completion": 1.10, // 输出: $1.10/百万tokens
 	},
 	"openai": {
-		"prompt":      2.50,      // gpt-4 输入
-		"completion":  10.00,     // gpt-4 输出
+		"prompt":     2.50,  // gpt-4 输入
+		"completion": 10.00, // gpt-4 输出
 	},
 	"anthropic": {
-		"prompt":      3.00,      // claude 输入
-		"completion":  15.00,     // claude 输出
+		"prompt":     3.00,  // claude 输入
+		"completion": 15.00, // claude 输出
 	},
 	"default": {
-		"prompt":      1.00,      // 默认输入价格
-		"completion":  3.00,      // 默认输出价格
+		"prompt":     1.00, // 默认输入价格
+		"completion": 3.00, // 默认输出价格
 	},
 }
 
 // RecordTokenUsage 记录Token使用情况
 func (s *TokenUsageService) RecordTokenUsage(
+	ctx context.Context,
 	userID uint,
 	modelName, provider, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string,
 	promptTokens, completionTokens int,
@@ -69,22 +73,29 @@ func (s *TokenUsageService) RecordTokenUsage(
 	}
 
 	usage := &model.TokenUsage{
-		UserID:           userID,
-		Model:            modelName,
-		Provider:         provider,
-		InputTokens:      promptTokens,
-		OutputTokens:     completionTokens,
-		TotalTokens:      promptTokens + completionTokens,
-		Cost:             cost,
-		RequestType:      requestType,
-		RequestContent:   requestContent,
-		ResponseStatus:   responseStatus,
-		ErrorMessage:    errorMessage,
-		IPAddress:        ipAddress,
-		UserAgent:        userAgent,
+		UserID:         userID,
+		Model:          modelName,
+		Provider:       provider,
+		InputTokens:    promptTokens,
+		OutputTokens:   completionTokens,
+		TotalTokens:    promptTokens + completionTokens,
+		Cost:           cost,
+		RequestType:    requestType,
+		RequestContent: requestContent,
+		ResponseStatus: responseStatus,
+		ErrorMessage:   errorMessage,
+		IPAddress:      ipAddress,
+		UserAgent:      userAgent,
 	}
 
-	return s.repo.Create(usage)
+	if err := s.repo.Create(usage); err != nil {
+		log.Printf("[TokenUsageService] RecordTokenUsage error: failed to record usage for user %d: %v", userID, err)
+		return err
+	}
+
+	log.Printf("[TokenUsageService] RecordTokenUsage success: user %d, model %s, tokens %d",
+		userID, modelName, promptTokens+completionTokens)
+	return nil
 }
 
 // calculateCost 计算费用
@@ -94,48 +105,87 @@ func (s *TokenUsageService) calculateCost(provider string, promptTokens, complet
 	if !ok {
 		prices = TokenPricePerMillion["default"]
 	}
-	
+
 	promptCost := float64(promptTokens) / 1_000_000 * prices["prompt"]
 	completionCost := float64(completionTokens) / 1_000_000 * prices["completion"]
-	
+
 	return promptCost + completionCost
 }
 
 // GetUserTokenUsage 获取用户Token使用记录
-func (s *TokenUsageService) GetUserTokenUsage(userID uint, limit int) ([]model.TokenUsage, error) {
+func (s *TokenUsageService) GetUserTokenUsage(ctx context.Context, userID uint, limit int) ([]model.TokenUsage, error) {
 	if limit <= 0 {
 		limit = 50
 	}
-	return s.repo.GetByUserID(userID, limit)
+
+	usages, err := s.repo.GetByUserID(userID, limit)
+	if err != nil {
+		log.Printf("[TokenUsageService] GetUserTokenUsage error: failed to get usage for user %d: %v", userID, err)
+		return nil, err
+	}
+
+	return usages, nil
 }
 
 // GetUserTokenStats 获取用户Token使用统计
-func (s *TokenUsageService) GetUserTokenStats(userID uint) (*model.TokenUsageStats, error) {
-	return s.repo.GetStatsByUserID(userID)
+func (s *TokenUsageService) GetUserTokenStats(ctx context.Context, userID uint) (*model.TokenUsageStats, error) {
+	stats, err := s.repo.GetStatsByUserID(userID)
+	if err != nil {
+		log.Printf("[TokenUsageService] GetUserTokenStats error: failed to get stats for user %d: %v", userID, err)
+		return nil, err
+	}
+
+	return stats, nil
 }
 
 // GetUserDailyStats 获取用户每日Token使用统计
-func (s *TokenUsageService) GetUserDailyStats(userID uint, days int) ([]model.UserTokenUsage, error) {
+func (s *TokenUsageService) GetUserDailyStats(ctx context.Context, userID uint, days int) ([]model.UserTokenUsage, error) {
 	if days <= 0 {
 		days = 30
 	}
-	return s.repo.GetDailyStatsByUserID(userID, days)
+
+	stats, err := s.repo.GetDailyStatsByUserID(userID, days)
+	if err != nil {
+		log.Printf("[TokenUsageService] GetUserDailyStats error: failed to get daily stats for user %d: %v", userID, err)
+		return nil, err
+	}
+
+	return stats, nil
 }
 
 // GetUserStatsByModel 获取用户按模型统计的使用情况
-func (s *TokenUsageService) GetUserStatsByModel(userID uint) ([]model.TokenUsageByModel, error) {
-	return s.repo.GetStatsByModel(userID)
+func (s *TokenUsageService) GetUserStatsByModel(ctx context.Context, userID uint) ([]model.TokenUsageByModel, error) {
+	stats, err := s.repo.GetStatsByModel(userID)
+	if err != nil {
+		log.Printf("[TokenUsageService] GetUserStatsByModel error: failed to get stats by model for user %d: %v", userID, err)
+		return nil, err
+	}
+
+	return stats, nil
 }
 
 // GetGlobalTokenStats 获取全局Token使用统计（仅管理员）
-func (s *TokenUsageService) GetGlobalTokenStats() (*model.TokenUsageStats, error) {
-	return s.repo.GetGlobalStats()
+func (s *TokenUsageService) GetGlobalTokenStats(ctx context.Context) (*model.TokenUsageStats, error) {
+	stats, err := s.repo.GetGlobalStats()
+	if err != nil {
+		log.Printf("[TokenUsageService] GetGlobalTokenStats error: failed to get global stats: %v", err)
+		return nil, err
+	}
+
+	return stats, nil
 }
 
 // GetGlobalDailyStats 获取全局每日Token使用统计
-func (s *TokenUsageService) GetGlobalDailyStats(days int) ([]model.UserTokenUsage, error) {
+func (s *TokenUsageService) GetGlobalDailyStats(ctx context.Context, days int) ([]model.UserTokenUsage, error) {
 	if days <= 0 {
 		days = 30
 	}
-	return s.repo.GetGlobalDailyStats(days)
+
+	stats, err := s.repo.GetGlobalDailyStats(days)
+	if err != nil {
+		log.Printf("[TokenUsageService] GetGlobalDailyStats error: failed to get global daily stats: %v", err)
+		return nil, err
+	}
+
+	return stats, nil
 }

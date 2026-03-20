@@ -116,6 +116,10 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 			&model.PublishRecord{},
 			&model.TokenBlacklist{},
 			&model.TokenUsage{},
+			&model.LLMProvider{},
+			&model.XiaohongshuConfig{},
+			&model.PublishConfig{},
+			&model.SystemDict{},
 		)
 		if err != nil {
 			initErr = err
@@ -157,6 +161,11 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 		// 初始化admin用户
 		if err := initAdminUser(); err != nil {
 			log.Printf("Failed to init admin user: %v", err)
+		}
+
+		// 初始化系统字典数据
+		if err := initSystemDicts(); err != nil {
+			log.Printf("Failed to init system dicts: %v", err)
 		}
 	})
 
@@ -234,6 +243,23 @@ func initPermissions() error {
 		// Token使用统计模块
 		{Name: "查看Token使用统计", Code: "token:view", Module: "token", Description: "查看Token使用统计"},
 		{Name: "查看全局Token统计", Code: "token:view_global", Module: "token", Description: "查看全局Token使用统计（管理员）"},
+
+		// 大模型配置模块
+		{Name: "查看大模型配置", Code: "llm:view", Module: "llm", Description: "查看大模型服务商配置"},
+		{Name: "创建大模型配置", Code: "llm:create", Module: "llm", Description: "创建新的大模型服务商配置"},
+		{Name: "编辑大模型配置", Code: "llm:edit", Module: "llm", Description: "编辑大模型服务商配置"},
+		{Name: "删除大模型配置", Code: "llm:delete", Module: "llm", Description: "删除大模型服务商配置"},
+
+		// 小红书配置模块
+		{Name: "查看小红书配置", Code: "xhs:view", Module: "xhs", Description: "查看小红书账号配置"},
+		{Name: "创建小红书配置", Code: "xhs:create", Module: "xhs", Description: "创建新的小红书账号配置"},
+		{Name: "编辑小红书配置", Code: "xhs:edit", Module: "xhs", Description: "编辑小红书账号配置"},
+		{Name: "删除小红书配置", Code: "xhs:delete", Module: "xhs", Description: "删除小红书账号配置"},
+		{Name: "验证小红书配置", Code: "xhs:verify", Module: "xhs", Description: "验证小红书Cookie有效性"},
+
+		// 系统字典模块
+		{Name: "查看系统字典", Code: "dict:view", Module: "dict", Description: "查看系统字典"},
+		{Name: "管理系统字典", Code: "dict:manage", Module: "dict", Description: "管理系统字典（管理员）"},
 	}
 
 	for _, p := range permissions {
@@ -523,18 +549,71 @@ func addPostgreSQLComments(fieldComments map[string]map[string]string) error {
 // getTableComment 根据表名获取表注释
 func getTableComment(tableName string) string {
 	tableComments := map[string]string{
-		"users":             "用户表",
-		"token_blacklists":  "Token黑名单表",
-		"roles":             "角色表",
-		"permissions":       "权限表",
+		"users":              "用户表",
+		"token_blacklists":   "Token黑名单表",
+		"roles":              "角色表",
+		"permissions":        "权限表",
 		"contents":          "小红书内容表",
 		"content_histories": "内容历史记录表",
 		"user_configs":      "用户配置表",
-		"publish_records":   "发布记录表",
+		"publish_records":    "发布记录表",
 		"token_usage":       "Token使用记录表",
+		"llm_providers":     "大模型服务商配置表",
+		"xiaohongshu_configs": "小红书账号配置表",
+		"publish_configs":   "发布配置表",
+		"system_dicts":      "系统字典表",
 	}
 	if comment, ok := tableComments[tableName]; ok {
 		return comment
 	}
 	return tableName
+}
+
+// initSystemDicts 初始化系统字典数据
+func initSystemDicts() error {
+	// 检查是否已初始化
+	var count int64
+	DB.Model(&model.SystemDict{}).Where("category = ?", model.DictCategoryLLMProvider).Count(&count)
+	if count > 0 {
+		log.Printf("System dicts already initialized, skipping...")
+		return nil
+	}
+
+	// 大模型服务商
+	providers := []model.SystemDict{
+		{Category: model.DictCategoryLLMProvider, Code: "openai", Name: "OpenAI", Value: "https://api.openai.com/v1", Description: "OpenAI GPT系列模型", SortOrder: 1, Enabled: true, Extra: `{"models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "deepseek", Name: "DeepSeek", Value: "https://api.deepseek.com", Description: "DeepSeek 通义大模型", SortOrder: 2, Enabled: true, Extra: `{"models": ["deepseek-chat", "deepseek-coder"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "azure", Name: "Azure OpenAI", Value: "", Description: "Azure 托管的 OpenAI 服务", SortOrder: 3, Enabled: true, Extra: `{"models": ["gpt-4o", "gpt-4", "gpt-35-turbo"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "anthropic", Name: "Anthropic Claude", Value: "https://api.anthropic.com", Description: "Anthropic Claude 系列模型", SortOrder: 4, Enabled: true, Extra: `{"models": ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "google", Name: "Google Gemini", Value: "https://generativelanguage.googleapis.com", Description: "Google Gemini 系列模型", SortOrder: 5, Enabled: true, Extra: `{"models": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "zhipuai", Name: "智谱AI", Value: "https://open.bigmodel.cn/api/paas/v4", Description: "智谱 AI GLM 系列模型", SortOrder: 6, Enabled: true, Extra: `{"models": ["glm-4", "glm-4-flash", "glm-3-turbo"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "qwen", Name: "通义千问", Value: "https://dashscope.aliyuncs.com/compatible-mode/v1", Description: "阿里云通义千问模型", SortOrder: 7, Enabled: true, Extra: `{"models": ["qwen-turbo", "qwen-plus", "qwen-max"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "yi", Name: "零一万物", Value: "https://api.lingyiwanwu.com/v1", Description: "零一万物 Yi 系列模型", SortOrder: 8, Enabled: true, Extra: `{"models": ["yi-large", "yi-medium", "yi-small"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "minimax", Name: "MiniMax", Value: "https://api.minimax.chat/v1", Description: "MiniMax 海螺模型", SortOrder: 9, Enabled: true, Extra: `{"models": ["abab6.5s-chat", "abab6.5g-chat"]}`},
+		{Category: model.DictCategoryLLMProvider, Code: "custom", Name: "自定义", Value: "", Description: "自定义 API 服务商", SortOrder: 99, Enabled: true, Extra: `{"models": []}`},
+	}
+
+	// 小红书配置状态
+	configStatuses := []model.SystemDict{
+		{Category: "xhs_status", Code: "pending", Name: "待验证", Value: "pending", Description: "配置待验证状态", SortOrder: 1, Enabled: true},
+		{Category: "xhs_status", Code: "active", Name: "正常", Value: "active", Description: "配置正常使用状态", SortOrder: 2, Enabled: true},
+		{Category: "xhs_status", Code: "expired", Name: "已过期", Value: "expired", Description: "Cookie或Token已过期", SortOrder: 3, Enabled: true},
+		{Category: "xhs_status", Code: "error", Name: "异常", Value: "error", Description: "配置异常状态", SortOrder: 4, Enabled: true},
+	}
+
+	// 插入数据
+	for _, p := range providers {
+		if err := DB.FirstOrCreate(&p, model.SystemDict{Category: p.Category, Code: p.Code}).Error; err != nil {
+			log.Printf("Failed to create system dict %s: %v", p.Code, err)
+		}
+	}
+
+	for _, s := range configStatuses {
+		if err := DB.FirstOrCreate(&s, model.SystemDict{Category: s.Category, Code: s.Code}).Error; err != nil {
+			log.Printf("Failed to create system dict %s: %v", s.Code, err)
+		}
+	}
+
+	log.Printf("System dicts initialized successfully")
+	return nil
 }

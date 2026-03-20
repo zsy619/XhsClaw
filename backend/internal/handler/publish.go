@@ -4,13 +4,14 @@ package handler
 import (
 	"context"
 	"strconv"
+
+	"github.com/cloudwego/hertz/pkg/app"
+
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
-
-	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // PublishHandler 发布处理器
@@ -39,7 +40,7 @@ func (h *PublishHandler) SchedulePublish(c context.Context, ctx *app.RequestCont
 		return
 	}
 
-	record, err := h.publishService.SchedulePublish(userID, &req)
+	record, err := h.publishService.SchedulePublish(c, userID, &req)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -66,7 +67,7 @@ func (h *PublishHandler) PublishNow(c context.Context, ctx *app.RequestContext) 
 		return
 	}
 
-	record, err := h.publishService.PublishNow(userID, &req)
+	record, err := h.publishService.PublishNow(c, userID, &req)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -94,7 +95,7 @@ func (h *PublishHandler) GetPublishRecord(c context.Context, ctx *app.RequestCon
 		return
 	}
 
-	record, err := h.publishService.GetPublishRecord(userID, uint(id))
+	record, err := h.publishService.GetPublishRecord(c, userID, uint(id))
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -117,14 +118,14 @@ func (h *PublishHandler) ListPublishRecords(c context.Context, ctx *app.RequestC
 
 	pageStr := ctx.Query("page")
 	pageSizeStr := ctx.Query("page_size")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
-	
+
 	pageSize := 20
 	if pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
@@ -132,7 +133,7 @@ func (h *PublishHandler) ListPublishRecords(c context.Context, ctx *app.RequestC
 		}
 	}
 
-	records, total, err := h.publishService.ListPublishRecords(userID, page, pageSize)
+	records, total, err := h.publishService.ListPublishRecords(c, userID, page, pageSize)
 	if err != nil {
 		response.Error(ctx, errno.InternalError)
 		return
@@ -161,7 +162,7 @@ func (h *PublishHandler) CancelPublish(c context.Context, ctx *app.RequestContex
 		return
 	}
 
-	err = h.publishService.CancelPublish(userID, uint(id))
+	err = h.publishService.CancelPublish(c, userID, uint(id))
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -189,7 +190,7 @@ func (h *PublishHandler) RetryPublish(c context.Context, ctx *app.RequestContext
 		return
 	}
 
-	record, err := h.publishService.RetryPublish(userID, uint(id))
+	record, err := h.publishService.RetryPublish(c, userID, uint(id))
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)

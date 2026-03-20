@@ -3,6 +3,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -155,20 +156,20 @@ func (s *AIService) GenerateXiaohongshuContent(userID uint, skillContent string,
 
 	if err != nil {
 		// 记录失败的请求
-		go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
+		go s.RecordUsage(context.Background(), userID, model, "deepseek", "generate_content", prompt, "failed", err.Error(), "", "", promptTokens, completionTokens)
 		return nil, err
 	}
 
 	// 解析响应
 	if len(response.Choices) == 0 {
-		go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "failed", "empty response", "", "", promptTokens, completionTokens)
+		go s.RecordUsage(context.Background(), userID, model, "deepseek", "generate_content", prompt, "failed", "empty response", "", "", promptTokens, completionTokens)
 		return nil, errno.GenerateFailed
 	}
 
 	content := response.Choices[0].Message.Content
 
 	// 记录成功的请求
-	go s.RecordUsage(userID, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
+	go s.RecordUsage(context.Background(), userID, model, "deepseek", "generate_content", prompt, "success", "", "", "", promptTokens, completionTokens)
 
 	// 解析JSON
 	var items []ContentItem
@@ -243,6 +244,7 @@ func (s *AIService) callDeepSeekAPI(messages []DeepSeekMessage, apiKey, baseURL,
 
 // RecordUsage 记录Token使用情况
 func (s *AIService) RecordUsage(
+	ctx context.Context,
 	userID uint,
 	model, provider, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string,
 	promptTokens, completionTokens int,
@@ -251,6 +253,7 @@ func (s *AIService) RecordUsage(
 		s.tokenUsageSvc = NewTokenUsageService()
 	}
 	return s.tokenUsageSvc.RecordTokenUsage(
+		ctx,
 		userID, model, provider, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent,
 		promptTokens, completionTokens,
 	)

@@ -79,7 +79,7 @@ func TestCalculateTitleSize(t *testing.T) {
 
 	// 测试不同长度的标题
 	assert.Equal(t, int(float64(width)*0.14), calculateTitleSize("短标题", width))          // <=6字
-	assert.Equal(t, int(float64(width)*0.12), calculateTitleSize("这是一个中等标题", width))   // 7-10字
+	assert.Equal(t, int(float64(width)*0.12), calculateTitleSize("这是一个中等标题", width))     // 7-10字
 	assert.Equal(t, int(float64(width)*0.09), calculateTitleSize("这是一个比较长的标题内容", width)) // 11-18字
 	// 注意：以下测试需要确保字符数正确
 	longTitle := "这是一个非常非常长的标题内容测试" // 11-18字
@@ -99,9 +99,9 @@ func TestIsTagLine(t *testing.T) {
 	assert.True(t, isTagLine("#小红书 #内容创作"))
 
 	// 测试非标签行
-	assert.False(t, isTagLine("# 标题"))      // 标题行（有空格）
-	assert.False(t, isTagLine("普通文本"))    // 普通文本
-	assert.False(t, isTagLine(""))           // 空行
+	assert.False(t, isTagLine("# 标题")) // 标题行（有空格）
+	assert.False(t, isTagLine("普通文本")) // 普通文本
+	assert.False(t, isTagLine(""))     // 空行
 }
 
 // TestSimpleMarkdownToHTML 测试Markdown转HTML

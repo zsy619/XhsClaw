@@ -7,12 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"xiaohongshu/internal/handler"
-	"xiaohongshu/internal/middleware"
-	"xiaohongshu/internal/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+
+	"xiaohongshu/internal/handler"
+	"xiaohongshu/internal/middleware"
+	"xiaohongshu/internal/utils"
 )
 
 // getProjectRoot 获取项目根目录的绝对路径

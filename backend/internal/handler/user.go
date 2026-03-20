@@ -60,7 +60,7 @@ func (h *UserHandler) Register(c context.Context, ctx *app.RequestContext) {
 	}
 
 	userService := service.NewUserService()
-	resp, err := userService.Register(&req)
+	resp, err := userService.Register(c, &req)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -101,7 +101,7 @@ func (h *UserHandler) Login(c context.Context, ctx *app.RequestContext) {
 	}
 
 	userService := service.NewUserService()
-	resp, err := userService.Login(&req)
+	resp, err := userService.Login(c, &req)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -229,7 +229,7 @@ func (h *UserHandler) ListUsers(c context.Context, ctx *app.RequestContext) {
 	}
 
 	userService := service.NewUserService()
-	users, total, err := userService.ListUsers(page, pageSize)
+	users, total, err := userService.ListUsers(c, page, pageSize)
 	if err != nil {
 		response.Error(ctx, errno.InternalError)
 		return

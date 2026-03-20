@@ -127,30 +127,32 @@
 </template>
 
 <script setup lang="ts">
+import { logout } from '@/api/auth'
+import { useUserStore } from '@/stores/user'
 import {
-  ArrowDown,
-  ArrowRight,
-  Coin,
-  DataAnalysis,
-  Edit,
-  Folder,
-  Setting,
-  SwitchButton,
-  Upload,
-  List,
-  Timer,
-  Connection,
-  DocumentCopy,
-  User,
-  UserFilled,
-  Key,
-  Menu
+    ArrowDown,
+    ArrowRight,
+    Coin,
+    Connection,
+    DataAnalysis,
+    Document,
+    DocumentCopy,
+    Edit,
+    Folder,
+    Key,
+    List,
+    Menu,
+    Operation,
+    Setting,
+    SwitchButton,
+    Timer,
+    Upload,
+    User,
+    UserFilled
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { logout } from '@/api/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -228,7 +230,29 @@ const menuItems = [
   {
     path: '/settings',
     title: '系统设置',
-    icon: Setting
+    icon: Setting,
+    children: [
+      {
+        path: '/settings/profile',
+        title: '个人设置',
+        icon: User
+      },
+      {
+        path: '/settings/llm',
+        title: '大模型配置',
+        icon: Operation
+      },
+      {
+        path: '/settings/xhs',
+        title: '小红书配置',
+        icon: Connection
+      },
+      {
+        path: '/settings/dict',
+        title: '系统字典',
+        icon: Document
+      }
+    ]
   },
   {
     path: '/token-usage',

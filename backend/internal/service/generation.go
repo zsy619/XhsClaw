@@ -2,6 +2,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -179,26 +180,26 @@ func (s *GenerationService) RewriteContent(userID uint, req *model.RewriteReques
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
 		// 记录失败的请求（使用默认值）
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
+		go s.recordTokenUsage(context.Background(), userID, modelName, "rewrite_content", prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
 		return s.rewriteMockContent(req, err)
 	}
 
 	if len(response.Choices) == 0 {
 		// 记录空响应
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+		go s.recordTokenUsage(context.Background(), userID, modelName, "rewrite_content", prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.rewriteMockContent(req)
 	}
 
 	content := response.Choices[0].Message.Content
 
 	// 记录成功的请求
-	go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+	go s.recordTokenUsage(context.Background(), userID, modelName, "rewrite_content", prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
 		// 记录解析失败
-		go s.recordTokenUsage(userID, modelName, "rewrite_content", prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+		go s.recordTokenUsage(context.Background(), userID, modelName, "rewrite_content", prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.rewriteMockContent(req)
 	}
 
@@ -217,26 +218,26 @@ func (s *GenerationService) callGenerationAPI(userID uint, modelName, requestTyp
 	response, err := s.aiService.callDeepSeekAPI(messages, apiKey, baseURL, modelName)
 	if err != nil {
 		// 记录失败的请求（使用默认值）
-		go s.recordTokenUsage(userID, modelName, requestType, prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
+		go s.recordTokenUsage(context.Background(), userID, modelName, requestType, prompt, "failed", err.Error(), ipAddress, userAgent, 0, 0)
 		return s.generateMockContent(req, err)
 	}
 
 	if len(response.Choices) == 0 {
 		// 记录空响应
-		go s.recordTokenUsage(userID, modelName, requestType, prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+		go s.recordTokenUsage(context.Background(), userID, modelName, requestType, prompt, "failed", "empty response", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.generateMockContent(req, fmt.Errorf("记录空响应"))
 	}
 
 	content := response.Choices[0].Message.Content
 
 	// 记录成功的请求
-	go s.recordTokenUsage(userID, modelName, requestType, prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+	go s.recordTokenUsage(context.Background(), userID, modelName, requestType, prompt, "success", "", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 
 	var result model.GenerationResponse
 	err = json.Unmarshal([]byte(content), &result)
 	if err != nil {
 		// 记录解析失败
-		go s.recordTokenUsage(userID, modelName, requestType, prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
+		go s.recordTokenUsage(context.Background(), userID, modelName, requestType, prompt, "failed", "json unmarshal failed", ipAddress, userAgent, response.Usage.PromptTokens, response.Usage.CompletionTokens)
 		return s.generateMockContent(req, fmt.Errorf("记录解析失败"))
 	}
 
@@ -244,8 +245,9 @@ func (s *GenerationService) callGenerationAPI(userID uint, modelName, requestTyp
 }
 
 // recordTokenUsage 记录Token使用情况（支持token参数）
-func (s *GenerationService) recordTokenUsage(userID uint, model, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string, promptTokens, completionTokens int) {
+func (s *GenerationService) recordTokenUsage(ctx context.Context, userID uint, model, requestType, requestContent, responseStatus, errorMessage, ipAddress, userAgent string, promptTokens, completionTokens int) {
 	s.tokenUsageSvc.RecordTokenUsage(
+		ctx,
 		userID,
 		model,
 		"deepseek",

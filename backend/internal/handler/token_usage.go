@@ -33,7 +33,7 @@ func (h *TokenUsageHandler) GetUserTokenUsage(c context.Context, ctx *app.Reques
 		return
 	}
 
-	usages, err := h.tokenUsageService.GetUserTokenUsage(userID, 50)
+	usages, err := h.tokenUsageService.GetUserTokenUsage(c, userID, 50)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return
@@ -50,7 +50,7 @@ func (h *TokenUsageHandler) GetUserTokenStats(c context.Context, ctx *app.Reques
 		return
 	}
 
-	stats, err := h.tokenUsageService.GetUserTokenStats(userID)
+	stats, err := h.tokenUsageService.GetUserTokenStats(c, userID)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return
@@ -73,7 +73,7 @@ func (h *TokenUsageHandler) GetUserDailyStats(c context.Context, ctx *app.Reques
 		daysInt = 30
 	}
 
-	stats, err := h.tokenUsageService.GetUserDailyStats(userID, daysInt)
+	stats, err := h.tokenUsageService.GetUserDailyStats(c, userID, daysInt)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return
@@ -90,7 +90,7 @@ func (h *TokenUsageHandler) GetUserStatsByModel(c context.Context, ctx *app.Requ
 		return
 	}
 
-	stats, err := h.tokenUsageService.GetUserStatsByModel(userID)
+	stats, err := h.tokenUsageService.GetUserStatsByModel(c, userID)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return
@@ -101,7 +101,7 @@ func (h *TokenUsageHandler) GetUserStatsByModel(c context.Context, ctx *app.Requ
 
 // GetGlobalTokenStats 获取全局Token使用统计（仅管理员）
 func (h *TokenUsageHandler) GetGlobalTokenStats(c context.Context, ctx *app.RequestContext) {
-	stats, err := h.tokenUsageService.GetGlobalTokenStats()
+	stats, err := h.tokenUsageService.GetGlobalTokenStats(c)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return
@@ -118,7 +118,7 @@ func (h *TokenUsageHandler) GetGlobalDailyStats(c context.Context, ctx *app.Requ
 		daysInt = 30
 	}
 
-	stats, err := h.tokenUsageService.GetGlobalDailyStats(daysInt)
+	stats, err := h.tokenUsageService.GetGlobalDailyStats(c, daysInt)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return

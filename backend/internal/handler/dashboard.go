@@ -32,7 +32,7 @@ func (h *DashboardHandler) GetDashboardStats(c context.Context, ctx *app.Request
 		return
 	}
 
-	stats, err := h.dashboardService.GetUserDashboardStats(userID)
+	stats, err := h.dashboardService.GetUserDashboardStats(c, userID)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -53,7 +53,7 @@ func (h *DashboardHandler) GetDashboardData(c context.Context, ctx *app.RequestC
 		return
 	}
 
-	data, err := h.dashboardService.GetDashboardData(userID)
+	data, err := h.dashboardService.GetDashboardData(c, userID)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -74,7 +74,7 @@ func (h *DashboardHandler) GetUserActivities(c context.Context, ctx *app.Request
 		return
 	}
 
-	activities, err := h.dashboardService.GetUserActivities(userID, 10)
+	activities, err := h.dashboardService.GetUserActivities(c, userID, 10)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)
@@ -95,7 +95,7 @@ func (h *DashboardHandler) GetContentTrends(c context.Context, ctx *app.RequestC
 		return
 	}
 
-	trends, err := h.dashboardService.GetContentTrends(userID, 7)
+	trends, err := h.dashboardService.GetContentTrends(c, userID, 7)
 	if err != nil {
 		if e, ok := err.(*errno.ErrNo); ok {
 			response.Error(ctx, e)

@@ -67,3 +67,5 @@ backend/cmd/server/logs
 backend/main
 start-services.sh
 STARTUP_GUIDE.md
+backend/docs
+backend/migrate

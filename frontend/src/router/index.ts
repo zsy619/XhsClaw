@@ -94,8 +94,34 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'settings',
         name: 'Settings',
-        component: () => import('@/views/Settings/IndexView.vue'),
-        meta: { title: '系统设置', icon: 'Setting' }
+        redirect: '/settings/profile',
+        meta: { title: '系统设置', icon: 'Setting' },
+        children: [
+          {
+            path: 'profile',
+            name: 'SettingsProfile',
+            component: () => import('@/views/Settings/IndexView.vue'),
+            meta: { title: '个人设置', icon: 'User' }
+          },
+          {
+            path: 'llm',
+            name: 'SettingsLLM',
+            component: () => import('@/views/Settings/LLMProviderView.vue'),
+            meta: { title: '大模型配置', icon: 'Monitor' }
+          },
+          {
+            path: 'xhs',
+            name: 'SettingsXHS',
+            component: () => import('@/views/Settings/XHSConfigView.vue'),
+            meta: { title: '小红书配置', icon: 'Connection' }
+          },
+          {
+            path: 'dict',
+            name: 'SettingsDict',
+            component: () => import('@/views/Settings/SystemDictView.vue'),
+            meta: { title: '系统字典', icon: 'Document' }
+          }
+        ]
       },
       {
         path: 'token-usage',
