@@ -1,4 +1,5 @@
-// Package handler 提供请求处理
+// Package handler 提供HTTP请求处理层
+// 负责处理客户端请求，调用业务层服务，并返回标准化响应
 package handler
 
 import (
@@ -6,6 +7,10 @@ import (
 	"errors"
 	"strconv"
 	"time"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"gorm.io/gorm"
+
 	"xiaohongshu/internal/config"
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/model"
@@ -14,9 +19,6 @@ import (
 	"xiaohongshu/internal/utils"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
-
-	"github.com/cloudwego/hertz/pkg/app"
-	"gorm.io/gorm"
 )
 
 // UserHandler 用户处理器
@@ -38,7 +40,7 @@ func toAuthUserInfo(user *model.User) *model.AuthUserInfo {
 	if user.Role != nil {
 		roleCode = user.Role.Code
 	}
-	
+
 	return &model.AuthUserInfo{
 		ID:        user.ID,
 		Username:  user.Username,
@@ -84,11 +86,11 @@ func (h *UserHandler) Register(c context.Context, ctx *app.RequestContext) {
 // Login 用户登录
 func (h *UserHandler) Login(c context.Context, ctx *app.RequestContext) {
 	var req model.LoginRequest
-	
+
 	// 尝试从表单绑定（支持URLSearchParams格式）
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
-	
+
 	if username != "" && password != "" {
 		req.Username = username
 		req.Password = password
@@ -213,14 +215,14 @@ func (h *UserHandler) GetProfile(c context.Context, ctx *app.RequestContext) {
 func (h *UserHandler) ListUsers(c context.Context, ctx *app.RequestContext) {
 	pageStr := ctx.Query("page")
 	pageSizeStr := ctx.Query("page_size")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
-	
+
 	pageSize := 20
 	if pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {

@@ -70,8 +70,8 @@ func (h *LLMProviderHandler) List(c context.Context, ctx *app.RequestContext) {
 
 	response.Success(ctx, map[string]interface{}{
 		"items": providers,
-		"total":  len(providers),
-		"page":   page,
+		"total": len(providers),
+		"page":  page,
 	})
 }
 
@@ -120,18 +120,18 @@ func (h *LLMProviderHandler) Create(c context.Context, ctx *app.RequestContext) 
 	}
 
 	provider := &model.LLMProvider{
-		UserID:     userID,
-		Name:      req.Name,
-		Provider:  req.Provider,
-		APIKey:    req.APIKey,
-		BaseURL:   req.BaseURL,
-		ModelName: req.ModelName,
-		IsDefault: req.IsDefault,
-		IsEnabled: req.IsEnabled,
-		Timeout:   req.Timeout,
-		RetryCount: req.RetryCount,
+		UserID:      userID,
+		Name:        req.Name,
+		Provider:    req.Provider,
+		APIKey:      req.APIKey,
+		BaseURL:     req.BaseURL,
+		ModelName:   req.ModelName,
+		IsDefault:   req.IsDefault,
+		IsEnabled:   req.IsEnabled,
+		Timeout:     req.Timeout,
+		RetryCount:  req.RetryCount,
 		Description: req.Description,
-		SortOrder: req.SortOrder,
+		SortOrder:   req.SortOrder,
 	}
 
 	if err := h.llmRepo.Create(provider); err != nil {

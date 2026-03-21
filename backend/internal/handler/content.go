@@ -1,16 +1,18 @@
-// Package handler 提供请求处理
+// Package handler 提供HTTP请求处理层
+// 负责处理客户端请求，调用业务层服务，并返回标准化响应
 package handler
 
 import (
 	"context"
 	"strconv"
+
+	"github.com/cloudwego/hertz/pkg/app"
+
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/model"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
-
-	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // ContentHandler 内容处理器
@@ -124,21 +126,21 @@ func (h *ContentHandler) ListContents(c context.Context, ctx *app.RequestContext
 
 	pageStr := ctx.Query("page")
 	pageSizeStr := ctx.Query("page_size")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
-	
+
 	pageSize := 20
 	if pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
 			pageSize = ps
 		}
 	}
-	
+
 	var status *int
 	if statusStr := ctx.Query("status"); statusStr != "" {
 		if s, err := strconv.Atoi(statusStr); err == nil {
@@ -233,21 +235,21 @@ func (h *ContentHandler) ListContentHistories(c context.Context, ctx *app.Reques
 	pageStr := ctx.Query("page")
 	pageSizeStr := ctx.Query("page_size")
 	contentIDStr := ctx.Query("content_id")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
-	
+
 	pageSize := 20
 	if pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
 			pageSize = ps
 		}
 	}
-	
+
 	var contentID *uint
 	if contentIDStr != "" {
 		if cid, err := strconv.ParseUint(contentIDStr, 10, 32); err == nil {

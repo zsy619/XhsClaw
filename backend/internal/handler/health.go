@@ -1,4 +1,5 @@
-// Package handler 提供HTTP请求处理
+// Package handler 提供HTTP请求处理层
+// 负责处理客户端请求，调用业务层服务，并返回标准化响应
 package handler
 
 import (

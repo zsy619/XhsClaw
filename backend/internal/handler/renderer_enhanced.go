@@ -46,9 +46,9 @@ type EnhancedRenderRequest struct {
 	UserID uint `json:"user_id"`
 
 	// AI 生成参数
-	UseAI           bool   `json:"use_ai"`            // 是否使用 AI 生成内容
+	UseAI           bool   `json:"use_ai"`           // 是否使用 AI 生成内容
 	DeepSeekAPIKey  string `json:"deepseek_api_key"` // DeepSeek API Key（可选，覆盖配置）
-	ContentLength   string `json:"content_length"`    // 内容长度：short, medium, long
+	ContentLength   string `json:"content_length"`   // 内容长度：short, medium, long
 	StylePreference string `json:"style_preference"` // 风格偏好
 
 	// 分页模式: separator(按---分隔), auto-fit(自动缩放), auto-split(自动拆分), dynamic(动态高度)
