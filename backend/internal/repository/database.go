@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
+	"xiaohongshu/internal/config"
+	"xiaohongshu/internal/model"
+	"xiaohongshu/internal/utils"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	"xiaohongshu/internal/config"
-	"xiaohongshu/internal/model"
-	"xiaohongshu/internal/utils"
 )
 
 var (
@@ -110,7 +110,6 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 		// 迁移用户表
 		err = DB.AutoMigrate(
 			&model.User{},
-			&model.UserConfig{},
 			&model.Content{},
 			&model.ContentHistory{},
 			&model.PublishRecord{},
@@ -428,46 +427,46 @@ func addTableComments(dbType string) error {
 			"description": "权限描述",
 		},
 		"contents": {
-			"id":                  "内容ID",
-			"user_id":             "用户ID",
-			"title":               "标题",
-			"title_options":       "备选标题JSON",
+			"id":                   "内容ID",
+			"user_id":              "用户ID",
+			"title":                "标题",
+			"title_options":        "备选标题JSON",
 			"selected_title_index": "选中标题索引",
 			"description":          "正文内容",
-			"tags":                "标签JSON数组",
-			"images":              "图片URL数组JSON",
+			"tags":                 "标签JSON数组",
+			"images":               "图片URL数组JSON",
 			"cover_suggestion":     "封面建议文案",
 			"content_attributes":   "内容属性JSON",
 			"render_attributes":    "渲染属性JSON",
 			"status":               "状态 0:草稿 1:待发布 2:已发布 3:失败",
 		},
 		"content_histories": {
-			"id":                  "历史记录ID",
-			"content_id":          "内容ID",
-			"user_id":             "用户ID",
-			"type":                "操作类型 create/edit/delete/publish",
-			"title":               "标题",
-			"title_options":       "备选标题JSON",
+			"id":                   "历史记录ID",
+			"content_id":           "内容ID",
+			"user_id":              "用户ID",
+			"type":                 "操作类型 create/edit/delete/publish",
+			"title":                "标题",
+			"title_options":        "备选标题JSON",
 			"selected_title_index": "选中标题索引",
 			"description":          "正文内容",
-			"tags":                "标签JSON数组",
-			"images":              "图片URL数组JSON",
+			"tags":                 "标签JSON数组",
+			"images":               "图片URL数组JSON",
 			"cover_suggestion":     "封面建议文案",
 			"content_attributes":   "内容属性JSON",
 			"render_attributes":    "渲染属性JSON",
 			"change_reason":        "变更原因",
 		},
 		"user_configs": {
-			"id":                    "配置ID",
-			"user_id":               "用户ID",
-			"llm_api_key":           "大模型API密钥",
-			"llm_base_url":          "大模型API地址",
-			"llm_model":             "大模型名称",
-			"xiaohongshu_cookie":    "小红书Cookie",
+			"id":                   "配置ID",
+			"user_id":              "用户ID",
+			"llm_api_key":          "大模型API密钥",
+			"llm_base_url":         "大模型API地址",
+			"llm_model":            "大模型名称",
+			"xiaohongshu_cookie":   "小红书Cookie",
 			"xiaohongshu_user_id":  "小红书用户ID",
-			"xiaohongshu_token":     "小红书Token",
-			"default_publish_time":  "默认发布时间 HH:mm",
-			"auto_publish_enabled":  "是否启用自动发布",
+			"xiaohongshu_token":    "小红书Token",
+			"default_publish_time": "默认发布时间 HH:mm",
+			"auto_publish_enabled": "是否启用自动发布",
 		},
 		"publish_records": {
 			"id":           "发布记录ID",
@@ -479,20 +478,20 @@ func addTableComments(dbType string) error {
 			"published_at": "实际发布时间",
 		},
 		"token_usage": {
-			"id":             "记录ID",
-			"user_id":        "用户ID",
-			"model":          "使用的模型",
-			"provider":       "提供商",
-			"input_tokens":   "输入tokens",
-			"output_tokens":  "输出tokens",
-			"total_tokens":   "总tokens",
-			"cost":           "费用(美元)",
-			"request_type":   "请求类型",
+			"id":              "记录ID",
+			"user_id":         "用户ID",
+			"model":           "使用的模型",
+			"provider":        "提供商",
+			"input_tokens":    "输入tokens",
+			"output_tokens":   "输出tokens",
+			"total_tokens":    "总tokens",
+			"cost":            "费用(美元)",
+			"request_type":    "请求类型",
 			"request_content": "请求内容摘要",
 			"response_status": "响应状态",
-			"error_message":  "错误信息",
-			"ip_address":     "IP地址",
-			"user_agent":     "用户代理",
+			"error_message":   "错误信息",
+			"ip_address":      "IP地址",
+			"user_agent":      "用户代理",
 		},
 	}
 
@@ -528,16 +527,18 @@ func addMySQLComments(fieldComments map[string]map[string]string) error {
 // addPostgreSQLComments 为PostgreSQL添加表和字段注释
 func addPostgreSQLComments(fieldComments map[string]map[string]string) error {
 	for tableName, fields := range fieldComments {
-		// 添加表注释
-		if err := DB.Exec(fmt.Sprintf("COMMENT ON TABLE %s IS ?", tableName), getTableComment(tableName)).Error; err != nil {
+		// 添加表注释（PostgreSQL 不支持参数化，需要直接拼接字符串）
+		tableComment := getTableComment(tableName)
+		sql := fmt.Sprintf("COMMENT ON TABLE %s IS '%s'", tableName, escapeSQLString(tableComment))
+		if err := DB.Exec(sql).Error; err != nil {
 			log.Printf("Failed to add comment for table %s: %v", tableName, err)
 			continue
 		}
 
 		// 添加字段注释
 		for fieldName, fieldComment := range fields {
-			sql := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS ?", tableName, fieldName)
-			if err := DB.Exec(sql, fieldComment).Error; err != nil {
+			sql := fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s'", tableName, fieldName, escapeSQLString(fieldComment))
+			if err := DB.Exec(sql).Error; err != nil {
 				log.Printf("Failed to add comment for column %s.%s: %v", tableName, fieldName, err)
 			}
 		}
@@ -546,22 +547,31 @@ func addPostgreSQLComments(fieldComments map[string]map[string]string) error {
 	return nil
 }
 
+// escapeSQLString 转义 SQL 字符串中的特殊字符
+func escapeSQLString(s string) string {
+	// 转义单引号（PostgreSQL 中用两个单引号表示一个单引号）
+	s = strings.ReplaceAll(s, "'", "''")
+	// 转义反斜杠
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	return s
+}
+
 // getTableComment 根据表名获取表注释
 func getTableComment(tableName string) string {
 	tableComments := map[string]string{
-		"users":              "用户表",
-		"token_blacklists":   "Token黑名单表",
-		"roles":              "角色表",
-		"permissions":        "权限表",
-		"contents":          "小红书内容表",
-		"content_histories": "内容历史记录表",
-		"user_configs":      "用户配置表",
-		"publish_records":    "发布记录表",
-		"token_usage":       "Token使用记录表",
-		"llm_providers":     "大模型服务商配置表",
+		"users":               "用户表",
+		"token_blacklists":    "Token黑名单表",
+		"roles":               "角色表",
+		"permissions":         "权限表",
+		"contents":            "小红书内容表",
+		"content_histories":   "内容历史记录表",
+		"user_configs":        "用户配置表",
+		"publish_records":     "发布记录表",
+		"token_usage":         "Token使用记录表",
+		"llm_providers":       "大模型服务商配置表",
 		"xiaohongshu_configs": "小红书账号配置表",
-		"publish_configs":   "发布配置表",
-		"system_dicts":      "系统字典表",
+		"publish_configs":     "发布配置表",
+		"system_dicts":        "系统字典表",
 	}
 	if comment, ok := tableComments[tableName]; ok {
 		return comment
@@ -579,19 +589,8 @@ func initSystemDicts() error {
 		return nil
 	}
 
-	// 大模型服务商
-	providers := []model.SystemDict{
-		{Category: model.DictCategoryLLMProvider, Code: "openai", Name: "OpenAI", Value: "https://api.openai.com/v1", Description: "OpenAI GPT系列模型", SortOrder: 1, Enabled: true, Extra: `{"models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "deepseek", Name: "DeepSeek", Value: "https://api.deepseek.com", Description: "DeepSeek 通义大模型", SortOrder: 2, Enabled: true, Extra: `{"models": ["deepseek-chat", "deepseek-coder"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "azure", Name: "Azure OpenAI", Value: "", Description: "Azure 托管的 OpenAI 服务", SortOrder: 3, Enabled: true, Extra: `{"models": ["gpt-4o", "gpt-4", "gpt-35-turbo"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "anthropic", Name: "Anthropic Claude", Value: "https://api.anthropic.com", Description: "Anthropic Claude 系列模型", SortOrder: 4, Enabled: true, Extra: `{"models": ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "google", Name: "Google Gemini", Value: "https://generativelanguage.googleapis.com", Description: "Google Gemini 系列模型", SortOrder: 5, Enabled: true, Extra: `{"models": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "zhipuai", Name: "智谱AI", Value: "https://open.bigmodel.cn/api/paas/v4", Description: "智谱 AI GLM 系列模型", SortOrder: 6, Enabled: true, Extra: `{"models": ["glm-4", "glm-4-flash", "glm-3-turbo"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "qwen", Name: "通义千问", Value: "https://dashscope.aliyuncs.com/compatible-mode/v1", Description: "阿里云通义千问模型", SortOrder: 7, Enabled: true, Extra: `{"models": ["qwen-turbo", "qwen-plus", "qwen-max"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "yi", Name: "零一万物", Value: "https://api.lingyiwanwu.com/v1", Description: "零一万物 Yi 系列模型", SortOrder: 8, Enabled: true, Extra: `{"models": ["yi-large", "yi-medium", "yi-small"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "minimax", Name: "MiniMax", Value: "https://api.minimax.chat/v1", Description: "MiniMax 海螺模型", SortOrder: 9, Enabled: true, Extra: `{"models": ["abab6.5s-chat", "abab6.5g-chat"]}`},
-		{Category: model.DictCategoryLLMProvider, Code: "custom", Name: "自定义", Value: "", Description: "自定义 API 服务商", SortOrder: 99, Enabled: true, Extra: `{"models": []}`},
-	}
+	// 从 model 常量动态生成大模型服务商字典
+	providers := generateLLMProviderDicts()
 
 	// 小红书配置状态
 	configStatuses := []model.SystemDict{
@@ -616,4 +615,80 @@ func initSystemDicts() error {
 
 	log.Printf("System dicts initialized successfully")
 	return nil
+}
+
+// generateLLMProviderDicts 从 model.LLMProvider 常量生成系统字典
+func generateLLMProviderDicts() []model.SystemDict {
+	var dicts []model.SystemDict
+	sortOrder := 1
+
+	// 按优先级分组排序
+	priorityOrder := []string{
+		model.ProviderOpenAI,
+		model.ProviderDeepSeek,
+		model.ProviderAzure,
+		model.ProviderClaude,
+		model.ProviderGemini,
+		model.ProviderQwen,
+		model.ProviderGLM,
+		model.ProviderQianfan,
+		model.ProviderHunyuan,
+		model.ProviderDoubao,
+		model.ProviderSpark,
+		model.ProviderBaichuan,
+		model.ProviderMiniMax,
+		model.ProviderMistral,
+		model.ProviderCohere,
+		model.ProviderGroq,
+		model.ProviderReplicate,
+		model.ProviderPerplexity,
+		model.ProviderOllama,
+		model.ProviderLMStudio,
+		model.ProviderLocalAI,
+		model.ProvidervLLM,
+		model.ProviderCustom,
+	}
+
+	// 生成字典
+	for _, provider := range priorityOrder {
+		name := model.GetProviderDisplayName(provider)
+		baseURL := model.GetProviderBaseURL(provider)
+		description := model.GetProviderDescription(provider)
+		models := model.GetProviderModels(provider)
+
+		// 构建 Extra JSON
+		extra := fmt.Sprintf(`{"models": %s}`, formatModelsJSON(models))
+
+		dict := model.SystemDict{
+			Category:    model.DictCategoryLLMProvider,
+			Code:        provider,
+			Name:        name,
+			Value:       baseURL,
+			Description: description,
+			SortOrder:   sortOrder,
+			Enabled:     true,
+			Extra:       extra,
+		}
+		dicts = append(dicts, dict)
+		sortOrder++
+	}
+
+	return dicts
+}
+
+// formatModelsJSON 格式化模型列表为 JSON 数组字符串
+func formatModelsJSON(models []string) string {
+	if len(models) == 0 {
+		return "[]"
+	}
+
+	result := "["
+	for i, m := range models {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf(`"%s"`, m)
+	}
+	result += "]"
+	return result
 }

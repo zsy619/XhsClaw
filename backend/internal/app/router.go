@@ -112,6 +112,8 @@ func SetupRouter(h *server.Hertz) {
 	enhancedRendererHandler := handler.NewEnhancedRendererHandler()
 	roleHandler := handler.NewRoleHandler()
 	dashboardHandler := handler.NewDashboardHandler()
+	llmProviderHandler := handler.NewLLMProviderHandler()
+	systemDictHandler := handler.NewSystemDictHandler()
 
 	// 健康检查 - 不需要认证
 	h.GET("/health", handler.HealthCheck)
@@ -226,6 +228,25 @@ func SetupRouter(h *server.Hertz) {
 					v1Generation.GET("/styles", rendererHandler.GetRendererStyles)
 					v1Generation.POST("/render", rendererHandler.RenderMarkdown)
 					v1Generation.POST("/cover", rendererHandler.GenerateCover)
+				}
+
+				// 大模型配置管理
+				v1LLM := v1Authorized.Group("/llm")
+				{
+					v1LLM.GET("/providers", llmProviderHandler.List)
+					v1LLM.GET("/providers/:id", llmProviderHandler.Get)
+					v1LLM.POST("/providers", llmProviderHandler.Create)
+					v1LLM.PUT("/providers/:id", llmProviderHandler.Update)
+					v1LLM.DELETE("/providers/:id", llmProviderHandler.Delete)
+					v1LLM.GET("/active", llmProviderHandler.GetActive)
+				}
+
+				// 系统字典
+				v1Dict := v1Authorized.Group("/dict")
+				{
+					v1Dict.GET("/category/:category", systemDictHandler.GetByCategory)
+					v1Dict.GET("/list", systemDictHandler.List)
+					v1Dict.GET("/categories", systemDictHandler.GetCategories)
 				}
 			}
 		}
