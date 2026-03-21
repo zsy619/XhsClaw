@@ -3,6 +3,7 @@ package handler
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 
@@ -40,15 +41,30 @@ func (h *SystemDictHandler) GetByCategory(c context.Context, ctx *app.RequestCon
 	response.Success(ctx, dicts)
 }
 
-// List 获取所有字典数据
+// List 获取所有字典数据（支持分页）
 func (h *SystemDictHandler) List(c context.Context, ctx *app.RequestContext) {
-	dicts, err := h.dictRepo.List()
+	// 解析分页参数
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "50"))
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 50
+	}
+
+	dicts, total, err := h.dictRepo.List(page, pageSize)
 	if err != nil {
 		response.Error(ctx, errno.InternalError)
 		return
 	}
 
-	response.Success(ctx, dicts)
+	// 返回分页结果
+	response.Success(ctx, map[string]interface{}{
+		"items": dicts,
+		"total": total,
+	})
 }
 
 // GetCategories 获取所有类别

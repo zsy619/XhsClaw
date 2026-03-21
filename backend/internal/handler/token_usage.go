@@ -4,13 +4,12 @@ package handler
 import (
 	"context"
 	"fmt"
-
-	"github.com/cloudwego/hertz/pkg/app"
-
 	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/service"
 	"xiaohongshu/pkg/errno"
 	"xiaohongshu/pkg/response"
+
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // TokenUsageHandler Token使用记录处理器
@@ -33,7 +32,14 @@ func (h *TokenUsageHandler) GetUserTokenUsage(c context.Context, ctx *app.Reques
 		return
 	}
 
-	usages, err := h.tokenUsageService.GetUserTokenUsage(c, userID, 50)
+	// 从limit参数获取条数，默认50条
+	limit := ctx.DefaultQuery("limit", "50")
+	var limitInt int
+	if _, err := fmt.Sscanf(limit, "%d", &limitInt); err != nil {
+		limitInt = 50
+	}
+
+	usages, err := h.tokenUsageService.GetUserTokenUsage(c, userID, limitInt)
 	if err != nil {
 		response.ErrorWithMessage(ctx, errno.InternalError, err.Error())
 		return

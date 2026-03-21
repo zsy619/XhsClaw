@@ -1,21 +1,24 @@
 <template>
-  <div class="xhs-config-view">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h1 class="text-2xl font-bold text-xiaohongshu-dark flex items-center gap-2">
-          <el-icon class="text-primary-500"><Connection /></el-icon>
-          小红书配置
-        </h1>
-        <p class="mt-1 text-sm text-gray-500">管理您的小红书账号配置</p>
+  <div>
+    <!-- 页面头部 -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <el-icon class="text-primary-500"><Connection /></el-icon>
+            小红书配置
+          </h1>
+          <p class="mt-1 text-sm text-gray-500">管理您的小红书账号配置</p>
+        </div>
+        <el-button type="primary" @click="openDialog('create')">
+          <el-icon><Plus /></el-icon>
+          新增配置
+        </el-button>
       </div>
-      <el-button type="primary" @click="openDialog('create')">
-        <el-icon><Plus /></el-icon>
-        新增配置
-      </el-button>
     </div>
 
     <!-- 状态筛选 -->
-    <el-card class="mb-4">
+    <el-card class="mb-6">
       <el-form :inline="true">
         <el-form-item label="状态">
           <el-select v-model="searchStatus" placeholder="全部" clearable @change="loadData">

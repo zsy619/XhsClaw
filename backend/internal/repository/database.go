@@ -116,7 +116,7 @@ func InitDatabase(cfg *config.DatabaseConfig) error {
 			&model.TokenBlacklist{},
 			&model.TokenUsage{},
 			&model.LLMProvider{},
-			&model.XiaohongshuConfig{},
+			&model.XHSConfig{},
 			&model.PublishConfig{},
 			&model.SystemDict{},
 		)

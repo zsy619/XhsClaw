@@ -1,21 +1,24 @@
 <template>
-  <div class="system-dict-view">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h1 class="text-2xl font-bold text-xiaohongshu-dark flex items-center gap-2">
-          <el-icon class="text-primary-500"><Document /></el-icon>
-          系统字典
-        </h1>
-        <p class="mt-1 text-sm text-gray-500">管理系统字典数据</p>
+  <div>
+    <!-- 页面头部 -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <el-icon class="text-primary-500"><Document /></el-icon>
+            系统字典
+          </h1>
+          <p class="mt-1 text-sm text-gray-500">管理系统字典数据</p>
+        </div>
+        <el-button type="primary" @click="openDialog('create')">
+          <el-icon><Plus /></el-icon>
+          新增字典
+        </el-button>
       </div>
-      <el-button type="primary" @click="openDialog('create')">
-        <el-icon><Plus /></el-icon>
-        新增字典
-      </el-button>
     </div>
 
     <!-- 分类筛选 -->
-    <el-card class="mb-4">
+    <el-card class="mb-6">
       <el-form :inline="true">
         <el-form-item label="字典分类">
           <el-select v-model="searchCategory" placeholder="选择分类" clearable @change="loadData">
@@ -121,18 +124,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Document } from '@element-plus/icons-vue'
 import {
-  getAllDicts,
-  createDict,
-  updateDict,
-  deleteDict,
-  getDictCategories,
-  type SystemDict,
-  type SystemDictRequest
+    createDict,
+    deleteDict,
+    getAllDicts,
+    getDictCategories,
+    updateDict,
+    type SystemDict,
+    type SystemDictRequest
 } from '@/api/systemDict'
+import { Document, Plus } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 const loading = ref(false)
 const submitting = ref(false)

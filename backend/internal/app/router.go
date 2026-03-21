@@ -204,6 +204,19 @@ func setupAuthorizedRoutes(h *server.Hertz) {
 		dict.GET("/categories", dictHandler.GetCategories)
 	}
 
+	// 小红书配置管理
+	xhsConfigHandler := handler.NewXHSConfigHandler()
+	xhs := v1Authorized.Group("/xhs")
+	{
+		xhs.GET("/configs", xhsConfigHandler.List)
+		xhs.GET("/configs/:id", xhsConfigHandler.Get)
+		xhs.POST("/configs", xhsConfigHandler.Create)
+		xhs.PUT("/configs/:id", xhsConfigHandler.Update)
+		xhs.DELETE("/configs/:id", xhsConfigHandler.Delete)
+		xhs.POST("/configs/:id/verify", xhsConfigHandler.Verify)
+		xhs.GET("/active", xhsConfigHandler.GetActive)
+	}
+
 	// Token 使用统计
 	tokenHandler := handler.NewTokenUsageHandler()
 	v1Authorized.GET("/token-usage", tokenHandler.GetUserTokenUsage)

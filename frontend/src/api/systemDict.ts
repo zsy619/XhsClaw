@@ -37,7 +37,7 @@ export const getDictByCategory = (category: string) => {
 
 // 获取所有字典
 export const getAllDicts = (params?: { page?: number; page_size?: number }) => {
-  return http.get<{ items: SystemDict[]; total: number }>('/dict/all', { params })
+  return http.get<SystemDict[]>('/dict/list', { params })
 }
 
 // 创建字典项

@@ -31,7 +31,7 @@
         <MdEditor
           v-model="localCoverSuggestion"
           :style="{ height: editorHeight }"
-          :toolbars="editorToolbars"
+          :toolbars="(editorToolbars as any)"
           :language="language"
           :placeholder="placeholder"
           :theme="editorTheme"
@@ -141,12 +141,6 @@ import {
   Brush,
   Document,
   DocumentCopy,
-  Bold,
-  Italic,
-  Quote,
-  Link,
-  Image,
-  Code,
   InfoFilled,
   QuestionFilled,
   CircleCheckFilled

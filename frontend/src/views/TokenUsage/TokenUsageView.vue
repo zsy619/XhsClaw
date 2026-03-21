@@ -168,22 +168,22 @@
         <el-table-column prop="provider" label="提供商" width="120" />
         <el-table-column prop="prompt_tokens" label="输入Tokens" width="120" align="right">
           <template #default="{ row }">
-            <span class="text-blue-600">{{ row.prompt_tokens.toLocaleString() }}</span>
+            <span class="text-blue-600">{{ (row.prompt_tokens ?? 0).toLocaleString() }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="completion_tokens" label="输出Tokens" width="120" align="right">
           <template #default="{ row }">
-            <span class="text-green-600">{{ row.completion_tokens.toLocaleString() }}</span>
+            <span class="text-green-600">{{ (row.completion_tokens ?? 0).toLocaleString() }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="total_tokens" label="总Tokens" width="120" align="right">
           <template #default="{ row }">
-            <span class="font-semibold">{{ row.total_tokens.toLocaleString() }}</span>
+            <span class="font-semibold">{{ (row.total_tokens ?? 0).toLocaleString() }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="cost" label="费用(美元)" width="100" align="right">
           <template #default="{ row }">
-            <span class="text-orange-600">${{ row.cost.toFixed(6) }}</span>
+            <span class="text-orange-600">${{ (row.cost ?? 0).toFixed(6) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="request_type" label="请求类型" width="120" />
@@ -215,12 +215,12 @@ import {
     type TokenUsageStats,
     type UserTokenUsage
 } from '@/api/token_usage'
-import { Coin, Refresh, Check, Tools } from '@element-plus/icons-vue'
+import { getQuickFixSteps, quickDiagnostic } from '@/utils/diagnostic'
+import { Check, Coin, Refresh, Tools } from '@element-plus/icons-vue'
 import type { ECharts } from 'echarts'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { quickDiagnostic, getQuickFixSteps } from '@/utils/diagnostic'
 
 // 诊断结果接口
 interface DiagnosticResult {
@@ -534,8 +534,10 @@ const validateThemes = async () => {
 }
 
 // 格式化日期
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr: string | undefined) => {
+  if (!dateStr) return '-'
   const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return '-'
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -586,19 +588,72 @@ const loadStats = async () => {
   }
 }
 
-// 加载使用记录
+// 使用记录加载状态
+const usageRecordsLoading = ref(false)
+const usageRecordsRetryCount = ref(0)
+const usageRecordsMaxRetries = 5
+
+// 加载使用记录 - 带自我校验和自动重试机制
 const loadUsageRecords = async () => {
+  if (usageRecordsLoading.value) return
+
+  usageRecordsLoading.value = true
   loading.value = true
-  try {
-    const res = await getUserTokenUsage(50)
-    if (res.code === 0 && res.data) {
-      usageRecords.value = res.data as TokenUsage[]
+  usageRecordsRetryCount.value = 0
+
+  const attemptLoad = async (): Promise<boolean> => {
+    try {
+      usageRecordsRetryCount.value++
+      const res = await getUserTokenUsage(10)
+
+      if (res.code === 0 && res.data && Array.isArray(res.data)) {
+        const records = res.data as TokenUsage[]
+
+        // 自我校验：验证数据完整性和有效性
+        const isValid = records.every(record =>
+          record &&
+          typeof record.model === 'string' &&
+          typeof record.total_tokens === 'number'
+        )
+
+        if (isValid || records.length === 0) {
+          usageRecords.value = records
+          return true
+        } else {
+          console.warn(`⚠ 第 ${usageRecordsRetryCount.value} 次校验失败：数据不完整`)
+        }
+      } else {
+        console.warn(`⚠ 第 ${usageRecordsRetryCount.value} 次校验失败：返回数据异常`)
+      }
+
+      return false
+    } catch (error: any) {
+      console.error(`❌ 第 ${usageRecordsRetryCount.value} 次加载失败:`, error.message || error)
+      return false
     }
-  } catch (error: any) {
-    console.error('加载使用记录失败:', error)
-  } finally {
-    loading.value = false
   }
+
+  let success = false
+
+  while (!success && usageRecordsRetryCount.value < usageRecordsMaxRetries) {
+    success = await attemptLoad()
+
+    if (!success && usageRecordsRetryCount.value < usageRecordsMaxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, usageRecordsRetryCount.value - 1), 5000)
+      console.log(`⏳ ${Math.round(delay/1000)}秒后进行第 ${usageRecordsRetryCount.value + 1} 次尝试...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+
+  if (!success) {
+    console.error(`❌ 已达到最大重试次数 (${usageRecordsMaxRetries})，加载失败`)
+    ElMessage.error('使用记录加载失败，请稍后刷新页面重试')
+  } else if (usageRecordsRetryCount.value > 1) {
+    ElMessage.success(`✓ 使用记录加载成功 (共尝试 ${usageRecordsRetryCount.value} 次)`)
+  }
+
+  usageRecordsLoading.value = false
+  loading.value = false
 }
 
 // 更新每日趋势图表
@@ -735,6 +790,5 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .token-usage-container {
-  padding: 20px;
 }
 </style>

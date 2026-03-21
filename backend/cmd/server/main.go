@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"xiaohongshu/internal/app"
 	"xiaohongshu/internal/config"
+	"xiaohongshu/internal/middleware"
 	"xiaohongshu/internal/repository"
 	"xiaohongshu/internal/utils"
 
@@ -40,6 +41,10 @@ func main() {
 	h := server.Default(
 		server.WithHostPorts(fmt.Sprintf(":%d", cfg.Server.Port)),
 	)
+
+	// 全局应用CORS中间件
+	logger.Info("正在配置CORS中间件...")
+	h.Use(middleware.CORSMiddleware())
 
 	// 设置路由
 	logger.Info("正在配置路由...")

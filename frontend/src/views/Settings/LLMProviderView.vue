@@ -1,21 +1,24 @@
 <template>
-  <div class="llm-provider-view">
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <h1 class="text-2xl font-bold text-xiaohongshu-dark flex items-center gap-2">
-          <el-icon class="text-primary-500"><Monitor /></el-icon>
-          大模型配置
-        </h1>
-        <p class="mt-1 text-sm text-gray-500">管理您的大模型服务商配置</p>
+  <div>
+    <!-- 页面头部 -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <el-icon class="text-primary-500"><Monitor /></el-icon>
+            大模型配置
+          </h1>
+          <p class="mt-1 text-sm text-gray-500">管理您的大模型服务商配置</p>
+        </div>
+        <el-button type="primary" @click="openDialog('create')">
+          <el-icon><Plus /></el-icon>
+          新增配置
+        </el-button>
       </div>
-      <el-button type="primary" @click="openDialog('create')">
-        <el-icon><Plus /></el-icon>
-        新增配置
-      </el-button>
     </div>
 
     <!-- 搜索筛选 -->
-    <el-card class="mb-4">
+    <el-card class="mb-6">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="服务商">
           <el-select v-model="searchForm.provider" placeholder="全部" clearable>

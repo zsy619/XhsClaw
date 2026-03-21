@@ -206,13 +206,13 @@ func migrateXiaohongshuConfig(tx *gorm.DB) error {
 	for _, config := range configs {
 		// 检查是否已存在对应的小红书配置
 		var existingCount int64
-		tx.Model(&model.XiaohongshuConfig{}).
+		tx.Model(&model.XHSConfig{}).
 			Where("user_id = ? AND is_default = ?", config.UserID, true).
 			Count(&existingCount)
 
 		if existingCount > 0 {
 			// 更新现有的默认配置
-			err := tx.Model(&model.XiaohongshuConfig{}).
+			err := tx.Model(&model.XHSConfig{}).
 				Where("user_id = ? AND is_default = ?", config.UserID, true).
 				Updates(map[string]interface{}{
 					"cookie":     config.XiaohongshuCookie,
@@ -226,7 +226,7 @@ func migrateXiaohongshuConfig(tx *gorm.DB) error {
 			}
 		} else {
 			// 创建新的小红书配置
-			xhsConfig := model.XiaohongshuConfig{
+			xhsConfig := model.XHSConfig{
 				UserID:      config.UserID,
 				Name:        "默认账号",
 				Cookie:      config.XiaohongshuCookie,
@@ -234,7 +234,7 @@ func migrateXiaohongshuConfig(tx *gorm.DB) error {
 				Token:       config.XiaohongshuToken,
 				IsDefault:   true,
 				IsEnabled:   true,
-				Status:      model.XHSStatusPending, // 需要重新验证
+				Status:      "pending", // 需要重新验证
 				Description: "从 user_configs 迁移",
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),

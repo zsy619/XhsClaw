@@ -31,14 +31,27 @@ func (r *SystemDictRepository) GetByCategory(category string) ([]model.SystemDic
 	return dicts, nil
 }
 
-// List 获取所有字典
-func (r *SystemDictRepository) List() ([]model.SystemDict, error) {
+// List 获取所有字典（支持分页）
+func (r *SystemDictRepository) List(page, pageSize int) ([]model.SystemDict, int64, error) {
 	var dicts []model.SystemDict
-	err := r.db.Order("category ASC, sort_order ASC, id ASC").Find(&dicts).Error
-	if err != nil {
-		return nil, fmt.Errorf("查询字典列表失败：%w", err)
+	var total int64
+
+	// 统计总数
+	if err := r.db.Model(&model.SystemDict{}).Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("统计字典数量失败：%w", err)
 	}
-	return dicts, nil
+
+	// 分页查询
+	offset := (page - 1) * pageSize
+	err := r.db.Order("category ASC, sort_order ASC, id ASC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&dicts).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("查询字典列表失败：%w", err)
+	}
+
+	return dicts, total, nil
 }
 
 // GetCategories 获取所有类别
